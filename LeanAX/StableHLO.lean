@@ -2,27 +2,49 @@ import LeanAX.Build
 
 namespace LeanAX
 
-def BindingKind.render (kind : BindingKind) : String :=
-  match kind with
-  | .constant value => "stablehlo.constant dense<" ++ value ++ ">"
-  | .add lhs rhs => "stablehlo.add " ++ lhs.percent ++ ", " ++ rhs.percent
-  | .multiply lhs rhs => "stablehlo.multiply " ++ lhs.percent ++ ", " ++ rhs.percent
-  | .dotGeneral lhs rhs =>
-      "stablehlo.dot_general " ++ lhs.percent ++ ", " ++ rhs.percent ++
-        ", batching_dims = [] x []"
-  | .broadcastInDim operand =>
-      "stablehlo.broadcast_in_dim " ++ operand.percent
-  | .reshape operand =>
-      "stablehlo.reshape " ++ operand.percent
-  | .transpose operand permutation =>
-      "stablehlo.transpose " ++ operand.percent ++
-        ", permutation = [" ++ joinSep ", " (permutation.map (fun dim => toString dim)) ++ "]"
-  | .reduceSum operand =>
-      "stablehlo.reduce " ++ operand.percent ++ ", dimensions = all"
+def renderOperandTypes (values : List ValueRef) : String :=
+  joinSep ", " (values.map (fun value => value.ty.stableName))
+
+def renderOperands (values : List ValueRef) : String :=
+  joinSep ", " (values.map ValueRef.percent)
+
+def renderPermutation (permutation : List Nat) : String :=
+  "[" ++ joinSep ", " (permutation.map (fun dim => toString dim)) ++ "]"
+
+def renderGenericOp
+    (result : ValueRef)
+    (opName : String)
+    (operands : List ValueRef)
+    (attrs : Option String := none) : String :=
+  let attrText :=
+    match attrs with
+    | none => ""
+    | some text => " " ++ text
+  "    " ++ result.percent ++ " = \"stablehlo." ++ opName ++ "\"(" ++
+    renderOperands operands ++ ")" ++ attrText ++ " : (" ++
+    renderOperandTypes operands ++ ") -> " ++ result.ty.stableName
 
 def Binding.render (binding : Binding) : String :=
-  "    " ++ binding.result.percent ++ " = " ++ binding.kind.render ++
-    " : " ++ binding.result.ty.stableName
+  match binding.kind with
+  | .constant value =>
+      "    " ++ binding.result.percent ++
+        " = \"stablehlo.constant\"() {value = \"" ++ value ++
+        "\"} : () -> " ++ binding.result.ty.stableName
+  | .add lhs rhs =>
+      renderGenericOp binding.result "add" [lhs, rhs]
+  | .multiply lhs rhs =>
+      renderGenericOp binding.result "multiply" [lhs, rhs]
+  | .dotGeneral lhs rhs =>
+      renderGenericOp binding.result "dot_general" [lhs, rhs] (some "{batching_dims = \"[] x []\"}")
+  | .broadcastInDim operand =>
+      renderGenericOp binding.result "broadcast_in_dim" [operand]
+  | .reshape operand =>
+      renderGenericOp binding.result "reshape" [operand]
+  | .transpose operand permutation =>
+      renderGenericOp binding.result "transpose" [operand]
+        (some ("{permutation = " ++ renderPermutation permutation ++ "}"))
+  | .reduceSum operand =>
+      renderGenericOp binding.result "reduce" [operand] (some "{dimensions = \"all\"}")
 
 def Module.renderSignature (modu : Module) : String :=
   "  func.func @" ++ modu.functionName ++ "(" ++

@@ -21,6 +21,7 @@
               pkgs.cargo
               pkgs.rustc
               pkgs.stdenv.cc
+              pkgs.llvmPackages.mlir
               pkgs.uv
               pkgs.python3
               pkgs.git
@@ -44,6 +45,7 @@
             pkgs.cargo
             pkgs.rustc
             pkgs.rustfmt
+            pkgs.llvmPackages.mlir
             pkgs.uv
             pkgs.python3
             pkgs.git

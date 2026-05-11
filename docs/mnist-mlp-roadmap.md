@@ -57,6 +57,8 @@ Already implemented:
 - Constants, broadcast, reshape, rank-2 transpose, and scalar reduce-sum.
 - Shape/type validation for current primitives.
 - StableHLO-like text emission.
+- MLIR generic-op syntax that parses with `mlir-opt
+  --allow-unregistered-dialect`.
 - Rust e2e runner with golden comparisons.
 - Python structural verifier.
 - Expected-failure validation case.
@@ -107,6 +109,12 @@ Exit gate:
 
 - Generated `affine`, `matmul`, and reduction examples parse under real
   StableHLO/MLIR tooling.
+
+Current progress:
+
+- Generated modules now parse under `mlir-opt --allow-unregistered-dialect`.
+  This is real MLIR syntax validation with StableHLO-shaped generic ops, not yet
+  StableHLO dialect semantic verification.
 
 ## Phase 3: Numeric Execution
 

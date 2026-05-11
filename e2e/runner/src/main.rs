@@ -144,6 +144,24 @@ fn run(repo: &Path, program: &str, args: &[&str]) -> Result<(), String> {
     }
 }
 
+fn run_mlir_parse(repo: &Path, path: &str) -> Result<(), String> {
+    eprintln!("running: mlir-opt --allow-unregistered-dialect {path}");
+    let status = Command::new("mlir-opt")
+        .arg("--allow-unregistered-dialect")
+        .arg(path)
+        .current_dir(repo)
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .status()
+        .map_err(|err| format!("failed to start mlir-opt: {err}"))?;
+
+    if status.success() {
+        Ok(())
+    } else {
+        Err(format!("mlir-opt exited with {status}"))
+    }
+}
+
 fn run_expect_failure(
     repo: &Path,
     program: &str,
@@ -220,6 +238,7 @@ fn run_pass_case(repo: &Path, case: &Case, output: &str, golden: &str) -> Result
             output,
         ],
     )?;
+    run_mlir_parse(repo, output)?;
     Ok(())
 }
 

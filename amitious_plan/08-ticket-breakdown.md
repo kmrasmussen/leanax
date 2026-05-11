@@ -14,6 +14,7 @@ Phase one is the first vertical slice from planning to checked artifact.
 8. `TICKET-0008`: Unify the e2e manifest around explicit expected outcomes.
 9. `TICKET-0009`: Add structured validation errors and smart constructors.
 10. `TICKET-0010`: Add constants, reshape, transpose, broadcast, and reduce-sum.
+11. `TICKET-0011`: Parse generated modules with real MLIR tooling.
 
 ## Completion Rule
 
@@ -34,6 +35,7 @@ The first six tickets are implemented together as a vertical slice:
 - Structured validation errors rendered through stable CLI messages.
 - Neural-network primitive coverage for constants, broadcast, reshape,
   transpose, and reduce-sum.
+- MLIR parser verification for passing generated modules via `mlir-opt`.
 
 ## Next Ticket Themes
 

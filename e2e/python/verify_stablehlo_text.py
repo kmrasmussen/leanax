@@ -38,7 +38,9 @@ def verify(path: Path) -> None:
     unknown = sorted(set(ops) - allowed)
     require(not unknown, f"unknown operations: {', '.join(unknown)}")
 
-    defined = set(re.findall(r"^\s+%([A-Za-z0-9_]+) = stablehlo\.", text, re.M))
+    defined = set(
+        re.findall(r'^\s+%([A-Za-z0-9_]+) = "stablehlo\.', text, re.M)
+    )
     params = set()
     signature = re.search(r"func\.func @main\((.*?)\) ->", text)
     require(signature is not None, "missing function signature")

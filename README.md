@@ -60,10 +60,11 @@ nix develop --command bash -lc 'lake build && cargo test --locked --manifest-pat
 ```
 
 That command builds the Lean executable, tests the Rust manifest parser, emits
-StableHLO-like text for the manifested examples, compares the output against
-`e2e/golden`, and runs a no-dependency Python verifier through `uv`. The unified
-e2e manifest records expected outcomes, including validation failures, so
-unexpected successes and unexpected failures are checked by the same runner.
+MLIR-parseable StableHLO-shaped text for the manifested examples, compares the
+output against `e2e/golden`, runs a no-dependency Python verifier through `uv`,
+and parses generated modules with `mlir-opt --allow-unregistered-dialect`. The
+unified e2e manifest records expected outcomes, including validation failures,
+so unexpected successes and unexpected failures are checked by the same runner.
 
 ## A Useful First Milestone
 
