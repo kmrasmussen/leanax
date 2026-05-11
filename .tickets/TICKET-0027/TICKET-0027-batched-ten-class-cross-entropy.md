@@ -36,3 +36,13 @@ parsing, lowering manifest validation, and Python oracle comparison.
 
 Use batch size `2` and class count `10`, matching the current MNIST fixture
 contract.
+
+## Status
+
+Completed. LeanAX now has a batched ten-class `mnist-cross-entropy` artifact
+with row-wise softmax denominators, scalar mean loss over the fixture batch, and
+deterministic numeric oracle coverage. The IR gained a checked
+`reduceSumLastDim` operation that keeps a singleton class axis, allowing row-wise
+normalization to broadcast back to `2x10` logits. The e2e manifest covers
+`mnist-cross-entropy` as a numeric case and
+`bad-mnist-cross-entropy-shape` as an expected validation failure.

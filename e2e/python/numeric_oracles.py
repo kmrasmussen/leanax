@@ -65,14 +65,20 @@ def elementwise(lhs: Tensor, rhs: Tensor, op) -> Tensor:
 def broadcast_to(value: Tensor, shape: tuple[int, ...]) -> Tensor:
     if not value.shape:
         return Tensor(shape, tuple(value.data[0] for _ in range(numel(shape))))
-    if len(value.shape) > len(shape) or value.shape != shape[-len(value.shape) :]:
+    if len(value.shape) > len(shape):
         fail(f"cannot broadcast {value.shape} to {shape}")
+    offset = len(shape) - len(value.shape)
+    for source_dim, target_dim in zip(value.shape, shape[offset:]):
+        if source_dim != target_dim and source_dim != 1:
+            fail(f"cannot broadcast {value.shape} to {shape}")
 
     out = []
-    prefix = len(shape) - len(value.shape)
     for index in range(numel(shape)):
         coords = unflatten(index, shape)
-        operand_coords = coords[prefix:]
+        operand_coords = tuple(
+            0 if dim == 1 else coord
+            for coord, dim in zip(coords[offset:], value.shape)
+        )
         out.append(value.data[flat_index(operand_coords, value.shape)])
     return Tensor(shape, tuple(out))
 
@@ -97,6 +103,13 @@ def transpose_2d(value: Tensor) -> Tensor:
         fail(f"expected rank-2 transpose, got {value.shape}")
     rows, cols = value.shape
     return Tensor((cols, rows), tuple(value.data[r * cols + c] for c in range(cols) for r in range(rows)))
+
+
+def reduce_last_dim(value: Tensor) -> Tensor:
+    if len(value.shape) != 2:
+        fail(f"expected rank-2 reduce-last-dim, got {value.shape}")
+    rows, cols = value.shape
+    return Tensor((rows, 1), tuple(sum(value.data[row * cols + col] for col in range(cols)) for row in range(rows)))
 
 
 def parse_signature(text: str) -> list[str]:
@@ -164,7 +177,10 @@ def execute(text: str, inputs: dict[str, Tensor]) -> list[Tensor]:
         elif op == "transpose":
             values[name] = transpose_2d(tensors[0])
         elif op == "reduce":
-            values[name] = Tensor.scalar(sum(tensors[0].data))
+            if 'dimensions = "last"' in line:
+                values[name] = reduce_last_dim(tensors[0])
+            else:
+                values[name] = Tensor.scalar(sum(tensors[0].data))
         else:
             fail(f"unsupported op stablehlo.{op}")
 
@@ -215,6 +231,23 @@ def oracle_inputs(name: str) -> dict[str, Tensor]:
             return {
                 "logits": tensor((2,), [1.25, -0.75]),
                 "labels": tensor((2,), [1.0, 0.0]),
+            }
+        case "mnist-cross-entropy":
+            return {
+                "logits": tensor(
+                    (2, 10),
+                    [
+                        1.5, -0.25, 0.75, -1.0, 0.5, 0.0, -0.5, 1.0, -1.5, 0.25,
+                        -0.75, 0.2, 1.25, 0.0, -0.4, 0.6, -1.2, 1.4, 0.3, -0.1,
+                    ],
+                ),
+                "labels": tensor(
+                    (2, 10),
+                    [
+                        0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+                    ],
+                ),
             }
         case "vmap-pointwise":
             return {
@@ -275,6 +308,13 @@ def expected(name: str, inputs: dict[str, Tensor]) -> Tensor | list[Tensor]:
             log_probs = Tensor(probs.shape, tuple(math.log(value) for value in probs.data))
             weighted = elementwise(inputs["labels"], log_probs, lambda label, log_prob: label * log_prob)
             return Tensor.scalar(-sum(weighted.data))
+        case "mnist-cross-entropy":
+            exp_logits = Tensor(inputs["logits"].shape, tuple(math.exp(value) for value in inputs["logits"].data))
+            denom = broadcast_to(reduce_last_dim(exp_logits), inputs["logits"].shape)
+            probs = elementwise(exp_logits, denom, lambda value, row_total: value / row_total)
+            log_probs = Tensor(probs.shape, tuple(math.log(value) for value in probs.data))
+            weighted = elementwise(inputs["labels"], log_probs, lambda label, log_prob: label * log_prob)
+            return Tensor.scalar(-sum(weighted.data) / inputs["logits"].shape[0])
         case "vmap-pointwise":
             summed = elementwise(inputs["x"], inputs["y"], lambda a, b: a + b)
             return elementwise(summed, summed, lambda a, b: a * b)

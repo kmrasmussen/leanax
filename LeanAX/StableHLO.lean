@@ -42,6 +42,7 @@ def BindingKind.stableOpName : BindingKind -> String
   | .reshape _ => "stablehlo.reshape"
   | .transpose _ _ => "stablehlo.transpose"
   | .reduceSum _ => "stablehlo.reduce"
+  | .reduceSumLastDim _ => "stablehlo.reduce"
 
 def BindingKind.operands : BindingKind -> List ValueRef
   | .constant _ => []
@@ -56,6 +57,7 @@ def BindingKind.operands : BindingKind -> List ValueRef
   | .reshape operand => [operand]
   | .transpose operand _ => [operand]
   | .reduceSum operand => [operand]
+  | .reduceSumLastDim operand => [operand]
 
 def Binding.render (binding : Binding) : String :=
   match binding.kind with
@@ -86,6 +88,8 @@ def Binding.render (binding : Binding) : String :=
         (some ("{permutation = " ++ renderPermutation permutation ++ "}"))
   | .reduceSum operand =>
       renderGenericOp binding.result "reduce" [operand] (some "{dimensions = \"all\"}")
+  | .reduceSumLastDim operand =>
+      renderGenericOp binding.result "reduce" [operand] (some "{dimensions = \"last\"}")
 
 def renderReturnTypes : List ValueRef -> String
   | [] => "()"
@@ -346,6 +350,36 @@ def badCrossEntropyShapeModule : Module :=
     ],
     returns := [loss] }
 
+def badMnistCrossEntropyShapeModule : Module :=
+  let logits := tensor "logits" .f32 [2, 10]
+  let labels := tensor "labels" .f32 [2, 9]
+  let expLogits := tensor "mnist_ce_exp" .f32 [2, 10]
+  let denom := tensor "mnist_ce_denom" .f32 [2, 1]
+  let denomBatched := tensor "mnist_ce_denom_batched" .f32 [2, 10]
+  let probs := tensor "mnist_ce_probs" .f32 [2, 10]
+  let logProbs := tensor "mnist_ce_log_probs" .f32 [2, 10]
+  let weighted := tensor "mnist_ce_weighted" .f32 [2, 10]
+  let perExample := tensor "mnist_ce_per_example" .f32 [2, 1]
+  let sum := tensor "mnist_ce_sum" .f32 []
+  let negMean := tensor "mnist_ce_neg_mean" .f32 []
+  let loss := tensor "mnist_ce_loss" .f32 []
+  { name := "leanax_bad_mnist_cross_entropy_shape",
+    functionName := "main",
+    inputs := [logits, labels],
+    bindings := [
+      { result := expLogits, kind := .exponential logits },
+      { result := denom, kind := .reduceSumLastDim expLogits },
+      { result := denomBatched, kind := .broadcastInDim denom },
+      { result := probs, kind := .divide expLogits denomBatched },
+      { result := logProbs, kind := .logarithm probs },
+      { result := weighted, kind := .multiply labels logProbs },
+      { result := perExample, kind := .reduceSumLastDim weighted },
+      { result := sum, kind := .reduceSum perExample },
+      { result := negMean, kind := .constant "-0.5" },
+      { result := loss, kind := .multiply sum negMean }
+    ],
+    returns := [loss] }
+
 def badVmapDenseRankModule : Module :=
   let x := tensor "x" .f32 [2, 2, 4]
   let w := tensor "w" .f32 [4, 3]
@@ -397,6 +431,7 @@ def moduleByName (name : String) : Option Module :=
   | "mlp-forward" => DSL.mlpForwardModule?.toOption
   | "relu-forward" => DSL.reluForwardModule?.toOption
   | "cross-entropy-loss" => DSL.crossEntropyLossModule?.toOption
+  | "mnist-cross-entropy" => DSL.mnistCrossEntropyModule?.toOption
   | "vmap-pointwise" => vmapPointwiseModule?.toOption
   | "vmap-dense" => vmapDenseModule?.toOption
   | "square-sum" => squareSumModule?.toOption
@@ -417,6 +452,7 @@ def moduleByName (name : String) : Option Module :=
   | "bad-reduce" => some badReduceModule
   | "bad-maximum-shape" => some badMaximumShapeModule
   | "bad-cross-entropy-shape" => some badCrossEntropyShapeModule
+  | "bad-mnist-cross-entropy-shape" => some badMnistCrossEntropyShapeModule
   | "bad-vmap-dense-rank" => some badVmapDenseRankModule
   | "bad-grad-dense-shape" => some badGradDenseShapeModule
   | "bad-parameter-tree-shape" => some badParameterTreeShapeModule
@@ -430,6 +466,7 @@ def availableCases : List String :=
     "mlp-forward",
     "relu-forward",
     "cross-entropy-loss",
+    "mnist-cross-entropy",
     "vmap-pointwise",
     "vmap-dense",
     "square-sum",
@@ -450,6 +487,7 @@ def availableCases : List String :=
     "bad-reduce",
     "bad-maximum-shape",
     "bad-cross-entropy-shape",
+    "bad-mnist-cross-entropy-shape",
     "bad-vmap-dense-rank",
     "bad-grad-dense-shape",
     "bad-parameter-tree-shape"

@@ -1,0 +1,90 @@
+{
+  "schema": "leanax.lowering.v1",
+  "generated": "generated/mnist-cross-entropy.mlir",
+  "module": "leanax_mnist_cross_entropy",
+  "function": "main",
+  "inputs": [{"name": "logits", "type": "tensor<2x10xf32>"}, {"name": "labels", "type": "tensor<2x10xf32>"}],
+  "outputs": [{"name": "mnist_ce_loss", "type": "tensor<f32>"}],
+  "operations": [
+    {
+      "id": "op0",
+      "result": "mnist_ce_exp",
+      "op": "stablehlo.exponential",
+      "operands": ["logits"],
+      "result_type": "tensor<2x10xf32>",
+      "mlir_line": 3
+    },
+    {
+      "id": "op1",
+      "result": "mnist_ce_denom",
+      "op": "stablehlo.reduce",
+      "operands": ["mnist_ce_exp"],
+      "result_type": "tensor<2x1xf32>",
+      "mlir_line": 4
+    },
+    {
+      "id": "op2",
+      "result": "mnist_ce_denom_batched",
+      "op": "stablehlo.broadcast_in_dim",
+      "operands": ["mnist_ce_denom"],
+      "result_type": "tensor<2x10xf32>",
+      "mlir_line": 5
+    },
+    {
+      "id": "op3",
+      "result": "mnist_ce_probs",
+      "op": "stablehlo.divide",
+      "operands": ["mnist_ce_exp", "mnist_ce_denom_batched"],
+      "result_type": "tensor<2x10xf32>",
+      "mlir_line": 6
+    },
+    {
+      "id": "op4",
+      "result": "mnist_ce_log_probs",
+      "op": "stablehlo.log",
+      "operands": ["mnist_ce_probs"],
+      "result_type": "tensor<2x10xf32>",
+      "mlir_line": 7
+    },
+    {
+      "id": "op5",
+      "result": "mnist_ce_weighted",
+      "op": "stablehlo.multiply",
+      "operands": ["labels", "mnist_ce_log_probs"],
+      "result_type": "tensor<2x10xf32>",
+      "mlir_line": 8
+    },
+    {
+      "id": "op6",
+      "result": "mnist_ce_per_example",
+      "op": "stablehlo.reduce",
+      "operands": ["mnist_ce_weighted"],
+      "result_type": "tensor<2x1xf32>",
+      "mlir_line": 9
+    },
+    {
+      "id": "op7",
+      "result": "mnist_ce_sum",
+      "op": "stablehlo.reduce",
+      "operands": ["mnist_ce_per_example"],
+      "result_type": "tensor<f32>",
+      "mlir_line": 10
+    },
+    {
+      "id": "op8",
+      "result": "mnist_ce_neg_mean",
+      "op": "stablehlo.constant",
+      "operands": [],
+      "result_type": "tensor<f32>",
+      "mlir_line": 11
+    },
+    {
+      "id": "op9",
+      "result": "mnist_ce_loss",
+      "op": "stablehlo.multiply",
+      "operands": ["mnist_ce_sum", "mnist_ce_neg_mean"],
+      "result_type": "tensor<f32>",
+      "mlir_line": 12
+    }
+  ]
+}

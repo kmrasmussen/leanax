@@ -287,6 +287,10 @@ Current progress:
   command. It runs over the fixture path, asserts generated loss and optimizer
   artifacts are present, trains a tiny parity classifier for stable metrics, and
   stays explicit about not being full runtime execution yet.
+- `mnist-cross-entropy` now lowers a batched ten-class fixture loss with
+  row-wise softmax normalization and mean-over-batch semantics. The e2e manifest
+  checks it with golden text, MLIR parsing, lowering manifest validation, and a
+  Python numeric oracle.
 
 ## Where We Are Relative To A Real Classifier
 
@@ -310,8 +314,8 @@ What is still missing for an honest MNIST classifier:
 
 - The current MLP forward fixture is tiny (`4 -> 3 -> 2`), not
   `784 -> hidden -> 10`.
-- The current cross-entropy artifact is a fixed two-class single-example loss,
-  not batched ten-class MNIST loss.
+- The ten-class cross-entropy artifact exists, but it is not yet connected to an
+  MNIST-shaped forward module or full train step.
 - Gradients cover square loss and a one-layer dense case, not a two-layer
   ReLU MLP trained with cross entropy.
 - The parameter-tree update covers one weight matrix and one bias vector, not
@@ -346,6 +350,11 @@ Exit gate:
 - `mnist-forward` and `mnist-cross-entropy` are manifested numeric cases with
   golden text, MLIR parsing, lowering manifests, and deterministic oracle
   comparisons.
+
+Current progress:
+
+- `mnist-cross-entropy` covers the batched ten-class loss slice for batch size
+  `2`, including a validation-failure case for mismatched label/logit shapes.
 
 ## Phase 10: Full Classifier Train Step
 

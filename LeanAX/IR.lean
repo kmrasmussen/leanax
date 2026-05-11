@@ -31,6 +31,7 @@ inductive BindingKind where
   | reshape (operand : ValueRef)
   | transpose (operand : ValueRef) (permutation : List Nat)
   | reduceSum (operand : ValueRef)
+  | reduceSumLastDim (operand : ValueRef)
   deriving Repr
 
 structure Binding where
@@ -80,6 +81,15 @@ def Shape.isSuffixOf (suffix : Shape) (full : Shape) : Bool :=
     match full with
     | [] => false
     | _ :: rest => suffix.isSuffixOf rest
+
+def Shape.broadcastableToSameRank : Shape -> Shape -> Bool
+  | [], [] => true
+  | sourceDim :: sourceRest, targetDim :: targetRest =>
+      (sourceDim == targetDim || sourceDim == 1) && broadcastableToSameRank sourceRest targetRest
+  | _, _ => false
+
+def Shape.broadcastableTo (source : Shape) (target : Shape) : Bool :=
+  source.isSuffixOf target || source.broadcastableToSameRank target
 
 def tensor (name : String) (dtype : DType) (shape : Shape) : ValueRef :=
   { name := name, ty := { dtype := dtype, shape := shape } }

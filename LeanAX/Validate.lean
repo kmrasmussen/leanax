@@ -14,6 +14,7 @@ inductive ValidationError where
   | reshapeElementMismatch (operand : TensorType) (result : TensorType)
   | transposeUnsupported (operand : TensorType) (result : TensorType) (permutation : List Nat)
   | reduceSumResultMismatch (operand : TensorType) (result : TensorType)
+  | reduceSumLastDimResultMismatch (operand : TensorType) (result : TensorType)
   | unsupportedTransform (transform : String) (bindingName : String)
   deriving Repr, BEq
 
@@ -40,6 +41,8 @@ def ValidationError.render : ValidationError -> String
       s!"stablehlo.transpose: unsupported permutation {permutation} from {operand.stableName} to {result.stableName}"
   | .reduceSumResultMismatch operand result =>
       s!"stablehlo.reduce: expected scalar result for {operand.stableName}, got {result.stableName}"
+  | .reduceSumLastDimResultMismatch operand result =>
+      s!"stablehlo.reduce: expected last-dimension singleton result for {operand.stableName}, got {result.stableName}"
   | .unsupportedTransform transform bindingName =>
       s!"{transform}: unsupported binding %{bindingName}"
 
@@ -74,7 +77,7 @@ def requireDefined (context : String) (defined : List ValueRef) (value : ValueRe
 
 def requireBroadcastable (operand : TensorType) (result : TensorType) :
     Except ValidationError Unit :=
-  if operand.dtype == result.dtype && operand.shape.isSuffixOf result.shape then
+  if operand.dtype == result.dtype && operand.shape.broadcastableTo result.shape then
     .ok ()
   else
     .error (.broadcastShapeMismatch operand result)
@@ -103,6 +106,17 @@ def requireReduceSum (operand : TensorType) (result : TensorType) :
     .ok ()
   else
     .error (.reduceSumResultMismatch operand result)
+
+def requireReduceSumLastDim (operand : TensorType) (result : TensorType) :
+    Except ValidationError Unit :=
+  match operand.shape, result.shape with
+  | [rows, _cols], [rowsOut, 1] =>
+      if operand.dtype == result.dtype && rows == rowsOut then
+        .ok ()
+      else
+        .error (.reduceSumLastDimResultMismatch operand result)
+  | _, _ =>
+      .error (.reduceSumLastDimResultMismatch operand result)
 
 def validateBinding (defined : List ValueRef) (binding : Binding) :
     Except ValidationError Unit := do
@@ -160,6 +174,9 @@ def validateBinding (defined : List ValueRef) (binding : Binding) :
   | .reduceSum operand =>
       requireDefined "stablehlo.reduce operand" defined operand
       requireReduceSum operand.ty binding.result.ty
+  | .reduceSumLastDim operand =>
+      requireDefined "stablehlo.reduce operand" defined operand
+      requireReduceSumLastDim operand.ty binding.result.ty
 
 partial def validateBindings (defined : List ValueRef) : List Binding ->
     Except ValidationError (List ValueRef)

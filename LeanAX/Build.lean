@@ -75,6 +75,16 @@ def checkedReduceSum (resultName : String) (operand : ValueRef) :
   requireReduceSum operand.ty result.ty
   pure { result := result, kind := .reduceSum operand }
 
+def checkedReduceSumLastDim (resultName : String) (operand : ValueRef) :
+    Except ValidationError Binding := do
+  let shape ←
+    match operand.ty.shape with
+    | [rows, _cols] => pure [rows, 1]
+    | _ => throw (.reduceSumLastDimResultMismatch operand.ty (tensor resultName operand.ty.dtype []).ty)
+  let result := tensor resultName operand.ty.dtype shape
+  requireReduceSumLastDim operand.ty result.ty
+  pure { result := result, kind := .reduceSumLastDim operand }
+
 def checkedModuleMulti
     (name : String)
     (functionName : String)
