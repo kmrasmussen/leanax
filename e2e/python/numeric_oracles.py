@@ -147,6 +147,12 @@ def execute(text: str, inputs: dict[str, Tensor]) -> Tensor:
             values[name] = elementwise(tensors[0], tensors[1], lambda a, b: a * b)
         elif op == "maximum":
             values[name] = elementwise(tensors[0], tensors[1], max)
+        elif op == "divide":
+            values[name] = elementwise(tensors[0], tensors[1], lambda a, b: a / b)
+        elif op == "exponential":
+            values[name] = Tensor(tensors[0].shape, tuple(math.exp(value) for value in tensors[0].data))
+        elif op == "log":
+            values[name] = Tensor(tensors[0].shape, tuple(math.log(value) for value in tensors[0].data))
         elif op == "dot_general":
             values[name] = matmul(tensors[0], tensors[1])
         elif op == "broadcast_in_dim":
@@ -205,6 +211,11 @@ def oracle_inputs(name: str) -> dict[str, Tensor]:
                 "w": tensor((4, 3), [1, -1, 0.5, 2, 0, -0.5, -1, 1.5, 2, 0.25, -2, 1]),
                 "b": tensor((3,), [-1, 0.5, 2]),
             }
+        case "cross-entropy-loss":
+            return {
+                "logits": tensor((2,), [1.25, -0.75]),
+                "labels": tensor((2,), [1.0, 0.0]),
+            }
         case "vmap-pointwise":
             return {
                 "x": tensor((4,), [1, 2, -1, 0.5]),
@@ -238,6 +249,13 @@ def expected(name: str, inputs: dict[str, Tensor]) -> Tensor:
         case "relu-forward":
             h = elementwise(matmul(inputs["x"], inputs["w"]), broadcast_to(inputs["b"], (2, 3)), lambda a, b: a + b)
             return elementwise(h, broadcast_to(Tensor.scalar(0.0), (2, 3)), max)
+        case "cross-entropy-loss":
+            exp_logits = Tensor(inputs["logits"].shape, tuple(math.exp(value) for value in inputs["logits"].data))
+            denom = sum(exp_logits.data)
+            probs = Tensor(exp_logits.shape, tuple(value / denom for value in exp_logits.data))
+            log_probs = Tensor(probs.shape, tuple(math.log(value) for value in probs.data))
+            weighted = elementwise(inputs["labels"], log_probs, lambda label, log_prob: label * log_prob)
+            return Tensor.scalar(-sum(weighted.data))
         case "vmap-pointwise":
             summed = elementwise(inputs["x"], inputs["y"], lambda a, b: a + b)
             return elementwise(summed, summed, lambda a, b: a * b)

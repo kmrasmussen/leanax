@@ -1,6 +1,7 @@
 import LeanAX.Build
 import LeanAX.DSL
 import LeanAX.Grad
+import LeanAX.Loss
 import LeanAX.Training
 import LeanAX.Transform
 
@@ -33,6 +34,9 @@ def BindingKind.stableOpName : BindingKind -> String
   | .add _ _ => "stablehlo.add"
   | .multiply _ _ => "stablehlo.multiply"
   | .maximum _ _ => "stablehlo.maximum"
+  | .divide _ _ => "stablehlo.divide"
+  | .exponential _ => "stablehlo.exponential"
+  | .logarithm _ => "stablehlo.log"
   | .dotGeneral _ _ => "stablehlo.dot_general"
   | .broadcastInDim _ => "stablehlo.broadcast_in_dim"
   | .reshape _ => "stablehlo.reshape"
@@ -44,6 +48,9 @@ def BindingKind.operands : BindingKind -> List ValueRef
   | .add lhs rhs => [lhs, rhs]
   | .multiply lhs rhs => [lhs, rhs]
   | .maximum lhs rhs => [lhs, rhs]
+  | .divide lhs rhs => [lhs, rhs]
+  | .exponential operand => [operand]
+  | .logarithm operand => [operand]
   | .dotGeneral lhs rhs => [lhs, rhs]
   | .broadcastInDim operand => [operand]
   | .reshape operand => [operand]
@@ -62,6 +69,12 @@ def Binding.render (binding : Binding) : String :=
       renderGenericOp binding.result "multiply" [lhs, rhs]
   | .maximum lhs rhs =>
       renderGenericOp binding.result "maximum" [lhs, rhs]
+  | .divide lhs rhs =>
+      renderGenericOp binding.result "divide" [lhs, rhs]
+  | .exponential operand =>
+      renderGenericOp binding.result "exponential" [operand]
+  | .logarithm operand =>
+      renderGenericOp binding.result "log" [operand]
   | .dotGeneral lhs rhs =>
       renderGenericOp binding.result "dot_general" [lhs, rhs] (some "{batching_dims = \"[] x []\"}")
   | .broadcastInDim operand =>
@@ -294,6 +307,34 @@ def badMaximumShapeModule : Module :=
     bindings := [{ result := out, kind := .maximum x y }],
     returns := out }
 
+def badCrossEntropyShapeModule : Module :=
+  let logits := tensor "logits" .f32 [2]
+  let labels := tensor "labels" .f32 [3]
+  let expLogits := tensor "ce_exp" .f32 [2]
+  let denom := tensor "ce_denom" .f32 []
+  let denomBatched := tensor "ce_denom_batched" .f32 [2]
+  let probs := tensor "ce_probs" .f32 [2]
+  let logProbs := tensor "ce_log_probs" .f32 [2]
+  let weighted := tensor "ce_weighted" .f32 [2]
+  let sum := tensor "ce_sum" .f32 []
+  let negOne := tensor "ce_neg_one" .f32 []
+  let loss := tensor "ce_loss" .f32 []
+  { name := "leanax_bad_cross_entropy_shape",
+    functionName := "main",
+    inputs := [logits, labels],
+    bindings := [
+      { result := expLogits, kind := .exponential logits },
+      { result := denom, kind := .reduceSum expLogits },
+      { result := denomBatched, kind := .broadcastInDim denom },
+      { result := probs, kind := .divide expLogits denomBatched },
+      { result := logProbs, kind := .logarithm probs },
+      { result := weighted, kind := .multiply labels logProbs },
+      { result := sum, kind := .reduceSum weighted },
+      { result := negOne, kind := .constant "-1.0" },
+      { result := loss, kind := .multiply sum negOne }
+    ],
+    returns := loss }
+
 def moduleByName (name : String) : Option Module :=
   match name with
   | "affine" => affineModule?.toOption
@@ -301,6 +342,7 @@ def moduleByName (name : String) : Option Module :=
   | "nn-primitives" => nnPrimitivesModule?.toOption
   | "mlp-forward" => DSL.mlpForwardModule?.toOption
   | "relu-forward" => DSL.reluForwardModule?.toOption
+  | "cross-entropy-loss" => DSL.crossEntropyLossModule?.toOption
   | "vmap-pointwise" => vmapPointwiseModule?.toOption
   | "square-sum" => squareSumModule?.toOption
   | "grad-square-sum" => gradSquareSumModule?.toOption
@@ -317,6 +359,7 @@ def moduleByName (name : String) : Option Module :=
   | "bad-transpose" => some badTransposeModule
   | "bad-reduce" => some badReduceModule
   | "bad-maximum-shape" => some badMaximumShapeModule
+  | "bad-cross-entropy-shape" => some badCrossEntropyShapeModule
   | _ => none
 
 def availableCases : List String :=
@@ -326,6 +369,7 @@ def availableCases : List String :=
     "nn-primitives",
     "mlp-forward",
     "relu-forward",
+    "cross-entropy-loss",
     "vmap-pointwise",
     "square-sum",
     "grad-square-sum",
@@ -341,7 +385,8 @@ def availableCases : List String :=
     "bad-reshape",
     "bad-transpose",
     "bad-reduce",
-    "bad-maximum-shape"
+    "bad-maximum-shape",
+    "bad-cross-entropy-shape"
   ]
 
 end LeanAX

@@ -220,6 +220,10 @@ Current progress:
 
 - `LeanAX/Grad.lean` covers a restricted scalar-loss case, `grad-square-sum`,
   and the e2e oracle checks that it returns `2 * x`.
+- `LeanAX/Loss.lean` adds a first fixed-shape two-class softmax cross-entropy
+  loss. It is intentionally not numerically stabilized yet; the current purpose
+  is to make classification-loss structure explicit and checked before moving
+  to batched MNIST labels.
 
 ## Phase 7: Training Step
 

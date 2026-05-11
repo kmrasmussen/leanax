@@ -35,3 +35,11 @@ validation-failure cases for mismatched class dimensions.
 Start with a tiny fixed-shape two-class loss fixture before generalizing class
 counts.
 
+## Status
+
+Completed. `LeanAX/Loss.lean` adds a first two-class softmax cross-entropy
+builder over f32 logits and one-hot labels. The lowering uses exponential,
+reduce-sum, broadcast, divide, log, multiply, and scalar negation. The
+`cross-entropy-loss` case is checked by golden text, MLIR parsing, lowering
+manifest validation, and a Python numeric oracle. `bad-cross-entropy-shape`
+covers mismatched label/logit dimensions as an expected validation failure.

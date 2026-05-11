@@ -126,6 +126,17 @@ def validateBinding (defined : List ValueRef) (binding : Binding) :
       requireDefined "stablehlo.maximum rhs" defined rhs
       requireTensorEq "stablehlo.maximum operands" lhs.ty rhs.ty
       requireTensorEq "stablehlo.maximum result" lhs.ty binding.result.ty
+  | .divide lhs rhs =>
+      requireDefined "stablehlo.divide lhs" defined lhs
+      requireDefined "stablehlo.divide rhs" defined rhs
+      requireTensorEq "stablehlo.divide operands" lhs.ty rhs.ty
+      requireTensorEq "stablehlo.divide result" lhs.ty binding.result.ty
+  | .exponential operand =>
+      requireDefined "stablehlo.exponential operand" defined operand
+      requireTensorEq "stablehlo.exponential result" operand.ty binding.result.ty
+  | .logarithm operand =>
+      requireDefined "stablehlo.log operand" defined operand
+      requireTensorEq "stablehlo.log result" operand.ty binding.result.ty
   | .dotGeneral lhs rhs =>
       requireDefined "stablehlo.dot_general lhs" defined lhs
       requireDefined "stablehlo.dot_general rhs" defined rhs

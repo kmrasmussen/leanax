@@ -2,6 +2,7 @@ import LeanAX.IR
 import LeanAX.Build
 import LeanAX.DSL
 import LeanAX.Grad
+import LeanAX.Loss
 import LeanAX.StableHLO
 import LeanAX.Training
 import LeanAX.Transform
