@@ -1,0 +1,114 @@
+{
+  "schema": "leanax.lowering.v1",
+  "generated": "generated/mnist-parameter-tree.mlir",
+  "module": "leanax_mnist_parameter_tree",
+  "function": "main",
+  "inputs": [{"name": "w1", "type": "tensor<784x8xf32>"}, {"name": "b1", "type": "tensor<8xf32>"}, {"name": "w2", "type": "tensor<8x10xf32>"}, {"name": "b2", "type": "tensor<10xf32>"}, {"name": "grad_w1", "type": "tensor<784x8xf32>"}, {"name": "grad_b1", "type": "tensor<8xf32>"}, {"name": "grad_w2", "type": "tensor<8x10xf32>"}, {"name": "grad_b2", "type": "tensor<10xf32>"}],
+  "outputs": [{"name": "next_w1", "type": "tensor<784x8xf32>"}, {"name": "next_b1", "type": "tensor<8xf32>"}, {"name": "next_w2", "type": "tensor<8x10xf32>"}, {"name": "next_b2", "type": "tensor<10xf32>"}],
+  "operations": [
+    {
+      "id": "op0",
+      "result": "mnist_neg_lr",
+      "op": "stablehlo.constant",
+      "operands": [],
+      "result_type": "tensor<f32>",
+      "mlir_line": 3
+    },
+    {
+      "id": "op1",
+      "result": "mnist_neg_lr_w1",
+      "op": "stablehlo.broadcast_in_dim",
+      "operands": ["mnist_neg_lr"],
+      "result_type": "tensor<784x8xf32>",
+      "mlir_line": 4
+    },
+    {
+      "id": "op2",
+      "result": "delta_w1",
+      "op": "stablehlo.multiply",
+      "operands": ["grad_w1", "mnist_neg_lr_w1"],
+      "result_type": "tensor<784x8xf32>",
+      "mlir_line": 5
+    },
+    {
+      "id": "op3",
+      "result": "next_w1",
+      "op": "stablehlo.add",
+      "operands": ["w1", "delta_w1"],
+      "result_type": "tensor<784x8xf32>",
+      "mlir_line": 6
+    },
+    {
+      "id": "op4",
+      "result": "mnist_neg_lr_b1",
+      "op": "stablehlo.broadcast_in_dim",
+      "operands": ["mnist_neg_lr"],
+      "result_type": "tensor<8xf32>",
+      "mlir_line": 7
+    },
+    {
+      "id": "op5",
+      "result": "delta_b1",
+      "op": "stablehlo.multiply",
+      "operands": ["grad_b1", "mnist_neg_lr_b1"],
+      "result_type": "tensor<8xf32>",
+      "mlir_line": 8
+    },
+    {
+      "id": "op6",
+      "result": "next_b1",
+      "op": "stablehlo.add",
+      "operands": ["b1", "delta_b1"],
+      "result_type": "tensor<8xf32>",
+      "mlir_line": 9
+    },
+    {
+      "id": "op7",
+      "result": "mnist_neg_lr_w2",
+      "op": "stablehlo.broadcast_in_dim",
+      "operands": ["mnist_neg_lr"],
+      "result_type": "tensor<8x10xf32>",
+      "mlir_line": 10
+    },
+    {
+      "id": "op8",
+      "result": "delta_w2",
+      "op": "stablehlo.multiply",
+      "operands": ["grad_w2", "mnist_neg_lr_w2"],
+      "result_type": "tensor<8x10xf32>",
+      "mlir_line": 11
+    },
+    {
+      "id": "op9",
+      "result": "next_w2",
+      "op": "stablehlo.add",
+      "operands": ["w2", "delta_w2"],
+      "result_type": "tensor<8x10xf32>",
+      "mlir_line": 12
+    },
+    {
+      "id": "op10",
+      "result": "mnist_neg_lr_b2",
+      "op": "stablehlo.broadcast_in_dim",
+      "operands": ["mnist_neg_lr"],
+      "result_type": "tensor<10xf32>",
+      "mlir_line": 13
+    },
+    {
+      "id": "op11",
+      "result": "delta_b2",
+      "op": "stablehlo.multiply",
+      "operands": ["grad_b2", "mnist_neg_lr_b2"],
+      "result_type": "tensor<10xf32>",
+      "mlir_line": 14
+    },
+    {
+      "id": "op12",
+      "result": "next_b2",
+      "op": "stablehlo.add",
+      "operands": ["b2", "delta_b2"],
+      "result_type": "tensor<10xf32>",
+      "mlir_line": 15
+    }
+  ]
+}

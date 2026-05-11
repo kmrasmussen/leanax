@@ -435,6 +435,18 @@ def badParameterTreeShapeModule : Module :=
     ],
     returns := [nextB] }
 
+def badMnistParameterTreeShapeModule : Module :=
+  let b2 := tensor "b2" .f32 [10]
+  let gradB2 := tensor "grad_b2" .f32 [9]
+  let nextB2 := tensor "next_b2" .f32 [10]
+  { name := "leanax_bad_mnist_parameter_tree_shape",
+    functionName := "main",
+    inputs := [b2, gradB2],
+    bindings := [
+      { result := nextB2, kind := .add b2 gradB2 }
+    ],
+    returns := [nextB2] }
+
 def moduleByName (name : String) : Option Module :=
   match name with
   | "affine" => affineModule?.toOption
@@ -452,6 +464,7 @@ def moduleByName (name : String) : Option Module :=
   | "grad-dense-loss" => gradDenseLossModule?.toOption
   | "linear-train-step" => linearTrainStepModule?.toOption
   | "sgd-parameter-tree" => parameterTreeStepModule?.toOption
+  | "mnist-parameter-tree" => mnistParameterTreeStepModule?.toOption
   | "bad-add-shape" => some badAddShapeModule
   | "duplicate-input" => some duplicateInputModule
   | "undefined-ref" => some undefinedReferenceModule
@@ -470,6 +483,7 @@ def moduleByName (name : String) : Option Module :=
   | "bad-vmap-dense-rank" => some badVmapDenseRankModule
   | "bad-grad-dense-shape" => some badGradDenseShapeModule
   | "bad-parameter-tree-shape" => some badParameterTreeShapeModule
+  | "bad-mnist-parameter-tree-shape" => some badMnistParameterTreeShapeModule
   | _ => none
 
 def availableCases : List String :=
@@ -489,6 +503,7 @@ def availableCases : List String :=
     "grad-dense-loss",
     "linear-train-step",
     "sgd-parameter-tree",
+    "mnist-parameter-tree",
     "bad-add-shape",
     "duplicate-input",
     "undefined-ref",
@@ -506,7 +521,8 @@ def availableCases : List String :=
     "bad-mnist-forward-shape",
     "bad-vmap-dense-rank",
     "bad-grad-dense-shape",
-    "bad-parameter-tree-shape"
+    "bad-parameter-tree-shape",
+    "bad-mnist-parameter-tree-shape"
   ]
 
 end LeanAX

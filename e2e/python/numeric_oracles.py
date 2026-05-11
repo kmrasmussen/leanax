@@ -293,6 +293,17 @@ def oracle_inputs(name: str) -> dict[str, Tensor]:
                 "grad_w": tensor((2, 2), [0.5, -1.0, 2.0, -0.25]),
                 "grad_b": tensor((2,), [1.5, -2.0]),
             }
+        case "mnist-parameter-tree":
+            return {
+                "w1": patterned_tensor((784, 8), 0.002, 3),
+                "b1": patterned_tensor((8,), 0.01, 5),
+                "w2": patterned_tensor((8, 10), 0.02, 7),
+                "b2": patterned_tensor((10,), 0.01, 9),
+                "grad_w1": patterned_tensor((784, 8), 0.0005, 11),
+                "grad_b1": patterned_tensor((8,), 0.001, 13),
+                "grad_w2": patterned_tensor((8, 10), 0.002, 15),
+                "grad_b2": patterned_tensor((10,), 0.001, 17),
+            }
         case _:
             fail(f"unknown oracle case {name}")
 
@@ -351,6 +362,13 @@ def expected(name: str, inputs: dict[str, Tensor]) -> Tensor | list[Tensor]:
             next_w = elementwise(inputs["w"], inputs["grad_w"], lambda param, grad: param - 0.1 * grad)
             next_b = elementwise(inputs["b"], inputs["grad_b"], lambda param, grad: param - 0.1 * grad)
             return [next_w, next_b]
+        case "mnist-parameter-tree":
+            return [
+                elementwise(inputs["w1"], inputs["grad_w1"], lambda param, grad: param - 0.1 * grad),
+                elementwise(inputs["b1"], inputs["grad_b1"], lambda param, grad: param - 0.1 * grad),
+                elementwise(inputs["w2"], inputs["grad_w2"], lambda param, grad: param - 0.1 * grad),
+                elementwise(inputs["b2"], inputs["grad_b2"], lambda param, grad: param - 0.1 * grad),
+            ]
         case _:
             fail(f"unknown expected case {name}")
 

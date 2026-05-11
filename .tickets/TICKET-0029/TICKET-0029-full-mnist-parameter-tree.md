@@ -33,3 +33,12 @@ updated outputs against a Python oracle.
 ## First Slice
 
 Reuse the existing two-parameter update pattern, then expand it to four outputs.
+
+## Status
+
+Completed. LeanAX now has an `mnist-parameter-tree` SGD update artifact for the
+full classifier parameter set: `w1`, `b1`, `w2`, and `b2`. The module accepts
+matching gradients, broadcasts the learning-rate scalar to each tensor, and
+returns `next_w1`, `next_b1`, `next_w2`, and `next_b2` as a multi-output module.
+The e2e manifest checks every output with a deterministic Python oracle, and
+`bad-mnist-parameter-tree-shape` covers a full-tree shape mismatch.

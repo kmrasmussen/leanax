@@ -259,6 +259,8 @@ Current progress:
 - LeanAX modules now support multiple return values, and `sgd-parameter-tree`
   updates a small weight matrix plus bias vector together against a Python
   oracle. This is the first parameter-tree-shaped optimizer artifact.
+- `mnist-parameter-tree` expands that update pattern to the full classifier
+  parameter set and returns all four updated tensors.
 
 ## Phase 8: MNIST MLP
 
@@ -293,6 +295,8 @@ Current progress:
   Python numeric oracle.
 - `mnist-forward` now lowers a classifier-shaped fixture forward pass with
   inputs `2x784`, hidden width `8`, and logits `2x10`.
+- `mnist-parameter-tree` updates the full classifier parameter set
+  `w1`, `b1`, `w2`, and `b2` and checks every returned tensor numerically.
 
 ## Where We Are Relative To A Real Classifier
 
@@ -320,8 +324,8 @@ What is still missing for an honest MNIST classifier:
   MNIST-shaped forward module or full train step.
 - Gradients cover square loss and a one-layer dense case, not a two-layer
   ReLU MLP trained with cross entropy.
-- The parameter-tree update covers one weight matrix and one bias vector, not
-  the full `w1`, `b1`, `w2`, `b2` classifier tree.
+- The full parameter-tree update exists, but classifier gradients are not yet
+  chained through the loss, final dense layer, ReLU, and first dense layer.
 - The MNIST smoke command uses Python training logic and checks that compiler
   artifacts exist; it does not yet execute a LeanAX-generated full train step.
 - Full dataset loading and stable short-epoch metrics remain future work.
@@ -377,6 +381,11 @@ Exit gate:
 
 - A `mnist-train-step` numeric case consumes one fixture batch, returns updated
   parameters, and matches a Python analytic oracle for the same small model.
+
+Current progress:
+
+- `mnist-parameter-tree` covers the full four-output SGD update for classifier
+  parameters.
 
 ## Phase 11: Classifier Command And Metrics
 
