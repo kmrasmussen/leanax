@@ -75,12 +75,12 @@ def checkedReduceSum (resultName : String) (operand : ValueRef) :
   requireReduceSum operand.ty result.ty
   pure { result := result, kind := .reduceSum operand }
 
-def checkedModule
+def checkedModuleMulti
     (name : String)
     (functionName : String)
     (inputs : List ValueRef)
     (bindings : List Binding)
-    (returns : ValueRef) :
+    (returns : List ValueRef) :
     Except ValidationError Module := do
   let modu := {
     name := name,
@@ -91,5 +91,14 @@ def checkedModule
   }
   modu.validate
   pure modu
+
+def checkedModule
+    (name : String)
+    (functionName : String)
+    (inputs : List ValueRef)
+    (bindings : List Binding)
+    (returns : ValueRef) :
+    Except ValidationError Module :=
+  checkedModuleMulti name functionName inputs bindings [returns]
 
 end LeanAX

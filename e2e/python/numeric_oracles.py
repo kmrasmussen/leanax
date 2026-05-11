@@ -106,11 +106,11 @@ def parse_signature(text: str) -> list[str]:
     return re.findall(r"%([A-Za-z0-9_]+): tensor<[^>]+>", signature.group(1))
 
 
-def parse_return(text: str) -> str:
-    match = re.search(r"return %([A-Za-z0-9_]+) :", text)
+def parse_returns(text: str) -> list[str]:
+    match = re.search(r"return (.*?) :", text)
     if match is None:
         fail("missing return")
-    return match.group(1)
+    return re.findall(r"%([A-Za-z0-9_]+)", match.group(1))
 
 
 def result_shape(line: str) -> tuple[int, ...]:
@@ -120,7 +120,7 @@ def result_shape(line: str) -> tuple[int, ...]:
     return parse_type(matches[-1])
 
 
-def execute(text: str, inputs: dict[str, Tensor]) -> Tensor:
+def execute(text: str, inputs: dict[str, Tensor]) -> list[Tensor]:
     values = dict(inputs)
     for name in parse_signature(text):
         if name not in values:
@@ -171,7 +171,7 @@ def execute(text: str, inputs: dict[str, Tensor]) -> Tensor:
         if values[name].shape != shape:
             fail(f"%{name} evaluated to {values[name].shape}, expected {shape}")
 
-    return values[parse_return(text)]
+    return [values[name] for name in parse_returns(text)]
 
 
 def tensor(shape: tuple[int, ...], data: list[float]) -> Tensor:
@@ -240,11 +240,18 @@ def oracle_inputs(name: str) -> dict[str, Tensor]:
                 "w": Tensor.scalar(1.0),
                 "grad": Tensor.scalar(-4.0),
             }
+        case "sgd-parameter-tree":
+            return {
+                "w": tensor((2, 2), [1.0, -2.0, 0.5, 3.0]),
+                "b": tensor((2,), [0.25, -0.75]),
+                "grad_w": tensor((2, 2), [0.5, -1.0, 2.0, -0.25]),
+                "grad_b": tensor((2,), [1.5, -2.0]),
+            }
         case _:
             fail(f"unknown oracle case {name}")
 
 
-def expected(name: str, inputs: dict[str, Tensor]) -> Tensor:
+def expected(name: str, inputs: dict[str, Tensor]) -> Tensor | list[Tensor]:
     match name:
         case "affine":
             shifted = elementwise(inputs["x"], inputs["bias"], lambda a, b: a + b)
@@ -283,16 +290,33 @@ def expected(name: str, inputs: dict[str, Tensor]) -> Tensor:
             return matmul(transpose_2d(inputs["x"]), grad_out)
         case "linear-train-step":
             return Tensor.scalar(inputs["w"].data[0] + inputs["grad"].data[0] * -0.1)
+        case "sgd-parameter-tree":
+            next_w = elementwise(inputs["w"], inputs["grad_w"], lambda param, grad: param - 0.1 * grad)
+            next_b = elementwise(inputs["b"], inputs["grad_b"], lambda param, grad: param - 0.1 * grad)
+            return [next_w, next_b]
         case _:
             fail(f"unknown expected case {name}")
 
 
-def assert_close(actual: Tensor, want: Tensor) -> None:
+def as_outputs(value: Tensor | list[Tensor]) -> list[Tensor]:
+    if isinstance(value, Tensor):
+        return [value]
+    return value
+
+
+def assert_close(actual: list[Tensor], want: list[Tensor]) -> None:
+    if len(actual) != len(want):
+        fail(f"result count {len(actual)} != expected {len(want)}")
+    for output_index, (actual_tensor, want_tensor) in enumerate(zip(actual, want)):
+        assert_tensor_close(actual_tensor, want_tensor, output_index)
+
+
+def assert_tensor_close(actual: Tensor, want: Tensor, output_index: int) -> None:
     if actual.shape != want.shape:
-        fail(f"result shape {actual.shape} != expected {want.shape}")
+        fail(f"result[{output_index}] shape {actual.shape} != expected {want.shape}")
     for index, (got, expected_value) in enumerate(zip(actual.data, want.data)):
         if not math.isclose(got, expected_value, rel_tol=1e-6, abs_tol=1e-6):
-            fail(f"result[{index}] {got} != expected {expected_value}")
+            fail(f"result[{output_index}][{index}] {got} != expected {expected_value}")
 
 
 def main(argv: list[str]) -> int:
@@ -302,7 +326,7 @@ def main(argv: list[str]) -> int:
     case = argv[1]
     text = Path(argv[2]).read_text(encoding="utf-8")
     inputs = oracle_inputs(case)
-    assert_close(execute(text, inputs), expected(case, inputs))
+    assert_close(execute(text, inputs), as_outputs(expected(case, inputs)))
     return 0
 
 

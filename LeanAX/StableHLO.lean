@@ -87,17 +87,28 @@ def Binding.render (binding : Binding) : String :=
   | .reduceSum operand =>
       renderGenericOp binding.result "reduce" [operand] (some "{dimensions = \"all\"}")
 
+def renderReturnTypes : List ValueRef -> String
+  | [] => "()"
+  | [value] => value.ty.stableName
+  | values => "(" ++ joinSep ", " (values.map (fun value => value.ty.stableName)) ++ ")"
+
+def renderReturnValues (values : List ValueRef) : String :=
+  joinSep ", " (values.map ValueRef.percent)
+
+def renderReturnValueTypes (values : List ValueRef) : String :=
+  joinSep ", " (values.map (fun value => value.ty.stableName))
+
 def Module.renderSignature (modu : Module) : String :=
   "  func.func @" ++ modu.functionName ++ "(" ++
     joinSep ", " (modu.inputs.map ValueRef.parameter) ++ ") -> " ++
-    modu.returns.ty.stableName ++ " {"
+    renderReturnTypes modu.returns ++ " {"
 
 def Module.render (modu : Module) : String :=
   let lines :=
     ["module @" ++ modu.name ++ " {",
      modu.renderSignature] ++
     (modu.bindings.map Binding.render) ++
-    ["    return " ++ modu.returns.percent ++ " : " ++ modu.returns.ty.stableName,
+    ["    return " ++ renderReturnValues modu.returns ++ " : " ++ renderReturnValueTypes modu.returns,
      "  }",
      "}"]
   joinSep "\n" lines ++ "\n"
@@ -142,7 +153,7 @@ def Module.renderLoweringManifest (modu : Module) (generatedPath : String) : Str
     "  \"module\": " ++ jsonString modu.name ++ ",\n" ++
     "  \"function\": " ++ jsonString modu.functionName ++ ",\n" ++
     "  \"inputs\": " ++ jsonArray (modu.inputs.map ValueRef.renderManifest) ++ ",\n" ++
-    "  \"outputs\": " ++ jsonArray [modu.returns.renderManifest] ++ ",\n" ++
+    "  \"outputs\": " ++ jsonArray (modu.returns.map ValueRef.renderManifest) ++ ",\n" ++
     "  \"operations\": [\n" ++
     joinSep ",\n" (enumerateBindings 0 modu.bindings) ++ "\n" ++
     "  ]\n" ++
@@ -196,7 +207,7 @@ def badAddShapeModule : Module :=
     bindings := [
       { result := out, kind := .add x y }
     ],
-    returns := out }
+    returns := [out] }
 
 def duplicateInputModule : Module :=
   let x := tensor "x" .f32 [2, 3]
@@ -204,7 +215,7 @@ def duplicateInputModule : Module :=
     functionName := "main",
     inputs := [x, x],
     bindings := [],
-    returns := x }
+    returns := [x] }
 
 def undefinedReferenceModule : Module :=
   let x := tensor "x" .f32 [2, 3]
@@ -214,7 +225,7 @@ def undefinedReferenceModule : Module :=
     functionName := "main",
     inputs := [y],
     bindings := [{ result := out, kind := .add x y }],
-    returns := out }
+    returns := [out] }
 
 def duplicateResultModule : Module :=
   let x := tensor "x" .f32 [2, 3]
@@ -229,7 +240,7 @@ def duplicateResultModule : Module :=
       { result := sum, kind := .multiply x y },
       { result := out, kind := .add sum y }
     ],
-    returns := out }
+    returns := [out] }
 
 def badDotInnerModule : Module :=
   let lhs := tensor "lhs" .f32 [2, 4]
@@ -239,7 +250,7 @@ def badDotInnerModule : Module :=
     functionName := "main",
     inputs := [lhs, rhs],
     bindings := [{ result := out, kind := .dotGeneral lhs rhs }],
-    returns := out }
+    returns := [out] }
 
 def badDotResultModule : Module :=
   let lhs := tensor "lhs" .f32 [2, 4]
@@ -249,7 +260,7 @@ def badDotResultModule : Module :=
     functionName := "main",
     inputs := [lhs, rhs],
     bindings := [{ result := out, kind := .dotGeneral lhs rhs }],
-    returns := out }
+    returns := [out] }
 
 def badDotRankModule : Module :=
   let lhs := tensor "lhs" .f32 [4]
@@ -259,7 +270,7 @@ def badDotRankModule : Module :=
     functionName := "main",
     inputs := [lhs, rhs],
     bindings := [{ result := out, kind := .dotGeneral lhs rhs }],
-    returns := out }
+    returns := [out] }
 
 def badBroadcastModule : Module :=
   let bias := tensor "bias" .f32 [2]
@@ -268,7 +279,7 @@ def badBroadcastModule : Module :=
     functionName := "main",
     inputs := [bias],
     bindings := [{ result := out, kind := .broadcastInDim bias }],
-    returns := out }
+    returns := [out] }
 
 def badReshapeModule : Module :=
   let x := tensor "x" .f32 [2, 3]
@@ -277,7 +288,7 @@ def badReshapeModule : Module :=
     functionName := "main",
     inputs := [x],
     bindings := [{ result := out, kind := .reshape x }],
-    returns := out }
+    returns := [out] }
 
 def badTransposeModule : Module :=
   let x := tensor "x" .f32 [2, 3]
@@ -286,7 +297,7 @@ def badTransposeModule : Module :=
     functionName := "main",
     inputs := [x],
     bindings := [{ result := out, kind := .transpose x [1, 0] }],
-    returns := out }
+    returns := [out] }
 
 def badReduceModule : Module :=
   let x := tensor "x" .f32 [2, 3]
@@ -295,7 +306,7 @@ def badReduceModule : Module :=
     functionName := "main",
     inputs := [x],
     bindings := [{ result := out, kind := .reduceSum x }],
-    returns := out }
+    returns := [out] }
 
 def badMaximumShapeModule : Module :=
   let x := tensor "x" .f32 [2, 3]
@@ -305,7 +316,7 @@ def badMaximumShapeModule : Module :=
     functionName := "main",
     inputs := [x, y],
     bindings := [{ result := out, kind := .maximum x y }],
-    returns := out }
+    returns := [out] }
 
 def badCrossEntropyShapeModule : Module :=
   let logits := tensor "logits" .f32 [2]
@@ -333,7 +344,7 @@ def badCrossEntropyShapeModule : Module :=
       { result := negOne, kind := .constant "-1.0" },
       { result := loss, kind := .multiply sum negOne }
     ],
-    returns := loss }
+    returns := [loss] }
 
 def badVmapDenseRankModule : Module :=
   let x := tensor "x" .f32 [2, 2, 4]
@@ -350,7 +361,7 @@ def badVmapDenseRankModule : Module :=
       { result := bias, kind := .broadcastInDim b },
       { result := out, kind := .add linear bias }
     ],
-    returns := out }
+    returns := [out] }
 
 def badGradDenseShapeModule : Module :=
   let x := tensor "x" .f32 [1, 3]
@@ -364,7 +375,19 @@ def badGradDenseShapeModule : Module :=
       { result := xT, kind := .transpose x [1, 0] },
       { result := gradW, kind := .dotGeneral xT gradOut }
     ],
-    returns := gradW }
+    returns := [gradW] }
+
+def badParameterTreeShapeModule : Module :=
+  let b := tensor "b" .f32 [3]
+  let gradB := tensor "grad_b" .f32 [2]
+  let nextB := tensor "next_b" .f32 [3]
+  { name := "leanax_bad_parameter_tree_shape",
+    functionName := "main",
+    inputs := [b, gradB],
+    bindings := [
+      { result := nextB, kind := .add b gradB }
+    ],
+    returns := [nextB] }
 
 def moduleByName (name : String) : Option Module :=
   match name with
@@ -380,6 +403,7 @@ def moduleByName (name : String) : Option Module :=
   | "grad-square-sum" => gradSquareSumModule?.toOption
   | "grad-dense-loss" => gradDenseLossModule?.toOption
   | "linear-train-step" => linearTrainStepModule?.toOption
+  | "sgd-parameter-tree" => parameterTreeStepModule?.toOption
   | "bad-add-shape" => some badAddShapeModule
   | "duplicate-input" => some duplicateInputModule
   | "undefined-ref" => some undefinedReferenceModule
@@ -395,6 +419,7 @@ def moduleByName (name : String) : Option Module :=
   | "bad-cross-entropy-shape" => some badCrossEntropyShapeModule
   | "bad-vmap-dense-rank" => some badVmapDenseRankModule
   | "bad-grad-dense-shape" => some badGradDenseShapeModule
+  | "bad-parameter-tree-shape" => some badParameterTreeShapeModule
   | _ => none
 
 def availableCases : List String :=
@@ -411,6 +436,7 @@ def availableCases : List String :=
     "grad-square-sum",
     "grad-dense-loss",
     "linear-train-step",
+    "sgd-parameter-tree",
     "bad-add-shape",
     "duplicate-input",
     "undefined-ref",
@@ -425,7 +451,8 @@ def availableCases : List String :=
     "bad-maximum-shape",
     "bad-cross-entropy-shape",
     "bad-vmap-dense-rank",
-    "bad-grad-dense-shape"
+    "bad-grad-dense-shape",
+    "bad-parameter-tree-shape"
   ]
 
 end LeanAX

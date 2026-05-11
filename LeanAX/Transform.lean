@@ -25,7 +25,10 @@ def Module.vmapPointwise (batch : Nat) (name : String) (modu : Module) :
     Except ValidationError Module := do
   let inputs := modu.inputs.map (ValueRef.prependBatch batch)
   let bindings ← modu.bindings.mapM (Binding.prependPointwiseBatch batch)
-  let returns := modu.returns.prependBatch batch
+  let returns ←
+    match modu.returns with
+    | [value] => pure (value.prependBatch batch)
+    | _ => throw (.unsupportedTransform "vmap" "multi-return")
   checkedModule name modu.functionName inputs bindings returns
 
 def scalarPointwiseModule? : Except ValidationError Module := do

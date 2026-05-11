@@ -11,6 +11,7 @@ numeric square-sum generated/square-sum.mlir e2e/golden/square-sum.mlir square-s
 numeric grad-square-sum generated/grad-square-sum.mlir e2e/golden/grad-square-sum.mlir grad-square-sum
 numeric grad-dense-loss generated/grad-dense-loss.mlir e2e/golden/grad-dense-loss.mlir grad-dense-loss
 numeric linear-train-step generated/linear-train-step.mlir e2e/golden/linear-train-step.mlir linear-train-step
+numeric sgd-parameter-tree generated/sgd-parameter-tree.mlir e2e/golden/sgd-parameter-tree.mlir sgd-parameter-tree
 training-loop synthetic-linear e2e/python/training_loop.py
 validation-fail bad-add-shape stablehlo.add operands: expected matching tensor types
 validation-fail duplicate-input module inputs contain duplicate name %x
@@ -27,3 +28,4 @@ validation-fail bad-maximum-shape stablehlo.maximum operands: expected matching 
 validation-fail bad-cross-entropy-shape stablehlo.multiply operands: expected matching tensor types
 validation-fail bad-vmap-dense-rank stablehlo.dot_general: expected rank-2 f32 operands and rank-2 f32 result
 validation-fail bad-grad-dense-shape stablehlo.dot_general: result shape must be tensor<3x2xf32>
+validation-fail bad-parameter-tree-shape stablehlo.add operands: expected matching tensor types

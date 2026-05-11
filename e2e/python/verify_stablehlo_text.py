@@ -21,7 +21,7 @@ def verify(path: Path) -> None:
     require(text.count("{") == text.count("}"), "unbalanced braces")
     require(re.search(r"^module @leanax_[A-Za-z0-9_]+ \{$", text, re.M), "missing module header")
     require("func.func @main(" in text, "missing main function")
-    require(re.search(r"return %[A-Za-z0-9_]+ : tensor<", text), "missing typed return")
+    require(re.search(r"return %[A-Za-z0-9_]+(?:, %[A-Za-z0-9_]+)* : ", text), "missing typed return")
 
     ops = re.findall(r"stablehlo\.([A-Za-z0-9_]+)", text)
     require(ops, "module has no stablehlo operations")

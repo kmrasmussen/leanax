@@ -252,6 +252,9 @@ Current progress:
 - `LeanAX/Training.lean` emits a scalar train-step update module, and
   `e2e/python/training_loop.py` verifies loss reduction on deterministic
   synthetic linear data.
+- LeanAX modules now support multiple return values, and `sgd-parameter-tree`
+  updates a small weight matrix plus bias vector together against a Python
+  oracle. This is the first parameter-tree-shaped optimizer artifact.
 
 ## Phase 8: MNIST MLP
 

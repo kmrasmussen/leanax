@@ -43,7 +43,7 @@ structure Module where
   functionName : String
   inputs : List ValueRef
   bindings : List Binding
-  returns : ValueRef
+  returns : List ValueRef
   deriving Repr
 
 def DType.stableName : DType -> String

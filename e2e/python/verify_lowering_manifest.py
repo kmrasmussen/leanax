@@ -49,10 +49,10 @@ def mlir_inputs(text: str) -> list[str]:
     return re.findall(r"%([A-Za-z0-9_]+): tensor<[^>]+>", signature.group(1))
 
 
-def mlir_return(text: str) -> str:
-    match = re.search(r"return %([A-Za-z0-9_]+) :", text)
+def mlir_returns(text: str) -> list[str]:
+    match = re.search(r"return (.*?) :", text)
     require(match is not None, "generated MLIR is missing return")
-    return match.group(1)
+    return re.findall(r"%([A-Za-z0-9_]+)", match.group(1))
 
 
 def mlir_operations(text: str) -> list[dict[str, Any]]:
@@ -84,7 +84,7 @@ def verify(manifest_path: Path, generated_path: Path) -> None:
     require(manifest.get("module") == mlir_module_name(text), "module name mismatch")
     require(manifest.get("function") == "main", "function name mismatch")
     require(value_names(manifest.get("inputs"), "inputs") == mlir_inputs(text), "input names mismatch")
-    require(value_names(manifest.get("outputs"), "outputs") == [mlir_return(text)], "output names mismatch")
+    require(value_names(manifest.get("outputs"), "outputs") == mlir_returns(text), "output names mismatch")
 
     manifest_ops = manifest.get("operations")
     require(isinstance(manifest_ops, list), "operations must be a list")

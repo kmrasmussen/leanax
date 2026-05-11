@@ -37,3 +37,10 @@ compares every output tensor against a Python oracle.
 Start with two parameters, weight and bias, then expand to the two-layer MLP
 record.
 
+## Status
+
+Completed. The LeanAX IR, renderer, manifest verifier, and numeric oracle now
+support multi-output modules while preserving single-output syntax for existing
+goldens. `sgd-parameter-tree` updates a weight matrix and bias vector together,
+and the e2e oracle checks both returned tensors. `bad-parameter-tree-shape`
+covers mismatched update shapes as an expected validation failure.

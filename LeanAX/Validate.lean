@@ -172,6 +172,7 @@ def Module.validate (modu : Module) : Except ValidationError Unit := do
   if let some name := firstDuplicateString (namesOf modu.inputs) then
     throw (.duplicateInput name)
   let defined ← validateBindings modu.inputs modu.bindings
-  requireDefined "module return" defined modu.returns
+  for value in modu.returns do
+    requireDefined "module return" defined value
 
 end LeanAX
