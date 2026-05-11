@@ -273,6 +273,13 @@ Exit gate:
 - `leanax train mnist-mlp` or an equivalent runner command trains the model,
   prints metrics, and exercises the checked compiler path.
 
+Current progress:
+
+- `e2e/python/mnist_fixture.py` provides a deterministic MNIST-shaped fixture
+  path with flattened `28x28` image batches, normalized pixel values, and
+  one-hot labels. The e2e manifest has a dedicated `data-loader` check for this
+  host-side contract.
+
 ## What Not To Do Yet
 
 - Do not chase a full NumPy surface area.

@@ -77,6 +77,11 @@ verification.
 `--manifest-out`. The e2e runner validates those manifests for every passing
 generated module, and the `affine` sidecar has a checked-in golden fixture.
 
+The MNIST path currently starts with a deterministic fixture mode documented in
+[docs/mnist-data.md](docs/mnist-data.md). It checks flattened `28x28` batches,
+normalization, one-hot labels, and deterministic host-side batching without a
+network dependency.
+
 ## A Useful First Milestone
 
 The smallest meaningful prototype would be:

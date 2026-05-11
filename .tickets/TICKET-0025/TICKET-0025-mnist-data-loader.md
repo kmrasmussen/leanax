@@ -37,3 +37,10 @@ range, and deterministic fixture behavior.
 Use a tiny checked-in fixture or generated MNIST-shaped sample before adding an
 optional full dataset path.
 
+## Status
+
+Completed. `e2e/python/mnist_fixture.py` provides a deterministic fast fixture
+with flattened `28x28` image vectors, normalized pixel values, batch size `2`,
+and one-hot labels of length `10`. The Rust e2e runner has a dedicated
+`data-loader` manifest outcome, and `docs/mnist-data.md` documents the fixture
+contract plus the future full-dataset route.

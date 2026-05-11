@@ -12,6 +12,7 @@ numeric grad-square-sum generated/grad-square-sum.mlir e2e/golden/grad-square-su
 numeric grad-dense-loss generated/grad-dense-loss.mlir e2e/golden/grad-dense-loss.mlir grad-dense-loss
 numeric linear-train-step generated/linear-train-step.mlir e2e/golden/linear-train-step.mlir linear-train-step
 numeric sgd-parameter-tree generated/sgd-parameter-tree.mlir e2e/golden/sgd-parameter-tree.mlir sgd-parameter-tree
+data-loader mnist-fixture e2e/python/mnist_fixture.py
 training-loop synthetic-linear e2e/python/training_loop.py
 validation-fail bad-add-shape stablehlo.add operands: expected matching tensor types
 validation-fail duplicate-input module inputs contain duplicate name %x

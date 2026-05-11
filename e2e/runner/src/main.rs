@@ -25,6 +25,9 @@ enum Expectation {
     ValidationFail {
         expected_stderr: String,
     },
+    DataLoader {
+        script: String,
+    },
     TrainingLoop {
         script: String,
     },
@@ -128,6 +131,18 @@ fn read_manifest(repo: &Path, manifest: &str) -> Result<Vec<Case>, String> {
             "validation-fail" => Expectation::ValidationFail {
                 expected_stderr: rest.to_string(),
             },
+            "data-loader" => {
+                let fields: Vec<_> = rest.split_whitespace().collect();
+                if fields.len() != 1 {
+                    return Err(format!(
+                        "manifest line {} data-loader cases must use: data-loader case script",
+                        index + 1
+                    ));
+                }
+                Expectation::DataLoader {
+                    script: fields[0].to_string(),
+                }
+            }
             "training-loop" => {
                 let fields: Vec<_> = rest.split_whitespace().collect();
                 if fields.len() != 1 {
@@ -434,6 +449,11 @@ fn run_case(
             run_validation_fail_case(repo, &case.name, expected_stderr)?;
             Ok("validation-fail")
         }
+        Expectation::DataLoader { script } => {
+            eprintln!("case data-loader: {}", case.name);
+            run_python_project(repo, script, &[])?;
+            Ok("data-loader")
+        }
         Expectation::TrainingLoop { script } => {
             eprintln!("case training-loop: {}", case.name);
             run_python_project(repo, script, &[])?;
@@ -464,6 +484,7 @@ fn main() -> Result<(), String> {
     let mut pass_count = 0usize;
     let mut numeric_count = 0usize;
     let mut validation_fail_count = 0usize;
+    let mut data_loader_count = 0usize;
     let mut training_loop_count = 0usize;
 
     run(&repo, "lake", &["build"])?;
@@ -472,12 +493,13 @@ fn main() -> Result<(), String> {
             "pass" => pass_count += 1,
             "numeric" => numeric_count += 1,
             "validation-fail" => validation_fail_count += 1,
+            "data-loader" => data_loader_count += 1,
             "training-loop" => training_loop_count += 1,
             _ => unreachable!(),
         }
     }
     eprintln!(
-        "e2e summary: {pass_count} pass, {numeric_count} numeric, {validation_fail_count} expected validation-fail, {training_loop_count} training-loop, 0 unexpected"
+        "e2e summary: {pass_count} pass, {numeric_count} numeric, {validation_fail_count} expected validation-fail, {data_loader_count} data-loader, {training_loop_count} training-loop, 0 unexpected"
     );
 
     Ok(())
@@ -510,19 +532,25 @@ mod tests {
 # outcome case output/golden-or-expected
 pass affine generated/affine.mlir e2e/golden/affine.mlir
 numeric matmul generated/matmul.mlir e2e/golden/matmul.mlir matmul
+data-loader mnist-fixture e2e/python/mnist_fixture.py
 validation-fail bad-add-shape stablehlo.add operands: expected matching tensor types
 ",
         );
 
         let cases = read_manifest(&repo, "manifest.txt").expect("manifest should parse");
-        assert_eq!(cases.len(), 3);
+        assert_eq!(cases.len(), 4);
         assert_eq!(cases[0].name, "affine");
         assert!(matches!(cases[0].expectation, Expectation::Pass { .. }));
         assert_eq!(cases[1].name, "matmul");
         assert!(matches!(cases[1].expectation, Expectation::Numeric { .. }));
-        assert_eq!(cases[2].name, "bad-add-shape");
+        assert_eq!(cases[2].name, "mnist-fixture");
         assert!(matches!(
             cases[2].expectation,
+            Expectation::DataLoader { .. }
+        ));
+        assert_eq!(cases[3].name, "bad-add-shape");
+        assert!(matches!(
+            cases[3].expectation,
             Expectation::ValidationFail { .. }
         ));
     }
