@@ -281,6 +281,18 @@ def oracle_inputs(name: str) -> dict[str, Tensor]:
                 "w": tensor((2, 2), [0.25, -1.0, 2.0, 0.5]),
                 "b": tensor((2,), [0.1, -0.2]),
             }
+        case "grad-softmax-dense":
+            return {
+                "hidden": patterned_tensor((2, 8), 0.05, 2),
+                "logits": patterned_tensor((2, 10), 0.2, 4),
+                "labels": tensor(
+                    (2, 10),
+                    [
+                        0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+                    ],
+                ),
+            }
         case "linear-train-step":
             return {
                 "w": Tensor.scalar(1.0),
@@ -356,6 +368,15 @@ def expected(name: str, inputs: dict[str, Tensor]) -> Tensor | list[Tensor]:
             residual = elementwise(matmul(inputs["x"], inputs["w"]), broadcast_to(inputs["b"], (1, 2)), lambda a, b: a + b)
             grad_out = Tensor(residual.shape, tuple(2.0 * value for value in residual.data))
             return matmul(transpose_2d(inputs["x"]), grad_out)
+        case "grad-softmax-dense":
+            exp_logits = Tensor(inputs["logits"].shape, tuple(math.exp(value) for value in inputs["logits"].data))
+            denom = broadcast_to(reduce_last_dim(exp_logits), inputs["logits"].shape)
+            probs = elementwise(exp_logits, denom, lambda value, row_total: value / row_total)
+            delta = elementwise(probs, inputs["labels"], lambda prob, label: (prob - label) / inputs["logits"].shape[0])
+            grad_w2 = matmul(transpose_2d(inputs["hidden"]), delta)
+            grad_b2_keepdim = reduce_last_dim(transpose_2d(delta))
+            grad_b2 = Tensor((10,), grad_b2_keepdim.data)
+            return [grad_w2, grad_b2]
         case "linear-train-step":
             return Tensor.scalar(inputs["w"].data[0] + inputs["grad"].data[0] * -0.1)
         case "sgd-parameter-tree":

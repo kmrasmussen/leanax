@@ -297,6 +297,8 @@ Current progress:
   inputs `2x784`, hidden width `8`, and logits `2x10`.
 - `mnist-parameter-tree` updates the full classifier parameter set
   `w1`, `b1`, `w2`, and `b2` and checks every returned tensor numerically.
+- `grad-softmax-dense` computes final-layer gradients for batched ten-class
+  softmax cross entropy, including batch-mean scaling.
 
 ## Where We Are Relative To A Real Classifier
 
@@ -324,8 +326,8 @@ What is still missing for an honest MNIST classifier:
   MNIST-shaped forward module or full train step.
 - Gradients cover square loss and a one-layer dense case, not a two-layer
   ReLU MLP trained with cross entropy.
-- The full parameter-tree update exists, but classifier gradients are not yet
-  chained through the loss, final dense layer, ReLU, and first dense layer.
+- Final-layer softmax/dense gradients exist, but gradients are not yet chained
+  through ReLU and the first dense layer.
 - The MNIST smoke command uses Python training logic and checks that compiler
   artifacts exist; it does not yet execute a LeanAX-generated full train step.
 - Full dataset loading and stable short-epoch metrics remain future work.
@@ -386,6 +388,8 @@ Current progress:
 
 - `mnist-parameter-tree` covers the full four-output SGD update for classifier
   parameters.
+- `grad-softmax-dense` covers the final dense layer gradient for batched
+  softmax cross entropy.
 
 ## Phase 11: Classifier Command And Metrics
 

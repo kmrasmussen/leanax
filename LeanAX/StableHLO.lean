@@ -423,6 +423,18 @@ def badGradDenseShapeModule : Module :=
     ],
     returns := [gradW] }
 
+def badGradSoftmaxDenseShapeModule : Module :=
+  let probs := tensor "softmax_probs" .f32 [2, 10]
+  let labels := tensor "labels" .f32 [2, 9]
+  let delta := tensor "logit_delta_unscaled" .f32 [2, 10]
+  { name := "leanax_bad_grad_softmax_dense_shape",
+    functionName := "main",
+    inputs := [probs, labels],
+    bindings := [
+      { result := delta, kind := .add probs labels }
+    ],
+    returns := [delta] }
+
 def badParameterTreeShapeModule : Module :=
   let b := tensor "b" .f32 [3]
   let gradB := tensor "grad_b" .f32 [2]
@@ -462,6 +474,7 @@ def moduleByName (name : String) : Option Module :=
   | "square-sum" => squareSumModule?.toOption
   | "grad-square-sum" => gradSquareSumModule?.toOption
   | "grad-dense-loss" => gradDenseLossModule?.toOption
+  | "grad-softmax-dense" => gradSoftmaxDenseModule?.toOption
   | "linear-train-step" => linearTrainStepModule?.toOption
   | "sgd-parameter-tree" => parameterTreeStepModule?.toOption
   | "mnist-parameter-tree" => mnistParameterTreeStepModule?.toOption
@@ -482,6 +495,7 @@ def moduleByName (name : String) : Option Module :=
   | "bad-mnist-forward-shape" => some badMnistForwardShapeModule
   | "bad-vmap-dense-rank" => some badVmapDenseRankModule
   | "bad-grad-dense-shape" => some badGradDenseShapeModule
+  | "bad-grad-softmax-dense-shape" => some badGradSoftmaxDenseShapeModule
   | "bad-parameter-tree-shape" => some badParameterTreeShapeModule
   | "bad-mnist-parameter-tree-shape" => some badMnistParameterTreeShapeModule
   | _ => none
@@ -501,6 +515,7 @@ def availableCases : List String :=
     "square-sum",
     "grad-square-sum",
     "grad-dense-loss",
+    "grad-softmax-dense",
     "linear-train-step",
     "sgd-parameter-tree",
     "mnist-parameter-tree",
@@ -521,6 +536,7 @@ def availableCases : List String :=
     "bad-mnist-forward-shape",
     "bad-vmap-dense-rank",
     "bad-grad-dense-shape",
+    "bad-grad-softmax-dense-shape",
     "bad-parameter-tree-shape",
     "bad-mnist-parameter-tree-shape"
   ]

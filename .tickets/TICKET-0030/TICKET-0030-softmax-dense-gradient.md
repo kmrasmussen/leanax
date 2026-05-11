@@ -35,3 +35,12 @@ gradients against an analytic oracle on deterministic fixture tensors.
 
 Start with hidden activations supplied as an input tensor before chaining the
 gradient through the first layer.
+
+## Status
+
+Completed. LeanAX now has a `grad-softmax-dense` artifact for the final
+classifier layer. It takes hidden activations, logits, and one-hot labels;
+computes `softmax(logits) - labels` with batch-mean scaling; returns `grad_w2`
+and `grad_b2`; and is checked against a deterministic analytic Python oracle.
+`bad-grad-softmax-dense-shape` covers mismatched logits/labels as an expected
+validation failure.
