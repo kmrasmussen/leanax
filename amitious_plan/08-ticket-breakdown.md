@@ -15,6 +15,11 @@ Phase one is the first vertical slice from planning to checked artifact.
 9. `TICKET-0009`: Add structured validation errors and smart constructors.
 10. `TICKET-0010`: Add constants, reshape, transpose, broadcast, and reduce-sum.
 11. `TICKET-0011`: Parse generated modules with real MLIR tooling.
+12. `TICKET-0012`: Execute generated modules against numeric oracles.
+13. `TICKET-0013`: Add a JAX-shaped DSL and MLP forward example.
+14. `TICKET-0014`: Add a first pointwise `vmap` transform.
+15. `TICKET-0015`: Add a restricted scalar-loss gradient example.
+16. `TICKET-0016`: Add a minimal host-side training loop check.
 
 ## Completion Rule
 
@@ -36,20 +41,25 @@ The first six tickets are implemented together as a vertical slice:
 - Neural-network primitive coverage for constants, broadcast, reshape,
   transpose, and reduce-sum.
 - MLIR parser verification for passing generated modules via `mlir-opt`.
+- Numeric oracle execution for generated affine, matmul, neural primitive, DSL,
+  transform, gradient, and train-step modules.
+- A checked two-layer MLP forward example built through the first DSL layer.
+- A checked pointwise `vmap` example.
+- A restricted `sum(x * x)` gradient example.
+- A deterministic host-side synthetic training loop whose loss decreases.
 
 ## Next Ticket Themes
 
-The next phase should make the MNIST MLP target less distant:
+The completed roadmap queue makes the MNIST MLP target less distant:
 
-1. Add structured Lean validation errors and smart constructors.
-2. Add constants, reshape, transpose, broadcast, and reduce-sum.
-3. Validate generated text with real StableHLO/MLIR tooling.
-4. Add numeric oracle checks for small kernels.
-5. Design a JAX-shaped LeanAX DSL surface for `forward`, `loss`, and
-   `trainStep`.
-6. Add a first `vmap` transform over elementwise modules.
-7. Add reverse-mode autodiff for scalar losses.
-8. Add a minimal host-side training loop.
+1. Structured Lean validation errors and smart constructors.
+2. Constants, reshape, transpose, broadcast, and reduce-sum.
+3. Generated text validation with real StableHLO/MLIR tooling.
+4. Numeric oracle checks for small generated kernels.
+5. A JAX-shaped LeanAX DSL surface for a two-layer `forward`.
+6. A first `vmap` transform over elementwise modules.
+7. A restricted reverse-mode-style gradient module for scalar losses.
+8. A minimal host-side training loop.
 
 `TICKET-0007` is intentionally an analysis ticket. It captures the north-star
 direction and roadmap; future tickets should break implementation work out of
@@ -57,8 +67,8 @@ that analysis.
 
 ## Roadmap Ticket Queue
 
-These tickets break the roadmap into implementation slices. Each ticket should
-land with an e2e gate that covers the behavior it introduces.
+These tickets broke the roadmap into implementation slices. Each landed with an
+e2e gate that covers the behavior it introduces.
 
 1. `TICKET-0008`: Unified e2e manifest and outcome summary.
 2. `TICKET-0009`: Structured validation errors and smart constructors.

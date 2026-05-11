@@ -11,4 +11,6 @@ oracle on tiny examples.
 
 ## Status
 
-Ready for development.
+Completed. `LeanAX/Grad.lean` adds a restricted scalar-loss gradient slice for
+`sum(x * x)`, and `grad-square-sum` is checked against the Python numeric
+oracle.

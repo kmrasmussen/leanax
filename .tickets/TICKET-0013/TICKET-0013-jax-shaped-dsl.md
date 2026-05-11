@@ -12,4 +12,6 @@ examples.
 
 ## Status
 
-Ready for development.
+Completed. `LeanAX/DSL.lean` adds a first checked DSL layer for dense layers and
+a square activation, and `mlp-forward` lowers a two-layer MLP forward pass
+through the same e2e runner as raw IR examples.

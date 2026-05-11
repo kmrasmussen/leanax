@@ -14,6 +14,7 @@ inductive ValidationError where
   | reshapeElementMismatch (operand : TensorType) (result : TensorType)
   | transposeUnsupported (operand : TensorType) (result : TensorType) (permutation : List Nat)
   | reduceSumResultMismatch (operand : TensorType) (result : TensorType)
+  | unsupportedTransform (transform : String) (bindingName : String)
   deriving Repr, BEq
 
 def ValidationError.render : ValidationError -> String
@@ -39,6 +40,8 @@ def ValidationError.render : ValidationError -> String
       s!"stablehlo.transpose: unsupported permutation {permutation} from {operand.stableName} to {result.stableName}"
   | .reduceSumResultMismatch operand result =>
       s!"stablehlo.reduce: expected scalar result for {operand.stableName}, got {result.stableName}"
+  | .unsupportedTransform transform bindingName =>
+      s!"{transform}: unsupported binding %{bindingName}"
 
 def namesOf (values : List ValueRef) : List String :=
   values.map (fun value => value.name)

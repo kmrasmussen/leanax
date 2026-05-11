@@ -1,4 +1,8 @@
 import LeanAX.Build
+import LeanAX.DSL
+import LeanAX.Grad
+import LeanAX.Training
+import LeanAX.Transform
 
 namespace LeanAX
 
@@ -215,6 +219,11 @@ def moduleByName (name : String) : Option Module :=
   | "affine" => affineModule?.toOption
   | "matmul" => matmulModule?.toOption
   | "nn-primitives" => nnPrimitivesModule?.toOption
+  | "mlp-forward" => DSL.mlpForwardModule?.toOption
+  | "vmap-pointwise" => vmapPointwiseModule?.toOption
+  | "square-sum" => squareSumModule?.toOption
+  | "grad-square-sum" => gradSquareSumModule?.toOption
+  | "linear-train-step" => linearTrainStepModule?.toOption
   | "bad-add-shape" => some badAddShapeModule
   | "duplicate-input" => some duplicateInputModule
   | "undefined-ref" => some undefinedReferenceModule
@@ -233,6 +242,11 @@ def availableCases : List String :=
     "affine",
     "matmul",
     "nn-primitives",
+    "mlp-forward",
+    "vmap-pointwise",
+    "square-sum",
+    "grad-square-sum",
+    "linear-train-step",
     "bad-add-shape",
     "duplicate-input",
     "undefined-ref",

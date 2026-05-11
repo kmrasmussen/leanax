@@ -12,4 +12,6 @@ modules or numeric oracles.
 
 ## Status
 
-Ready for development.
+Completed. `LeanAX/Transform.lean` implements a first pointwise `vmap` slice,
+and `vmap-pointwise` is checked by golden text, MLIR parsing, and the numeric
+oracle evaluator.

@@ -11,8 +11,21 @@ struct Case {
 
 #[derive(Debug)]
 enum Expectation {
-    Pass { output: String, golden: String },
-    ValidationFail { expected_stderr: String },
+    Pass {
+        output: String,
+        golden: String,
+    },
+    Numeric {
+        output: String,
+        golden: String,
+        oracle: String,
+    },
+    ValidationFail {
+        expected_stderr: String,
+    },
+    TrainingLoop {
+        script: String,
+    },
 }
 
 fn usage() -> &'static str {
@@ -96,9 +109,35 @@ fn read_manifest(repo: &Path, manifest: &str) -> Result<Vec<Case>, String> {
                     golden: fields[1].to_string(),
                 }
             }
+            "numeric" => {
+                let fields: Vec<_> = rest.split_whitespace().collect();
+                if fields.len() != 3 {
+                    return Err(format!(
+                        "manifest line {} numeric cases must use: numeric case output golden oracle",
+                        index + 1
+                    ));
+                }
+                Expectation::Numeric {
+                    output: fields[0].to_string(),
+                    golden: fields[1].to_string(),
+                    oracle: fields[2].to_string(),
+                }
+            }
             "validation-fail" => Expectation::ValidationFail {
                 expected_stderr: rest.to_string(),
             },
+            "training-loop" => {
+                let fields: Vec<_> = rest.split_whitespace().collect();
+                if fields.len() != 1 {
+                    return Err(format!(
+                        "manifest line {} training-loop cases must use: training-loop case script",
+                        index + 1
+                    ));
+                }
+                Expectation::TrainingLoop {
+                    script: fields[0].to_string(),
+                }
+            }
             other => {
                 return Err(format!(
                     "manifest line {} has unknown outcome '{other}'",
@@ -162,6 +201,21 @@ fn run_mlir_parse(repo: &Path, path: &str) -> Result<(), String> {
     }
 }
 
+fn run_python_project(repo: &Path, script: &str, args: &[&str]) -> Result<(), String> {
+    let mut uv_args = vec![
+        "run",
+        "--no-managed-python",
+        "--python",
+        "python3",
+        "--project",
+        "e2e/python",
+        "python",
+        script,
+    ];
+    uv_args.extend_from_slice(args);
+    run(repo, "uv", &uv_args)
+}
+
 fn run_expect_failure(
     repo: &Path,
     program: &str,
@@ -223,22 +277,20 @@ fn run_pass_case(repo: &Path, case: &Case, output: &str, golden: &str) -> Result
         ],
     )?;
     compare(repo, output, golden)?;
-    run(
-        repo,
-        "uv",
-        &[
-            "run",
-            "--no-managed-python",
-            "--python",
-            "python3",
-            "--project",
-            "e2e/python",
-            "python",
-            "e2e/python/verify_stablehlo_text.py",
-            output,
-        ],
-    )?;
+    run_python_project(repo, "e2e/python/verify_stablehlo_text.py", &[output])?;
     run_mlir_parse(repo, output)?;
+    Ok(())
+}
+
+fn run_numeric_case(
+    repo: &Path,
+    case: &Case,
+    output: &str,
+    golden: &str,
+    oracle: &str,
+) -> Result<(), String> {
+    run_pass_case(repo, case, output, golden)?;
+    run_python_project(repo, "e2e/python/numeric_oracles.py", &[oracle, output])?;
     Ok(())
 }
 
@@ -284,10 +336,24 @@ fn run_case(repo: &Path, case: &Case) -> Result<&'static str, String> {
             run_pass_case(repo, case, output, golden)?;
             Ok("pass")
         }
+        Expectation::Numeric {
+            output,
+            golden,
+            oracle,
+        } => {
+            eprintln!("case numeric: {}", case.name);
+            run_numeric_case(repo, case, output, golden, oracle)?;
+            Ok("numeric")
+        }
         Expectation::ValidationFail { expected_stderr } => {
             eprintln!("case validation-fail: {}", case.name);
             run_validation_fail_case(repo, &case.name, expected_stderr)?;
             Ok("validation-fail")
+        }
+        Expectation::TrainingLoop { script } => {
+            eprintln!("case training-loop: {}", case.name);
+            run_python_project(repo, script, &[])?;
+            Ok("training-loop")
         }
     }
 }
@@ -303,18 +369,22 @@ fn main() -> Result<(), String> {
     let manifest = parse_flag(&args, "--manifest").unwrap_or_else(|| "e2e/manifest.txt".into());
     let cases = read_manifest(&repo, &manifest)?;
     let mut pass_count = 0usize;
+    let mut numeric_count = 0usize;
     let mut validation_fail_count = 0usize;
+    let mut training_loop_count = 0usize;
 
     run(&repo, "lake", &["build"])?;
     for case in &cases {
         match run_case(&repo, case)? {
             "pass" => pass_count += 1,
+            "numeric" => numeric_count += 1,
             "validation-fail" => validation_fail_count += 1,
+            "training-loop" => training_loop_count += 1,
             _ => unreachable!(),
         }
     }
     eprintln!(
-        "e2e summary: {pass_count} pass, {validation_fail_count} expected validation-fail, 0 unexpected"
+        "e2e summary: {pass_count} pass, {numeric_count} numeric, {validation_fail_count} expected validation-fail, {training_loop_count} training-loop, 0 unexpected"
     );
 
     Ok(())
@@ -346,17 +416,20 @@ mod tests {
             "\
 # outcome case output/golden-or-expected
 pass affine generated/affine.mlir e2e/golden/affine.mlir
+numeric matmul generated/matmul.mlir e2e/golden/matmul.mlir matmul
 validation-fail bad-add-shape stablehlo.add operands: expected matching tensor types
 ",
         );
 
         let cases = read_manifest(&repo, "manifest.txt").expect("manifest should parse");
-        assert_eq!(cases.len(), 2);
+        assert_eq!(cases.len(), 3);
         assert_eq!(cases[0].name, "affine");
         assert!(matches!(cases[0].expectation, Expectation::Pass { .. }));
-        assert_eq!(cases[1].name, "bad-add-shape");
+        assert_eq!(cases[1].name, "matmul");
+        assert!(matches!(cases[1].expectation, Expectation::Numeric { .. }));
+        assert_eq!(cases[2].name, "bad-add-shape");
         assert!(matches!(
-            cases[1].expectation,
+            cases[2].expectation,
             Expectation::ValidationFail { .. }
         ));
     }
@@ -380,6 +453,18 @@ validation-fail bad-add-shape stablehlo.add operands: expected matching tensor t
 
         let err = read_manifest(&repo, "manifest.txt").expect_err("manifest should fail");
         assert!(err.contains("pass cases must use"));
+    }
+
+    #[test]
+    fn rejects_malformed_numeric_case() {
+        let repo = temp_repo("malformed-numeric");
+        write_manifest(
+            &repo,
+            "numeric matmul generated/matmul.mlir e2e/golden/matmul.mlir\n",
+        );
+
+        let err = read_manifest(&repo, "manifest.txt").expect_err("manifest should fail");
+        assert!(err.contains("numeric cases must use"));
     }
 
     #[test]

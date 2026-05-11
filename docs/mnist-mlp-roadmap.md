@@ -63,6 +63,11 @@ Already implemented:
 - Python structural verifier.
 - Expected-failure validation case.
 - Unified e2e manifest with explicit expected outcomes.
+- Numeric oracle execution for the supported generated-op subset.
+- A first DSL-built two-layer MLP forward module.
+- A first pointwise `vmap` transform.
+- A restricted scalar-loss gradient module for `sum(x * x)`.
+- A minimal deterministic host-side training loop check.
 
 Gate:
 
@@ -133,6 +138,12 @@ Exit gate:
 - LeanAX-generated kernels run externally and match a Python oracle on small
   arrays.
 
+Current progress:
+
+- The runner executes generated text for the supported op subset in
+  `e2e/python/numeric_oracles.py` and checks affine, matmul, primitive, MLP,
+  vmap, grad, and train-step cases against deterministic oracle values.
+
 ## Phase 4: JAX-Like Program Structure
 
 Goal: make LeanAX examples read like staged pure tensor programs, not raw IR
@@ -151,6 +162,11 @@ Exit gate:
 - A two-layer MLP forward pass is written as LeanAX DSL code and lowered through
   the existing e2e path.
 
+Current progress:
+
+- `LeanAX/DSL.lean` provides checked dense-layer helpers, and `mlp-forward`
+  lowers a two-layer forward pass through the golden, MLIR, and numeric gates.
+
 ## Phase 5: Batching With `vmap`
 
 Goal: match the JAX habit of writing per-example logic and batching it with a
@@ -167,6 +183,11 @@ Exit gate:
 
 - A scalar or per-example expression can be transformed into a batched module
   and checked against a manually batched oracle.
+
+Current progress:
+
+- `LeanAX/Transform.lean` batches a pointwise scalar module by prepending a batch
+  dimension, and `vmap-pointwise` is checked numerically.
 
 ## Phase 6: Reverse-Mode `grad`
 
@@ -185,6 +206,11 @@ Exit gate:
 - LeanAX computes gradients for a small dense model loss and matches a Python
   oracle.
 
+Current progress:
+
+- `LeanAX/Grad.lean` covers a restricted scalar-loss case, `grad-square-sum`,
+  and the e2e oracle checks that it returns `2 * x`.
+
 ## Phase 7: Training Step
 
 Goal: lower a JAX-like `train_step`.
@@ -200,6 +226,12 @@ Work:
 Exit gate:
 
 - A toy dense classifier trains on synthetic data and loss decreases.
+
+Current progress:
+
+- `LeanAX/Training.lean` emits a scalar train-step update module, and
+  `e2e/python/training_loop.py` verifies loss reduction on deterministic
+  synthetic linear data.
 
 ## Phase 8: MNIST MLP
 

@@ -12,4 +12,7 @@ and expected outputs.
 
 ## Status
 
-Ready for development.
+Completed. The unified e2e runner now supports `numeric` manifest cases that
+emit checked modules, compare golden StableHLO-shaped text, parse it with MLIR,
+execute the supported generated op subset in Python, and compare results against
+case-specific oracle values.
