@@ -1,4 +1,5 @@
 import LeanAX.StableHLO
+import LeanAX.RuntimeLLVM
 import LeanAX.Validate
 
 namespace LeanAX.Cli
@@ -6,9 +7,11 @@ namespace LeanAX.Cli
 def usage : String :=
   "leanax commands:\n" ++
   "  emit-stablehlo --case NAME --out PATH [--manifest-out PATH]\n" ++
+  "  emit-runtime-llvm --case NAME --out PATH\n" ++
   "  list-cases\n" ++
   "\n" ++
-  "Available cases: " ++ LeanAX.joinSep ", " LeanAX.availableCases ++ "\n"
+  "Available StableHLO cases: " ++ LeanAX.joinSep ", " LeanAX.availableCases ++ "\n" ++
+  "Available runtime LLVM cases: " ++ LeanAX.joinSep ", " LeanAX.availableRuntimeCases ++ "\n"
 
 partial def parseFlag (flag : String) : List String -> Option String
   | [] => none
@@ -42,14 +45,33 @@ def emitStableHLO (args : List String) : IO UInt32 := do
       IO.eprintln usage
       pure 2
 
+def emitRuntimeLLVM (args : List String) : IO UInt32 := do
+  let caseName := parseFlag "--case" args
+  let outPath := parseFlag "--out" args
+  match caseName, outPath with
+  | some name, some path =>
+      match LeanAX.runtimeLLVMByName name with
+      | some text =>
+          IO.FS.writeFile path text
+          IO.println s!"wrote {path}"
+          pure 0
+      | none =>
+          IO.eprintln s!"unknown runtime LLVM case '{name}'"
+          IO.eprintln usage
+          pure 2
+  | _, _ =>
+      IO.eprintln usage
+      pure 2
+
 def main (args : List String) : IO UInt32 := do
   match args with
   | [] =>
       IO.println usage
       pure 0
   | "emit-stablehlo" :: rest => emitStableHLO rest
+  | "emit-runtime-llvm" :: rest => emitRuntimeLLVM rest
   | ["list-cases"] =>
-      IO.println (LeanAX.joinSep "\n" LeanAX.availableCases)
+      IO.println (LeanAX.joinSep "\n" (LeanAX.availableCases ++ LeanAX.availableRuntimeCases))
       pure 0
   | ["--help"] =>
       IO.println usage

@@ -1,6 +1,6 @@
 # Runtime Execution
 
-`TICKET-0018` is currently blocked on a practical external runtime.
+`TICKET-0018` now has a first practical external runtime path.
 
 The checked options so far are:
 
@@ -8,20 +8,33 @@ The checked options so far are:
 - Nix package attributes matching StableHLO or XLA runtime tooling: none found.
 - Dev-shell commands: no `iree-compile`, `iree-run-module`, `iree-run-mlir`,
   `stablehlo-opt`, `stablehlo-translate`, `mlir-cpu-runner`, or `lli`.
-- LLVM MLIR tools: `mlir-runner` is present, but it runs lowerable CPU MLIR
-  dialects and does not execute the current `stablehlo.*` generic-op modules.
+- LLVM MLIR tools: `mlir-runner` is present. It does not execute the current
+  `stablehlo.*` generic-op modules directly, but it does execute LLVM-dialect
+  MLIR emitted by LeanAX for the first runtime fixture.
 - PyPI IREE packages: `uv` can install `iree-compiler` and `iree-runtime`, and
   Python imports work when `libstdc++` is visible, but the bundled
   `iree-compile` and `iree-run-module` executables are generic Linux binaries
   that fail under this NixOS environment with the dynamic-linker stub error.
 
-The useful next route is probably one of:
+Future routes toward direct StableHLO runtime execution are still:
 
 1. package IREE or StableHLO in Nix for this project,
 2. run PyPI IREE inside a reproducible FHS or `nix-ld` environment,
-3. add a second lowering target for executable CPU MLIR and run it with
-   `mlir-runner`.
+3. lower the full supported StableHLO subset into executable CPU MLIR instead of
+   only emitting the first affine checksum fixture.
 
-Until one of those routes is implemented, LeanAX keeps the numeric oracle as the
-value-checking gate and does not claim external runtime execution.
+The implemented first slice is intentionally narrow:
 
+- `lake exe leanax emit-runtime-llvm --case affine-runtime --out
+  generated/affine-runtime.mlir` emits an executable LLVM-dialect MLIR module.
+- The module hardcodes the same `affine` fixture values used by the Python
+  numeric oracle and returns `sum((x + bias) * (x + bias))`.
+- The e2e runner executes it with `mlir-runner --entry-point-result=f32` and
+  compares stdout against `94.25`.
+- `e2e/manifest.txt` records this as a `runtime` outcome, so the runtime check
+  is part of the normal Nix e2e gate.
+
+This proves LeanAX can emit a module that runs through an external compiler/JIT
+path available in the project shell. It is not yet direct StableHLO execution;
+that remains a later hardening step when StableHLO/IREE/XLA runtime tooling is
+packaged cleanly for this project.

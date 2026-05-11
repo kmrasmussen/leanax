@@ -38,15 +38,17 @@ runtime outputs against deterministic expected values.
 Try the smallest elementwise `affine` module first, because it avoids matmul and
 reduction runtime complications.
 
-## Current Blocker
+## Status
 
-Runtime execution is not complete yet. The current Nixpkgs input does not expose
-IREE, StableHLO runtime tooling, or XLA runtime tooling. The dev shell has
-`mlir-runner`, but that does not execute the current `stablehlo.*` generic-op
-modules. PyPI IREE packages install through `uv`, but their bundled
-`iree-compile` and `iree-run-module` binaries fail on this NixOS environment
-with the dynamic-linker stub error.
+Completed. IREE, StableHLO reference execution, and XLA runtime tooling remain
+unavailable in the current Nix shell, so this ticket uses the practical local
+external runtime path: LeanAX emits an executable LLVM-dialect MLIR module for
+the `affine-runtime` fixture, and the e2e runner executes it with
+`mlir-runner --entry-point-result=f32`.
 
-See `docs/runtime-execution.md` for the exact probe results and likely next
-routes.
-
+The fixture mirrors the `affine` numeric oracle inputs, computes
+`sum((x + bias) * (x + bias))`, and compares the external runtime output against
+the deterministic expected value `94.25`. The e2e manifest now has a dedicated
+`runtime` outcome, so runtime-backed execution is owned by the same full Nix
+gate as golden comparisons, MLIR parsing, Python numeric oracles, validation
+failures, data-loader checks, and training-loop checks.

@@ -31,6 +31,11 @@ enum Expectation {
     TrainingLoop {
         script: String,
     },
+    Runtime {
+        output: String,
+        golden: String,
+        expected: f64,
+    },
 }
 
 fn usage() -> &'static str {
@@ -153,6 +158,27 @@ fn read_manifest(repo: &Path, manifest: &str) -> Result<Vec<Case>, String> {
                 }
                 Expectation::TrainingLoop {
                     script: fields[0].to_string(),
+                }
+            }
+            "runtime" => {
+                let fields: Vec<_> = rest.split_whitespace().collect();
+                if fields.len() != 3 {
+                    return Err(format!(
+                        "manifest line {} runtime cases must use: runtime case output golden expected",
+                        index + 1
+                    ));
+                }
+                let expected = fields[2].parse::<f64>().map_err(|err| {
+                    format!(
+                        "manifest line {} runtime expected value '{}' is not a float: {err}",
+                        index + 1,
+                        fields[2]
+                    )
+                })?;
+                Expectation::Runtime {
+                    output: fields[0].to_string(),
+                    golden: fields[1].to_string(),
+                    expected,
                 }
             }
             other => {
@@ -424,6 +450,58 @@ fn run_validation_fail_case(repo: &Path, name: &str, expected_stderr: &str) -> R
     }
 }
 
+fn run_runtime_case(
+    repo: &Path,
+    case: &Case,
+    output: &str,
+    golden: &str,
+    expected: f64,
+) -> Result<(), String> {
+    if let Some(parent) = repo.join(output).parent() {
+        fs::create_dir_all(parent)
+            .map_err(|err| format!("failed creating output dir {}: {err}", parent.display()))?;
+    }
+
+    run(
+        repo,
+        "lake",
+        &[
+            "exe",
+            "leanax",
+            "emit-runtime-llvm",
+            "--case",
+            &case.name,
+            "--out",
+            output,
+        ],
+    )?;
+    compare(repo, output, golden)?;
+
+    eprintln!("running: mlir-runner --entry-point-result=f32 {output}");
+    let command_output = Command::new("mlir-runner")
+        .arg("--entry-point-result=f32")
+        .arg(output)
+        .current_dir(repo)
+        .stdin(Stdio::null())
+        .output()
+        .map_err(|err| format!("failed to start mlir-runner: {err}"))?;
+    if !command_output.status.success() {
+        return Err(format!("mlir-runner exited with {}", command_output.status));
+    }
+    let stdout = String::from_utf8_lossy(&command_output.stdout);
+    let actual = stdout.trim().parse::<f64>().map_err(|err| {
+        format!("mlir-runner stdout was not a float: {err}; stdout was {stdout:?}")
+    })?;
+    if (actual - expected).abs() > 0.0001 {
+        Err(format!(
+            "runtime case {} produced {actual}, expected {expected}",
+            case.name
+        ))
+    } else {
+        Ok(())
+    }
+}
+
 fn run_case(
     repo: &Path,
     stablehlo_verifier: &Option<String>,
@@ -459,6 +537,15 @@ fn run_case(
             run_python_project(repo, script, &[])?;
             Ok("training-loop")
         }
+        Expectation::Runtime {
+            output,
+            golden,
+            expected,
+        } => {
+            eprintln!("case runtime: {}", case.name);
+            run_runtime_case(repo, case, output, golden, *expected)?;
+            Ok("runtime")
+        }
     }
 }
 
@@ -486,6 +573,7 @@ fn main() -> Result<(), String> {
     let mut validation_fail_count = 0usize;
     let mut data_loader_count = 0usize;
     let mut training_loop_count = 0usize;
+    let mut runtime_count = 0usize;
 
     run(&repo, "lake", &["build"])?;
     for case in &cases {
@@ -495,11 +583,12 @@ fn main() -> Result<(), String> {
             "validation-fail" => validation_fail_count += 1,
             "data-loader" => data_loader_count += 1,
             "training-loop" => training_loop_count += 1,
+            "runtime" => runtime_count += 1,
             _ => unreachable!(),
         }
     }
     eprintln!(
-        "e2e summary: {pass_count} pass, {numeric_count} numeric, {validation_fail_count} expected validation-fail, {data_loader_count} data-loader, {training_loop_count} training-loop, 0 unexpected"
+        "e2e summary: {pass_count} pass, {numeric_count} numeric, {validation_fail_count} expected validation-fail, {data_loader_count} data-loader, {training_loop_count} training-loop, {runtime_count} runtime, 0 unexpected"
     );
 
     Ok(())
@@ -533,12 +622,13 @@ mod tests {
 pass affine generated/affine.mlir e2e/golden/affine.mlir
 numeric matmul generated/matmul.mlir e2e/golden/matmul.mlir matmul
 data-loader mnist-fixture e2e/python/mnist_fixture.py
+runtime affine-runtime generated/affine-runtime.mlir e2e/golden/affine-runtime.mlir 94.25
 validation-fail bad-add-shape stablehlo.add operands: expected matching tensor types
 ",
         );
 
         let cases = read_manifest(&repo, "manifest.txt").expect("manifest should parse");
-        assert_eq!(cases.len(), 4);
+        assert_eq!(cases.len(), 5);
         assert_eq!(cases[0].name, "affine");
         assert!(matches!(cases[0].expectation, Expectation::Pass { .. }));
         assert_eq!(cases[1].name, "matmul");
@@ -548,9 +638,11 @@ validation-fail bad-add-shape stablehlo.add operands: expected matching tensor t
             cases[2].expectation,
             Expectation::DataLoader { .. }
         ));
-        assert_eq!(cases[3].name, "bad-add-shape");
+        assert_eq!(cases[3].name, "affine-runtime");
+        assert!(matches!(cases[3].expectation, Expectation::Runtime { .. }));
+        assert_eq!(cases[4].name, "bad-add-shape");
         assert!(matches!(
-            cases[3].expectation,
+            cases[4].expectation,
             Expectation::ValidationFail { .. }
         ));
     }
@@ -586,6 +678,18 @@ validation-fail bad-add-shape stablehlo.add operands: expected matching tensor t
 
         let err = read_manifest(&repo, "manifest.txt").expect_err("manifest should fail");
         assert!(err.contains("numeric cases must use"));
+    }
+
+    #[test]
+    fn rejects_malformed_runtime_case() {
+        let repo = temp_repo("malformed-runtime");
+        write_manifest(
+            &repo,
+            "runtime affine-runtime generated/affine-runtime.mlir e2e/golden/affine-runtime.mlir\n",
+        );
+
+        let err = read_manifest(&repo, "manifest.txt").expect_err("manifest should fail");
+        assert!(err.contains("runtime cases must use"));
     }
 
     #[test]

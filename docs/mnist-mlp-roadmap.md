@@ -150,6 +150,10 @@ Current progress:
 - The runner executes generated text for the supported op subset in
   `e2e/python/numeric_oracles.py` and checks affine, matmul, primitive, MLP,
   vmap, grad, and train-step cases against deterministic oracle values.
+- The first external runtime slice is implemented as `affine-runtime`: LeanAX
+  emits executable LLVM-dialect MLIR, `mlir-runner` runs it through the local
+  LLVM JIT, and the e2e runner compares the scalar checksum against the fixture
+  value `94.25`. This does not claim direct StableHLO runtime execution yet.
 
 ## Phase 4: JAX-Like Program Structure
 

@@ -64,10 +64,11 @@ MLIR-parseable StableHLO-shaped text for the manifested examples, compares the
 output against `e2e/golden`, runs a no-dependency Python verifier through `uv`,
 parses generated modules with `mlir-opt --allow-unregistered-dialect`, probes
 for `stablehlo-opt` and runs it when available, executes numeric cases through a
-small Python evaluator for the supported generated-op subset, and checks a
-deterministic host-side training loop. The unified e2e manifest records numeric
-cases, validation failures, and training-loop checks, so unexpected successes
-and unexpected failures are checked by the same runner.
+small Python evaluator for the supported generated-op subset, executes the first
+LLVM-dialect runtime fixture with `mlir-runner`, and checks deterministic
+host-side training loops. The unified e2e manifest records numeric cases,
+runtime cases, validation failures, and training-loop checks, so unexpected
+successes and unexpected failures are checked by the same runner.
 
 See [docs/stablehlo-verification.md](docs/stablehlo-verification.md) for the
 current boundary between generic MLIR parsing and StableHLO semantic
@@ -76,6 +77,14 @@ verification.
 `emit-stablehlo` also writes lowering manifest sidecars when passed
 `--manifest-out`. The e2e runner validates those manifests for every passing
 generated module, and the `affine` sidecar has a checked-in golden fixture.
+
+The first external runtime fixture is:
+
+```sh
+nix develop --command bash -lc 'lake exe leanax emit-runtime-llvm --case affine-runtime --out generated/affine-runtime.mlir && mlir-runner --entry-point-result=f32 generated/affine-runtime.mlir'
+```
+
+It returns the `affine` fixture checksum `94.25` through the LLVM MLIR JIT.
 
 The MNIST path currently starts with a deterministic fixture mode documented in
 [docs/mnist-data.md](docs/mnist-data.md). It checks flattened `28x28` batches,
