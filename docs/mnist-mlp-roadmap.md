@@ -288,6 +288,103 @@ Current progress:
   artifacts are present, trains a tiny parity classifier for stable metrics, and
   stays explicit about not being full runtime execution yet.
 
+## Where We Are Relative To A Real Classifier
+
+LeanAX is past the project-scaffold stage and has enough checked pieces to make
+the remaining MNIST path concrete, but it is not yet training a real MNIST
+classifier from LeanAX-generated model and gradient artifacts.
+
+What is already solid:
+
+- The compiler path is reproducible under Nix.
+- Generated artifacts have golden text, structural checks, MLIR generic parsing,
+  lowering manifests, and Python numeric oracles.
+- The DSL can lower small dense layers, ReLU, a two-layer forward pass,
+  softmax-style cross entropy, dense batching, first gradients, and parameter
+  updates.
+- The host side can produce deterministic MNIST-shaped batches and run a stable
+  smoke training command.
+- One external runtime fixture now runs through LLVM `mlir-runner`.
+
+What is still missing for an honest MNIST classifier:
+
+- The current MLP forward fixture is tiny (`4 -> 3 -> 2`), not
+  `784 -> hidden -> 10`.
+- The current cross-entropy artifact is a fixed two-class single-example loss,
+  not batched ten-class MNIST loss.
+- Gradients cover square loss and a one-layer dense case, not a two-layer
+  ReLU MLP trained with cross entropy.
+- The parameter-tree update covers one weight matrix and one bias vector, not
+  the full `w1`, `b1`, `w2`, `b2` classifier tree.
+- The MNIST smoke command uses Python training logic and checks that compiler
+  artifacts exist; it does not yet execute a LeanAX-generated full train step.
+- Full dataset loading and stable short-epoch metrics remain future work.
+
+Pragmatically, the project is close enough to define the real classifier path in
+small implementation tickets, but not close enough to claim classifier training.
+The next milestone should be a small checked ten-class MNIST classifier over a
+fixture batch, followed by a short optional full-dataset run once the artifacts
+and metrics are stable.
+
+## Phase 9: Ten-Class MNIST Semantics
+
+Goal: make the model and loss match MNIST shapes before adding full training.
+
+Work:
+
+- Add batched ten-class cross entropy with explicit mean loss semantics.
+- Add an MNIST-shaped forward module with inputs shaped `batch x 784`, hidden
+  dimension kept small enough for readable goldens, and logits shaped
+  `batch x 10`.
+- Extend validation failures for label/logit rank, class count, and batch
+  mismatches.
+- Add numeric oracles that check both the generated forward pass and loss
+  against deterministic fixture values.
+
+Exit gate:
+
+- `mnist-forward` and `mnist-cross-entropy` are manifested numeric cases with
+  golden text, MLIR parsing, lowering manifests, and deterministic oracle
+  comparisons.
+
+## Phase 10: Full Classifier Train Step
+
+Goal: lower the train-step shape used by the classifier.
+
+Work:
+
+- Represent the full parameter tree: `w1`, `b1`, `w2`, and `b2`.
+- Add gradient artifacts for cross-entropy logits and the final dense layer.
+- Add ReLU gradient gating and chain it through the first dense layer.
+- Add a checked SGD update that returns the full updated parameter tree.
+- Keep host-side storage outside Lean, but make the update artifact explicit and
+  inspectable.
+
+Exit gate:
+
+- A `mnist-train-step` numeric case consumes one fixture batch, returns updated
+  parameters, and matches a Python analytic oracle for the same small model.
+
+## Phase 11: Classifier Command And Metrics
+
+Goal: turn the checked artifacts into a user-facing classifier training command.
+
+Work:
+
+- Replace the current parity smoke with a ten-class fixture-mode classifier run.
+- Add a command wrapper for `leanax train mnist-mlp` or the closest equivalent
+  runner command.
+- Print loss, accuracy, sample count, batch count, and artifact paths.
+- Add an optional full-dataset route with documented cache location and a fast
+  default fixture mode for CI/e2e.
+- Keep direct StableHLO/IREE runtime execution as a separate hardening track
+  until packaging is stable.
+
+Exit gate:
+
+- One command trains the fixture-mode ten-class classifier, proves loss improves
+  or accuracy does not regress, and the full Nix e2e gate covers it.
+
 ## What Not To Do Yet
 
 - Do not chase a full NumPy surface area.
