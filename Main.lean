@@ -28,7 +28,7 @@ def emitStableHLO (args : List String) : IO UInt32 := do
               IO.println s!"wrote {path}"
               pure 0
           | .error err =>
-              IO.eprintln s!"validation failed for case '{name}': {err}"
+              IO.eprintln s!"validation failed for case '{name}': {err.render}"
               pure 1
       | none =>
           IO.eprintln s!"unknown case '{name}'"
