@@ -229,6 +229,12 @@ def oracle_inputs(name: str) -> dict[str, Tensor]:
             }
         case "square-sum" | "grad-square-sum":
             return {"x": tensor((2, 3), [1, -2, 3, -4, 0.5, 2.5])}
+        case "grad-dense-loss":
+            return {
+                "x": tensor((1, 2), [1.5, -2.0]),
+                "w": tensor((2, 2), [0.25, -1.0, 2.0, 0.5]),
+                "b": tensor((2,), [0.1, -0.2]),
+            }
         case "linear-train-step":
             return {
                 "w": Tensor.scalar(1.0),
@@ -271,6 +277,10 @@ def expected(name: str, inputs: dict[str, Tensor]) -> Tensor:
             return Tensor.scalar(sum(value * value for value in inputs["x"].data))
         case "grad-square-sum":
             return Tensor(inputs["x"].shape, tuple(2.0 * value for value in inputs["x"].data))
+        case "grad-dense-loss":
+            residual = elementwise(matmul(inputs["x"], inputs["w"]), broadcast_to(inputs["b"], (1, 2)), lambda a, b: a + b)
+            grad_out = Tensor(residual.shape, tuple(2.0 * value for value in residual.data))
+            return matmul(transpose_2d(inputs["x"]), grad_out)
         case "linear-train-step":
             return Tensor.scalar(inputs["w"].data[0] + inputs["grad"].data[0] * -0.1)
         case _:

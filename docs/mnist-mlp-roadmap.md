@@ -227,6 +227,9 @@ Current progress:
   loss. It is intentionally not numerically stabilized yet; the current purpose
   is to make classification-loss structure explicit and checked before moving
   to batched MNIST labels.
+- `grad-dense-loss` adds the first dense-model gradient artifact for a one-layer
+  squared loss. It emits `grad_w = x^T @ (2 * (x @ w + b))` and checks that
+  matrix against a Python analytic oracle.
 
 ## Phase 7: Training Step
 

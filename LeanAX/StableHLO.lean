@@ -352,6 +352,20 @@ def badVmapDenseRankModule : Module :=
     ],
     returns := out }
 
+def badGradDenseShapeModule : Module :=
+  let x := tensor "x" .f32 [1, 3]
+  let gradOut := tensor "grad_out" .f32 [1, 2]
+  let xT := tensor "x_t" .f32 [3, 1]
+  let gradW := tensor "grad_w" .f32 [2, 2]
+  { name := "leanax_bad_grad_dense_shape",
+    functionName := "main",
+    inputs := [x, gradOut],
+    bindings := [
+      { result := xT, kind := .transpose x [1, 0] },
+      { result := gradW, kind := .dotGeneral xT gradOut }
+    ],
+    returns := gradW }
+
 def moduleByName (name : String) : Option Module :=
   match name with
   | "affine" => affineModule?.toOption
@@ -364,6 +378,7 @@ def moduleByName (name : String) : Option Module :=
   | "vmap-dense" => vmapDenseModule?.toOption
   | "square-sum" => squareSumModule?.toOption
   | "grad-square-sum" => gradSquareSumModule?.toOption
+  | "grad-dense-loss" => gradDenseLossModule?.toOption
   | "linear-train-step" => linearTrainStepModule?.toOption
   | "bad-add-shape" => some badAddShapeModule
   | "duplicate-input" => some duplicateInputModule
@@ -379,6 +394,7 @@ def moduleByName (name : String) : Option Module :=
   | "bad-maximum-shape" => some badMaximumShapeModule
   | "bad-cross-entropy-shape" => some badCrossEntropyShapeModule
   | "bad-vmap-dense-rank" => some badVmapDenseRankModule
+  | "bad-grad-dense-shape" => some badGradDenseShapeModule
   | _ => none
 
 def availableCases : List String :=
@@ -393,6 +409,7 @@ def availableCases : List String :=
     "vmap-dense",
     "square-sum",
     "grad-square-sum",
+    "grad-dense-loss",
     "linear-train-step",
     "bad-add-shape",
     "duplicate-input",
@@ -407,7 +424,8 @@ def availableCases : List String :=
     "bad-reduce",
     "bad-maximum-shape",
     "bad-cross-entropy-shape",
-    "bad-vmap-dense-rank"
+    "bad-vmap-dense-rank",
+    "bad-grad-dense-shape"
   ]
 
 end LeanAX

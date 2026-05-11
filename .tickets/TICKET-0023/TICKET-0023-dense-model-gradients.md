@@ -34,3 +34,10 @@ Python oracle on a tiny fixed-shape model.
 
 Target a one-layer dense model before expanding to the full two-layer MLP.
 
+## Status
+
+Completed. `LeanAX/Grad.lean` now emits `grad-dense-loss`, a one-layer dense
+gradient artifact for `sum((x @ w + b)^2)` returning `grad_w`. The e2e oracle
+checks the generated matrix against the analytic Python result, and
+`bad-grad-dense-shape` covers an unsupported gradient shape as an expected
+validation failure.
