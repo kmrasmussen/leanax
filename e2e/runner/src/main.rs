@@ -3,6 +3,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
+const STABLEHLO_VERIFIER_CANDIDATES: &[&str] = &["stablehlo-opt"];
+
 #[derive(Debug)]
 struct Case {
     name: String,
@@ -201,6 +203,56 @@ fn run_mlir_parse(repo: &Path, path: &str) -> Result<(), String> {
     }
 }
 
+fn select_stablehlo_verifier<F>(candidates: &[&str], is_available: F) -> Option<String>
+where
+    F: Fn(&str) -> bool,
+{
+    candidates
+        .iter()
+        .copied()
+        .find(|candidate| is_available(candidate))
+        .map(str::to_owned)
+}
+
+fn command_available(program: &str) -> bool {
+    Command::new(program)
+        .arg("--version")
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status()
+        .is_ok()
+}
+
+fn detect_stablehlo_verifier() -> Option<String> {
+    select_stablehlo_verifier(STABLEHLO_VERIFIER_CANDIDATES, command_available)
+}
+
+fn run_stablehlo_semantic_verify(
+    repo: &Path,
+    verifier: &Option<String>,
+    path: &str,
+) -> Result<(), String> {
+    if let Some(program) = verifier {
+        eprintln!("running: {program} {path}");
+        let status = Command::new(program)
+            .arg(path)
+            .current_dir(repo)
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .status()
+            .map_err(|err| format!("failed to start {program}: {err}"))?;
+
+        if status.success() {
+            Ok(())
+        } else {
+            Err(format!("{program} exited with {status}"))
+        }
+    } else {
+        Ok(())
+    }
+}
+
 fn run_python_project(repo: &Path, script: &str, args: &[&str]) -> Result<(), String> {
     let mut uv_args = vec![
         "run",
@@ -257,7 +309,13 @@ fn compare(repo: &Path, actual: &str, expected: &str) -> Result<(), String> {
     }
 }
 
-fn run_pass_case(repo: &Path, case: &Case, output: &str, golden: &str) -> Result<(), String> {
+fn run_pass_case(
+    repo: &Path,
+    stablehlo_verifier: &Option<String>,
+    case: &Case,
+    output: &str,
+    golden: &str,
+) -> Result<(), String> {
     if let Some(parent) = repo.join(output).parent() {
         fs::create_dir_all(parent)
             .map_err(|err| format!("failed creating output dir {}: {err}", parent.display()))?;
@@ -279,17 +337,19 @@ fn run_pass_case(repo: &Path, case: &Case, output: &str, golden: &str) -> Result
     compare(repo, output, golden)?;
     run_python_project(repo, "e2e/python/verify_stablehlo_text.py", &[output])?;
     run_mlir_parse(repo, output)?;
+    run_stablehlo_semantic_verify(repo, stablehlo_verifier, output)?;
     Ok(())
 }
 
 fn run_numeric_case(
     repo: &Path,
+    stablehlo_verifier: &Option<String>,
     case: &Case,
     output: &str,
     golden: &str,
     oracle: &str,
 ) -> Result<(), String> {
-    run_pass_case(repo, case, output, golden)?;
+    run_pass_case(repo, stablehlo_verifier, case, output, golden)?;
     run_python_project(repo, "e2e/python/numeric_oracles.py", &[oracle, output])?;
     Ok(())
 }
@@ -329,11 +389,15 @@ fn run_validation_fail_case(repo: &Path, name: &str, expected_stderr: &str) -> R
     }
 }
 
-fn run_case(repo: &Path, case: &Case) -> Result<&'static str, String> {
+fn run_case(
+    repo: &Path,
+    stablehlo_verifier: &Option<String>,
+    case: &Case,
+) -> Result<&'static str, String> {
     match &case.expectation {
         Expectation::Pass { output, golden } => {
             eprintln!("case pass: {}", case.name);
-            run_pass_case(repo, case, output, golden)?;
+            run_pass_case(repo, stablehlo_verifier, case, output, golden)?;
             Ok("pass")
         }
         Expectation::Numeric {
@@ -342,7 +406,7 @@ fn run_case(repo: &Path, case: &Case) -> Result<&'static str, String> {
             oracle,
         } => {
             eprintln!("case numeric: {}", case.name);
-            run_numeric_case(repo, case, output, golden, oracle)?;
+            run_numeric_case(repo, stablehlo_verifier, case, output, golden, oracle)?;
             Ok("numeric")
         }
         Expectation::ValidationFail { expected_stderr } => {
@@ -368,6 +432,15 @@ fn main() -> Result<(), String> {
     let repo = repo_root(&args)?;
     let manifest = parse_flag(&args, "--manifest").unwrap_or_else(|| "e2e/manifest.txt".into());
     let cases = read_manifest(&repo, &manifest)?;
+    let stablehlo_verifier = detect_stablehlo_verifier();
+    if let Some(program) = &stablehlo_verifier {
+        eprintln!("stablehlo semantic verifier: {program}");
+    } else {
+        eprintln!(
+            "stablehlo semantic verifier unavailable: checked candidates {}; generated modules still run through MLIR generic parsing",
+            STABLEHLO_VERIFIER_CANDIDATES.join(", ")
+        );
+    }
     let mut pass_count = 0usize;
     let mut numeric_count = 0usize;
     let mut validation_fail_count = 0usize;
@@ -375,7 +448,7 @@ fn main() -> Result<(), String> {
 
     run(&repo, "lake", &["build"])?;
     for case in &cases {
-        match run_case(&repo, case)? {
+        match run_case(&repo, &stablehlo_verifier, case)? {
             "pass" => pass_count += 1,
             "numeric" => numeric_count += 1,
             "validation-fail" => validation_fail_count += 1,
@@ -474,5 +547,21 @@ validation-fail bad-add-shape stablehlo.add operands: expected matching tensor t
 
         let err = read_manifest(&repo, "manifest.txt").expect_err("manifest should fail");
         assert!(err.contains("has no cases"));
+    }
+
+    #[test]
+    fn selects_first_available_stablehlo_verifier() {
+        let selected = select_stablehlo_verifier(&["missing", "stablehlo-opt"], |candidate| {
+            candidate == "stablehlo-opt"
+        });
+
+        assert_eq!(selected.as_deref(), Some("stablehlo-opt"));
+    }
+
+    #[test]
+    fn stablehlo_verifier_detection_reports_unavailable() {
+        let selected = select_stablehlo_verifier(&["missing-a", "missing-b"], |_| false);
+
+        assert!(selected.is_none());
     }
 }

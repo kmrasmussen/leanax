@@ -39,3 +39,12 @@ explicit diagnostic that keeps the limitation visible.
 Probe the Nix package set for a real StableHLO verifier and wire the best
 available check into the existing generated-module loop.
 
+## Status
+
+Completed. The local Nix shell exposes `mlir-opt` but not `stablehlo-opt` or
+`stablehlo-translate`, and the Nix package set does not expose a direct
+`stablehlo` attribute. The e2e runner now probes for `stablehlo-opt`, runs it on
+every passing generated module when present, and otherwise emits an explicit
+semantic-verifier-unavailable diagnostic while keeping the generic MLIR parser
+gate. The README, roadmap, and `docs/stablehlo-verification.md` record the
+coverage boundary.

@@ -120,6 +120,10 @@ Current progress:
 - Generated modules now parse under `mlir-opt --allow-unregistered-dialect`.
   This is real MLIR syntax validation with StableHLO-shaped generic ops, not yet
   StableHLO dialect semantic verification.
+- The e2e runner now probes for `stablehlo-opt` and will run it on every passing
+  generated module when available. The current Nix shell does not provide that
+  verifier, so the gate emits an explicit diagnostic and keeps the limitation
+  visible.
 
 ## Phase 3: Numeric Execution
 

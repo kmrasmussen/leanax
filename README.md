@@ -62,11 +62,16 @@ nix develop --command bash -lc 'lake build && cargo test --locked --manifest-pat
 That command builds the Lean executable, tests the Rust manifest parser, emits
 MLIR-parseable StableHLO-shaped text for the manifested examples, compares the
 output against `e2e/golden`, runs a no-dependency Python verifier through `uv`,
-parses generated modules with `mlir-opt --allow-unregistered-dialect`, executes
-numeric cases through a small Python evaluator for the supported generated-op
-subset, and checks a deterministic host-side training loop. The unified e2e
-manifest records numeric cases, validation failures, and training-loop checks,
-so unexpected successes and unexpected failures are checked by the same runner.
+parses generated modules with `mlir-opt --allow-unregistered-dialect`, probes
+for `stablehlo-opt` and runs it when available, executes numeric cases through a
+small Python evaluator for the supported generated-op subset, and checks a
+deterministic host-side training loop. The unified e2e manifest records numeric
+cases, validation failures, and training-loop checks, so unexpected successes
+and unexpected failures are checked by the same runner.
+
+See [docs/stablehlo-verification.md](docs/stablehlo-verification.md) for the
+current boundary between generic MLIR parsing and StableHLO semantic
+verification.
 
 ## A Useful First Milestone
 
