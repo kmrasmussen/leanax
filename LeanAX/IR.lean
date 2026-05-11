@@ -19,9 +19,14 @@ structure ValueRef where
   deriving Repr, BEq
 
 inductive BindingKind where
+  | constant (value : String)
   | add (lhs : ValueRef) (rhs : ValueRef)
   | multiply (lhs : ValueRef) (rhs : ValueRef)
   | dotGeneral (lhs : ValueRef) (rhs : ValueRef)
+  | broadcastInDim (operand : ValueRef)
+  | reshape (operand : ValueRef)
+  | transpose (operand : ValueRef) (permutation : List Nat)
+  | reduceSum (operand : ValueRef)
   deriving Repr
 
 structure Binding where
@@ -59,6 +64,18 @@ def ValueRef.percent (value : ValueRef) : String :=
 
 def ValueRef.parameter (value : ValueRef) : String :=
   value.percent ++ ": " ++ value.ty.stableName
+
+def Shape.numElements : Shape -> Nat
+  | [] => 1
+  | dim :: rest => dim * Shape.numElements rest
+
+def Shape.isSuffixOf (suffix : Shape) (full : Shape) : Bool :=
+  if suffix == full then
+    true
+  else
+    match full with
+    | [] => false
+    | _ :: rest => suffix.isSuffixOf rest
 
 def tensor (name : String) (dtype : DType) (shape : Shape) : ValueRef :=
   { name := name, ty := { dtype := dtype, shape := shape } }

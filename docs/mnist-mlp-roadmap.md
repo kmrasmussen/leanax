@@ -54,6 +54,7 @@ Already implemented:
 - Lean package and CLI.
 - Minimal SSA-like tensor IR.
 - `add`, `multiply`, and rank-2 `dot_general`.
+- Constants, broadcast, reshape, rank-2 transpose, and scalar reduce-sum.
 - Shape/type validation for current primitives.
 - StableHLO-like text emission.
 - Rust e2e runner with golden comparisons.
@@ -85,6 +86,11 @@ Exit gate:
 
 - A LeanAX module can express `x @ w + b`, a reduction, and a scalar loss-like
   expression.
+
+Current progress:
+
+- The first primitive expansion is implemented as `nn-primitives`, with e2e
+  coverage for constants, broadcast, reshape, transpose, and reduce-sum.
 
 ## Phase 2: Validate Real Lowering
 

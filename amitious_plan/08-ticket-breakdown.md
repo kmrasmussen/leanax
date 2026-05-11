@@ -12,6 +12,8 @@ Phase one is the first vertical slice from planning to checked artifact.
 6. `TICKET-0006`: Add Lean IR validation and an expected-failure e2e case.
 7. `TICKET-0007`: Analysis - document the MNIST MLP north star.
 8. `TICKET-0008`: Unify the e2e manifest around explicit expected outcomes.
+9. `TICKET-0009`: Add structured validation errors and smart constructors.
+10. `TICKET-0010`: Add constants, reshape, transpose, broadcast, and reduce-sum.
 
 ## Completion Rule
 
@@ -29,6 +31,9 @@ The first six tickets are implemented together as a vertical slice:
 - Lean validation that rejects `bad-add-shape` before lowering.
 - A unified e2e manifest that keeps pass and validation-failure cases in one
   regression gate.
+- Structured validation errors rendered through stable CLI messages.
+- Neural-network primitive coverage for constants, broadcast, reshape,
+  transpose, and reduce-sum.
 
 ## Next Ticket Themes
 

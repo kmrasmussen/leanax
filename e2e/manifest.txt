@@ -1,6 +1,7 @@
 # outcome case output/golden-or-expected
 pass affine generated/affine.mlir e2e/golden/affine.mlir
 pass matmul generated/matmul.mlir e2e/golden/matmul.mlir
+pass nn-primitives generated/nn-primitives.mlir e2e/golden/nn-primitives.mlir
 validation-fail bad-add-shape stablehlo.add operands: expected matching tensor types
 validation-fail duplicate-input module inputs contain duplicate name %x
 validation-fail undefined-ref stablehlo.add lhs: undefined reference %x
@@ -8,3 +9,7 @@ validation-fail duplicate-result binding %sum: duplicate result name
 validation-fail bad-dot-inner stablehlo.dot_general: inner dimensions differ (4 vs 5)
 validation-fail bad-dot-result stablehlo.dot_general: result shape must be tensor<2x3xf32>
 validation-fail bad-dot-rank stablehlo.dot_general: expected rank-2 f32 operands and rank-2 f32 result
+validation-fail bad-broadcast stablehlo.broadcast_in_dim: cannot broadcast tensor<2xf32> to tensor<2x3xf32>
+validation-fail bad-reshape stablehlo.reshape: element count mismatch from tensor<2x3xf32> to tensor<5xf32>
+validation-fail bad-transpose stablehlo.transpose: unsupported permutation [1, 0] from tensor<2x3xf32> to tensor<2x3xf32>
+validation-fail bad-reduce stablehlo.reduce: expected scalar result for tensor<2x3xf32>, got tensor<2xf32>

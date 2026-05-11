@@ -2,6 +2,10 @@ import LeanAX.Validate
 
 namespace LeanAX
 
+def checkedConstant (resultName : String) (dtype : DType) (shape : Shape) (value : String) :
+    Except ValidationError Binding := do
+  pure { result := tensor resultName dtype shape, kind := .constant value }
+
 def checkedAdd (resultName : String) (lhs : ValueRef) (rhs : ValueRef) :
     Except ValidationError Binding := do
   requireTensorEq "stablehlo.add operands" lhs.ty rhs.ty
@@ -24,6 +28,34 @@ def checkedDotGeneral (resultName : String) (lhs : ValueRef) (rhs : ValueRef) :
       }
   | _, _, _, _ =>
       throw .dotUnsupportedTypeOrRank
+
+def checkedBroadcastInDim (resultName : String) (operand : ValueRef) (shape : Shape) :
+    Except ValidationError Binding := do
+  let result := tensor resultName operand.ty.dtype shape
+  requireBroadcastable operand.ty result.ty
+  pure { result := result, kind := .broadcastInDim operand }
+
+def checkedReshape (resultName : String) (operand : ValueRef) (shape : Shape) :
+    Except ValidationError Binding := do
+  let result := tensor resultName operand.ty.dtype shape
+  requireSameElementCount operand.ty result.ty
+  pure { result := result, kind := .reshape operand }
+
+def checkedTranspose (resultName : String) (operand : ValueRef) (permutation : List Nat) :
+    Except ValidationError Binding := do
+  let shape ←
+    match operand.ty.shape, permutation with
+    | [m, n], [1, 0] => pure [n, m]
+    | _, _ => throw (.transposeUnsupported operand.ty operand.ty permutation)
+  let result := tensor resultName operand.ty.dtype shape
+  requireTranspose operand.ty result.ty permutation
+  pure { result := result, kind := .transpose operand permutation }
+
+def checkedReduceSum (resultName : String) (operand : ValueRef) :
+    Except ValidationError Binding := do
+  let result := tensor resultName operand.ty.dtype []
+  requireReduceSum operand.ty result.ty
+  pure { result := result, kind := .reduceSum operand }
 
 def checkedModule
     (name : String)

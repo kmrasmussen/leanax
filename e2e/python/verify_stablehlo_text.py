@@ -25,7 +25,16 @@ def verify(path: Path) -> None:
 
     ops = re.findall(r"stablehlo\.([A-Za-z0-9_]+)", text)
     require(ops, "module has no stablehlo operations")
-    allowed = {"add", "multiply", "dot_general"}
+    allowed = {
+        "add",
+        "broadcast_in_dim",
+        "constant",
+        "dot_general",
+        "multiply",
+        "reduce",
+        "reshape",
+        "transpose",
+    }
     unknown = sorted(set(ops) - allowed)
     require(not unknown, f"unknown operations: {', '.join(unknown)}")
 
