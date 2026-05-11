@@ -1,0 +1,82 @@
+{
+  "schema": "leanax.lowering.v1",
+  "generated": "generated/mnist-forward.mlir",
+  "module": "leanax_mnist_forward",
+  "function": "main",
+  "inputs": [{"name": "x", "type": "tensor<2x784xf32>"}, {"name": "w1", "type": "tensor<784x8xf32>"}, {"name": "b1", "type": "tensor<8xf32>"}, {"name": "w2", "type": "tensor<8x10xf32>"}, {"name": "b2", "type": "tensor<10xf32>"}],
+  "outputs": [{"name": "logits_out", "type": "tensor<2x10xf32>"}],
+  "operations": [
+    {
+      "id": "op0",
+      "result": "hidden_linear",
+      "op": "stablehlo.dot_general",
+      "operands": ["x", "w1"],
+      "result_type": "tensor<2x8xf32>",
+      "mlir_line": 3
+    },
+    {
+      "id": "op1",
+      "result": "hidden_bias",
+      "op": "stablehlo.broadcast_in_dim",
+      "operands": ["b1"],
+      "result_type": "tensor<2x8xf32>",
+      "mlir_line": 4
+    },
+    {
+      "id": "op2",
+      "result": "hidden_out",
+      "op": "stablehlo.add",
+      "operands": ["hidden_linear", "hidden_bias"],
+      "result_type": "tensor<2x8xf32>",
+      "mlir_line": 5
+    },
+    {
+      "id": "op3",
+      "result": "relu_zero",
+      "op": "stablehlo.constant",
+      "operands": [],
+      "result_type": "tensor<f32>",
+      "mlir_line": 6
+    },
+    {
+      "id": "op4",
+      "result": "relu_zero_batched",
+      "op": "stablehlo.broadcast_in_dim",
+      "operands": ["relu_zero"],
+      "result_type": "tensor<2x8xf32>",
+      "mlir_line": 7
+    },
+    {
+      "id": "op5",
+      "result": "relu_out",
+      "op": "stablehlo.maximum",
+      "operands": ["hidden_out", "relu_zero_batched"],
+      "result_type": "tensor<2x8xf32>",
+      "mlir_line": 8
+    },
+    {
+      "id": "op6",
+      "result": "logits_linear",
+      "op": "stablehlo.dot_general",
+      "operands": ["relu_out", "w2"],
+      "result_type": "tensor<2x10xf32>",
+      "mlir_line": 9
+    },
+    {
+      "id": "op7",
+      "result": "logits_bias",
+      "op": "stablehlo.broadcast_in_dim",
+      "operands": ["b2"],
+      "result_type": "tensor<2x10xf32>",
+      "mlir_line": 10
+    },
+    {
+      "id": "op8",
+      "result": "logits_out",
+      "op": "stablehlo.add",
+      "operands": ["logits_linear", "logits_bias"],
+      "result_type": "tensor<2x10xf32>",
+      "mlir_line": 11
+    }
+  ]
+}

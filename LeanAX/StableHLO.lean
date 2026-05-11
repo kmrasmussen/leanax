@@ -380,6 +380,18 @@ def badMnistCrossEntropyShapeModule : Module :=
     ],
     returns := [loss] }
 
+def badMnistForwardShapeModule : Module :=
+  let x := tensor "x" .f32 [2, 784]
+  let w1 := tensor "w1" .f32 [785, 8]
+  let hiddenLinear := tensor "hidden_linear" .f32 [2, 8]
+  { name := "leanax_bad_mnist_forward_shape",
+    functionName := "main",
+    inputs := [x, w1],
+    bindings := [
+      { result := hiddenLinear, kind := .dotGeneral x w1 }
+    ],
+    returns := [hiddenLinear] }
+
 def badVmapDenseRankModule : Module :=
   let x := tensor "x" .f32 [2, 2, 4]
   let w := tensor "w" .f32 [4, 3]
@@ -430,6 +442,7 @@ def moduleByName (name : String) : Option Module :=
   | "nn-primitives" => nnPrimitivesModule?.toOption
   | "mlp-forward" => DSL.mlpForwardModule?.toOption
   | "relu-forward" => DSL.reluForwardModule?.toOption
+  | "mnist-forward" => DSL.mnistForwardModule?.toOption
   | "cross-entropy-loss" => DSL.crossEntropyLossModule?.toOption
   | "mnist-cross-entropy" => DSL.mnistCrossEntropyModule?.toOption
   | "vmap-pointwise" => vmapPointwiseModule?.toOption
@@ -453,6 +466,7 @@ def moduleByName (name : String) : Option Module :=
   | "bad-maximum-shape" => some badMaximumShapeModule
   | "bad-cross-entropy-shape" => some badCrossEntropyShapeModule
   | "bad-mnist-cross-entropy-shape" => some badMnistCrossEntropyShapeModule
+  | "bad-mnist-forward-shape" => some badMnistForwardShapeModule
   | "bad-vmap-dense-rank" => some badVmapDenseRankModule
   | "bad-grad-dense-shape" => some badGradDenseShapeModule
   | "bad-parameter-tree-shape" => some badParameterTreeShapeModule
@@ -465,6 +479,7 @@ def availableCases : List String :=
     "nn-primitives",
     "mlp-forward",
     "relu-forward",
+    "mnist-forward",
     "cross-entropy-loss",
     "mnist-cross-entropy",
     "vmap-pointwise",
@@ -488,6 +503,7 @@ def availableCases : List String :=
     "bad-maximum-shape",
     "bad-cross-entropy-shape",
     "bad-mnist-cross-entropy-shape",
+    "bad-mnist-forward-shape",
     "bad-vmap-dense-rank",
     "bad-grad-dense-shape",
     "bad-parameter-tree-shape"

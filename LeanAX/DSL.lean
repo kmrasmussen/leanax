@@ -53,5 +53,18 @@ def reluForwardModule? : Except ValidationError Module := do
     (hidden.bindings ++ activated.bindings)
     activated.output
 
+def mnistForwardModule? : Except ValidationError Module := do
+  let x := tensor "x" .f32 [2, 784]
+  let w1 := tensor "w1" .f32 [784, 8]
+  let b1 := tensor "b1" .f32 [8]
+  let w2 := tensor "w2" .f32 [8, 10]
+  let b2 := tensor "b2" .f32 [10]
+  let hidden ← denseLayer "hidden" x w1 b1
+  let activated ← reluActivation "relu" hidden.output
+  let logits ← denseLayer "logits" activated.output w2 b2
+  checkedModule "leanax_mnist_forward" "main" [x, w1, b1, w2, b2]
+    (hidden.bindings ++ activated.bindings ++ logits.bindings)
+    logits.output
+
 end DSL
 end LeanAX

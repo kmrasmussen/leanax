@@ -196,6 +196,11 @@ def tensor(shape: tuple[int, ...], data: list[float]) -> Tensor:
     return Tensor(shape, tuple(float(value) for value in data))
 
 
+def patterned_tensor(shape: tuple[int, ...], scale: float, offset: int = 0) -> Tensor:
+    values = [(((index + offset) % 17) - 8) * scale for index in range(numel(shape))]
+    return Tensor(shape, tuple(values))
+
+
 def oracle_inputs(name: str) -> dict[str, Tensor]:
     match name:
         case "affine":
@@ -226,6 +231,14 @@ def oracle_inputs(name: str) -> dict[str, Tensor]:
                 "x": tensor((2, 4), [1, -2, 0.5, 3, -1, 2, -0.5, 0]),
                 "w": tensor((4, 3), [1, -1, 0.5, 2, 0, -0.5, -1, 1.5, 2, 0.25, -2, 1]),
                 "b": tensor((3,), [-1, 0.5, 2]),
+            }
+        case "mnist-forward":
+            return {
+                "x": patterned_tensor((2, 784), 0.01, 1),
+                "w1": patterned_tensor((784, 8), 0.002, 3),
+                "b1": patterned_tensor((8,), 0.01, 5),
+                "w2": patterned_tensor((8, 10), 0.02, 7),
+                "b2": patterned_tensor((10,), 0.01, 9),
             }
         case "cross-entropy-loss":
             return {
@@ -301,6 +314,10 @@ def expected(name: str, inputs: dict[str, Tensor]) -> Tensor | list[Tensor]:
         case "relu-forward":
             h = elementwise(matmul(inputs["x"], inputs["w"]), broadcast_to(inputs["b"], (2, 3)), lambda a, b: a + b)
             return elementwise(h, broadcast_to(Tensor.scalar(0.0), (2, 3)), max)
+        case "mnist-forward":
+            hidden = elementwise(matmul(inputs["x"], inputs["w1"]), broadcast_to(inputs["b1"], (2, 8)), lambda a, b: a + b)
+            activated = elementwise(hidden, broadcast_to(Tensor.scalar(0.0), (2, 8)), max)
+            return elementwise(matmul(activated, inputs["w2"]), broadcast_to(inputs["b2"], (2, 10)), lambda a, b: a + b)
         case "cross-entropy-loss":
             exp_logits = Tensor(inputs["logits"].shape, tuple(math.exp(value) for value in inputs["logits"].data))
             denom = sum(exp_logits.data)

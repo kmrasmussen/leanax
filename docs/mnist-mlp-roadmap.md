@@ -291,6 +291,8 @@ Current progress:
   row-wise softmax normalization and mean-over-batch semantics. The e2e manifest
   checks it with golden text, MLIR parsing, lowering manifest validation, and a
   Python numeric oracle.
+- `mnist-forward` now lowers a classifier-shaped fixture forward pass with
+  inputs `2x784`, hidden width `8`, and logits `2x10`.
 
 ## Where We Are Relative To A Real Classifier
 
@@ -312,8 +314,8 @@ What is already solid:
 
 What is still missing for an honest MNIST classifier:
 
-- The current MLP forward fixture is tiny (`4 -> 3 -> 2`), not
-  `784 -> hidden -> 10`.
+- The MNIST-shaped forward artifact exists, but it is not yet connected to the
+  ten-class loss or a full train step.
 - The ten-class cross-entropy artifact exists, but it is not yet connected to an
   MNIST-shaped forward module or full train step.
 - Gradients cover square loss and a one-layer dense case, not a two-layer
@@ -355,6 +357,8 @@ Current progress:
 
 - `mnist-cross-entropy` covers the batched ten-class loss slice for batch size
   `2`, including a validation-failure case for mismatched label/logit shapes.
+- `mnist-forward` covers the classifier-shaped forward slice with a small hidden
+  dimension and deterministic oracle values.
 
 ## Phase 10: Full Classifier Train Step
 

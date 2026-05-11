@@ -38,3 +38,12 @@ lowering manifest validation, and Python oracle comparison.
 
 Keep the hidden dimension small, for example `8`, so generated goldens stay
 reviewable while the public input and output shapes match MNIST.
+
+## Status
+
+Completed. LeanAX now has an `mnist-forward` DSL module with public classifier
+shapes `2x784 -> 8 -> 10`. The module lowers two dense layers with a ReLU hidden
+activation, checks logits shaped `2x10`, and is covered by golden text, MLIR
+parsing, lowering manifest validation, and a deterministic Python numeric
+oracle. `bad-mnist-forward-shape` covers an inner-dimension mismatch as an
+expected validation failure.

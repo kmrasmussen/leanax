@@ -4,6 +4,7 @@ numeric matmul generated/matmul.mlir e2e/golden/matmul.mlir matmul
 numeric nn-primitives generated/nn-primitives.mlir e2e/golden/nn-primitives.mlir nn-primitives
 numeric mlp-forward generated/mlp-forward.mlir e2e/golden/mlp-forward.mlir mlp-forward
 numeric relu-forward generated/relu-forward.mlir e2e/golden/relu-forward.mlir relu-forward
+numeric mnist-forward generated/mnist-forward.mlir e2e/golden/mnist-forward.mlir mnist-forward
 numeric cross-entropy-loss generated/cross-entropy-loss.mlir e2e/golden/cross-entropy-loss.mlir cross-entropy-loss
 numeric mnist-cross-entropy generated/mnist-cross-entropy.mlir e2e/golden/mnist-cross-entropy.mlir mnist-cross-entropy
 numeric vmap-pointwise generated/vmap-pointwise.mlir e2e/golden/vmap-pointwise.mlir vmap-pointwise
@@ -31,6 +32,7 @@ validation-fail bad-reduce stablehlo.reduce: expected scalar result for tensor<2
 validation-fail bad-maximum-shape stablehlo.maximum operands: expected matching tensor types
 validation-fail bad-cross-entropy-shape stablehlo.multiply operands: expected matching tensor types
 validation-fail bad-mnist-cross-entropy-shape stablehlo.multiply operands: expected matching tensor types
+validation-fail bad-mnist-forward-shape stablehlo.dot_general: inner dimensions differ
 validation-fail bad-vmap-dense-rank stablehlo.dot_general: expected rank-2 f32 operands and rank-2 f32 result
 validation-fail bad-grad-dense-shape stablehlo.dot_general: result shape must be tensor<3x2xf32>
 validation-fail bad-parameter-tree-shape stablehlo.add operands: expected matching tensor types
