@@ -173,6 +173,9 @@ Current progress:
 
 - `LeanAX/DSL.lean` provides checked dense-layer helpers, and `mlp-forward`
   lowers a two-layer forward pass through the golden, MLIR, and numeric gates.
+- The DSL also has a first ReLU activation built from a zero constant, broadcast,
+  and `stablehlo.maximum`; `relu-forward` is covered by golden, MLIR, lowering
+  manifest, numeric-oracle, and validation-failure checks.
 
 ## Phase 5: Batching With `vmap`
 

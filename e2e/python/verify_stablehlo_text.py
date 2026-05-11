@@ -30,6 +30,7 @@ def verify(path: Path) -> None:
         "broadcast_in_dim",
         "constant",
         "dot_general",
+        "maximum",
         "multiply",
         "reduce",
         "reshape",

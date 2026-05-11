@@ -23,6 +23,13 @@ def squareActivation (layerPrefix : String) (input : ValueRef) :
   let out ← checkedMultiply (layerPrefix ++ "_out") input input
   pure { bindings := [out], output := out.result }
 
+def reluActivation (layerPrefix : String) (input : ValueRef) :
+    Except ValidationError LayerResult := do
+  let zero ← checkedConstant (layerPrefix ++ "_zero") input.ty.dtype [] "0.0"
+  let zeroBatched ← checkedBroadcastInDim (layerPrefix ++ "_zero_batched") zero.result input.ty.shape
+  let out ← checkedMaximum (layerPrefix ++ "_out") input zeroBatched.result
+  pure { bindings := [zero, zeroBatched, out], output := out.result }
+
 def mlpForwardModule? : Except ValidationError Module := do
   let x := tensor "x" .f32 [2, 4]
   let w1 := tensor "w1" .f32 [4, 3]
@@ -35,6 +42,16 @@ def mlpForwardModule? : Except ValidationError Module := do
   checkedModule "leanax_mlp_forward" "main" [x, w1, b1, w2, b2]
     (hidden.bindings ++ activated.bindings ++ logits.bindings)
     logits.output
+
+def reluForwardModule? : Except ValidationError Module := do
+  let x := tensor "x" .f32 [2, 4]
+  let w := tensor "w" .f32 [4, 3]
+  let b := tensor "b" .f32 [3]
+  let hidden ← denseLayer "hidden" x w b
+  let activated ← reluActivation "relu" hidden.output
+  checkedModule "leanax_relu_forward" "main" [x, w, b]
+    (hidden.bindings ++ activated.bindings)
+    activated.output
 
 end DSL
 end LeanAX

@@ -15,6 +15,8 @@ def Binding.prependPointwiseBatch (batch : Nat) (binding : Binding) :
       checkedAdd binding.result.name (lhs.prependBatch batch) (rhs.prependBatch batch)
   | .multiply lhs rhs =>
       checkedMultiply binding.result.name (lhs.prependBatch batch) (rhs.prependBatch batch)
+  | .maximum lhs rhs =>
+      checkedMaximum binding.result.name (lhs.prependBatch batch) (rhs.prependBatch batch)
   | _ =>
       throw (.unsupportedTransform "vmap" binding.result.name)
 

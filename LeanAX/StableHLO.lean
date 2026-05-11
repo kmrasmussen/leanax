@@ -32,6 +32,7 @@ def BindingKind.stableOpName : BindingKind -> String
   | .constant _ => "stablehlo.constant"
   | .add _ _ => "stablehlo.add"
   | .multiply _ _ => "stablehlo.multiply"
+  | .maximum _ _ => "stablehlo.maximum"
   | .dotGeneral _ _ => "stablehlo.dot_general"
   | .broadcastInDim _ => "stablehlo.broadcast_in_dim"
   | .reshape _ => "stablehlo.reshape"
@@ -42,6 +43,7 @@ def BindingKind.operands : BindingKind -> List ValueRef
   | .constant _ => []
   | .add lhs rhs => [lhs, rhs]
   | .multiply lhs rhs => [lhs, rhs]
+  | .maximum lhs rhs => [lhs, rhs]
   | .dotGeneral lhs rhs => [lhs, rhs]
   | .broadcastInDim operand => [operand]
   | .reshape operand => [operand]
@@ -58,6 +60,8 @@ def Binding.render (binding : Binding) : String :=
       renderGenericOp binding.result "add" [lhs, rhs]
   | .multiply lhs rhs =>
       renderGenericOp binding.result "multiply" [lhs, rhs]
+  | .maximum lhs rhs =>
+      renderGenericOp binding.result "maximum" [lhs, rhs]
   | .dotGeneral lhs rhs =>
       renderGenericOp binding.result "dot_general" [lhs, rhs] (some "{batching_dims = \"[] x []\"}")
   | .broadcastInDim operand =>
@@ -280,12 +284,23 @@ def badReduceModule : Module :=
     bindings := [{ result := out, kind := .reduceSum x }],
     returns := out }
 
+def badMaximumShapeModule : Module :=
+  let x := tensor "x" .f32 [2, 3]
+  let y := tensor "y" .f32 [3, 2]
+  let out := tensor "out" .f32 [2, 3]
+  { name := "leanax_bad_maximum_shape",
+    functionName := "main",
+    inputs := [x, y],
+    bindings := [{ result := out, kind := .maximum x y }],
+    returns := out }
+
 def moduleByName (name : String) : Option Module :=
   match name with
   | "affine" => affineModule?.toOption
   | "matmul" => matmulModule?.toOption
   | "nn-primitives" => nnPrimitivesModule?.toOption
   | "mlp-forward" => DSL.mlpForwardModule?.toOption
+  | "relu-forward" => DSL.reluForwardModule?.toOption
   | "vmap-pointwise" => vmapPointwiseModule?.toOption
   | "square-sum" => squareSumModule?.toOption
   | "grad-square-sum" => gradSquareSumModule?.toOption
@@ -301,6 +316,7 @@ def moduleByName (name : String) : Option Module :=
   | "bad-reshape" => some badReshapeModule
   | "bad-transpose" => some badTransposeModule
   | "bad-reduce" => some badReduceModule
+  | "bad-maximum-shape" => some badMaximumShapeModule
   | _ => none
 
 def availableCases : List String :=
@@ -309,6 +325,7 @@ def availableCases : List String :=
     "matmul",
     "nn-primitives",
     "mlp-forward",
+    "relu-forward",
     "vmap-pointwise",
     "square-sum",
     "grad-square-sum",
@@ -323,7 +340,8 @@ def availableCases : List String :=
     "bad-broadcast",
     "bad-reshape",
     "bad-transpose",
-    "bad-reduce"
+    "bad-reduce",
+    "bad-maximum-shape"
   ]
 
 end LeanAX

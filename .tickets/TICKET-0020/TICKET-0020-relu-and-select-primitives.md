@@ -38,3 +38,10 @@ bad ReLU/select shape or dtype.
 Implement tensor ReLU for one ranked f32 shape, then generalize validation once
 the e2e case is stable.
 
+## Status
+
+Completed. LeanAX now has a checked `stablehlo.maximum` primitive, DSL ReLU
+activation built from zero constant, broadcast, and maximum, and a `relu-forward`
+case that runs through golden text comparison, MLIR parsing, lowering manifest
+validation, and numeric oracle execution. The manifest also covers
+`bad-maximum-shape` as an expected validation failure.

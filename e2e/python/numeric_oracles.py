@@ -145,6 +145,8 @@ def execute(text: str, inputs: dict[str, Tensor]) -> Tensor:
             values[name] = elementwise(tensors[0], tensors[1], lambda a, b: a + b)
         elif op == "multiply":
             values[name] = elementwise(tensors[0], tensors[1], lambda a, b: a * b)
+        elif op == "maximum":
+            values[name] = elementwise(tensors[0], tensors[1], max)
         elif op == "dot_general":
             values[name] = matmul(tensors[0], tensors[1])
         elif op == "broadcast_in_dim":
@@ -197,6 +199,12 @@ def oracle_inputs(name: str) -> dict[str, Tensor]:
                 "w2": tensor((3, 2), [1, -1, 0.5, 2, -0.5, 1]),
                 "b2": tensor((2,), [0.1, -0.2]),
             }
+        case "relu-forward":
+            return {
+                "x": tensor((2, 4), [1, -2, 0.5, 3, -1, 2, -0.5, 0]),
+                "w": tensor((4, 3), [1, -1, 0.5, 2, 0, -0.5, -1, 1.5, 2, 0.25, -2, 1]),
+                "b": tensor((3,), [-1, 0.5, 2]),
+            }
         case "vmap-pointwise":
             return {
                 "x": tensor((4,), [1, 2, -1, 0.5]),
@@ -227,6 +235,9 @@ def expected(name: str, inputs: dict[str, Tensor]) -> Tensor:
             h = elementwise(matmul(inputs["x"], inputs["w1"]), broadcast_to(inputs["b1"], (2, 3)), lambda a, b: a + b)
             h2 = elementwise(h, h, lambda a, b: a * b)
             return elementwise(matmul(h2, inputs["w2"]), broadcast_to(inputs["b2"], (2, 2)), lambda a, b: a + b)
+        case "relu-forward":
+            h = elementwise(matmul(inputs["x"], inputs["w"]), broadcast_to(inputs["b"], (2, 3)), lambda a, b: a + b)
+            return elementwise(h, broadcast_to(Tensor.scalar(0.0), (2, 3)), max)
         case "vmap-pointwise":
             summed = elementwise(inputs["x"], inputs["y"], lambda a, b: a + b)
             return elementwise(summed, summed, lambda a, b: a * b)

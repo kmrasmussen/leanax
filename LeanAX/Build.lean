@@ -16,6 +16,11 @@ def checkedMultiply (resultName : String) (lhs : ValueRef) (rhs : ValueRef) :
   requireTensorEq "stablehlo.multiply operands" lhs.ty rhs.ty
   pure { result := tensor resultName lhs.ty.dtype lhs.ty.shape, kind := .multiply lhs rhs }
 
+def checkedMaximum (resultName : String) (lhs : ValueRef) (rhs : ValueRef) :
+    Except ValidationError Binding := do
+  requireTensorEq "stablehlo.maximum operands" lhs.ty rhs.ty
+  pure { result := tensor resultName lhs.ty.dtype lhs.ty.shape, kind := .maximum lhs rhs }
+
 def checkedDotGeneral (resultName : String) (lhs : ValueRef) (rhs : ValueRef) :
     Except ValidationError Binding := do
   match lhs.ty.dtype, rhs.ty.dtype, lhs.ty.shape, rhs.ty.shape with

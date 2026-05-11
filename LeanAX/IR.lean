@@ -22,6 +22,7 @@ inductive BindingKind where
   | constant (value : String)
   | add (lhs : ValueRef) (rhs : ValueRef)
   | multiply (lhs : ValueRef) (rhs : ValueRef)
+  | maximum (lhs : ValueRef) (rhs : ValueRef)
   | dotGeneral (lhs : ValueRef) (rhs : ValueRef)
   | broadcastInDim (operand : ValueRef)
   | reshape (operand : ValueRef)
