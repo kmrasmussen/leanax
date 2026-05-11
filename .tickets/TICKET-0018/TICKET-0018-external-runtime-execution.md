@@ -38,3 +38,15 @@ runtime outputs against deterministic expected values.
 Try the smallest elementwise `affine` module first, because it avoids matmul and
 reduction runtime complications.
 
+## Current Blocker
+
+Runtime execution is not complete yet. The current Nixpkgs input does not expose
+IREE, StableHLO runtime tooling, or XLA runtime tooling. The dev shell has
+`mlir-runner`, but that does not execute the current `stablehlo.*` generic-op
+modules. PyPI IREE packages install through `uv`, but their bundled
+`iree-compile` and `iree-run-module` binaries fail on this NixOS environment
+with the dynamic-linker stub error.
+
+See `docs/runtime-execution.md` for the exact probe results and likely next
+routes.
+
