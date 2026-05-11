@@ -124,6 +124,9 @@ Current progress:
   generated module when available. The current Nix shell does not provide that
   verifier, so the gate emits an explicit diagnostic and keeps the limitation
   visible.
+- Generated modules now have validated lowering manifest sidecars. The manifests
+  connect LeanAX binding order, operation names, operands, result names, result
+  types, and MLIR line numbers for downstream debugging.
 
 ## Phase 3: Numeric Execution
 

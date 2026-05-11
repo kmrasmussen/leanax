@@ -28,6 +28,26 @@ def renderGenericOp
     renderOperands operands ++ ")" ++ attrText ++ " : (" ++
     renderOperandTypes operands ++ ") -> " ++ result.ty.stableName
 
+def BindingKind.stableOpName : BindingKind -> String
+  | .constant _ => "stablehlo.constant"
+  | .add _ _ => "stablehlo.add"
+  | .multiply _ _ => "stablehlo.multiply"
+  | .dotGeneral _ _ => "stablehlo.dot_general"
+  | .broadcastInDim _ => "stablehlo.broadcast_in_dim"
+  | .reshape _ => "stablehlo.reshape"
+  | .transpose _ _ => "stablehlo.transpose"
+  | .reduceSum _ => "stablehlo.reduce"
+
+def BindingKind.operands : BindingKind -> List ValueRef
+  | .constant _ => []
+  | .add lhs rhs => [lhs, rhs]
+  | .multiply lhs rhs => [lhs, rhs]
+  | .dotGeneral lhs rhs => [lhs, rhs]
+  | .broadcastInDim operand => [operand]
+  | .reshape operand => [operand]
+  | .transpose operand _ => [operand]
+  | .reduceSum operand => [operand]
+
 def Binding.render (binding : Binding) : String :=
   match binding.kind with
   | .constant value =>
@@ -64,6 +84,52 @@ def Module.render (modu : Module) : String :=
      "  }",
      "}"]
   joinSep "\n" lines ++ "\n"
+
+def jsonEscapeChar : Char -> String
+  | '"' => "\\\""
+  | '\\' => "\\\\"
+  | '\n' => "\\n"
+  | '\r' => "\\r"
+  | '\t' => "\\t"
+  | c => String.singleton c
+
+def jsonString (value : String) : String :=
+  "\"" ++ joinSep "" (value.toList.map jsonEscapeChar) ++ "\""
+
+def jsonArray (items : List String) : String :=
+  "[" ++ joinSep ", " items ++ "]"
+
+def ValueRef.renderManifest (value : ValueRef) : String :=
+  "{\"name\": " ++ jsonString value.name ++
+    ", \"type\": " ++ jsonString value.ty.stableName ++ "}"
+
+def Binding.renderManifest (index : Nat) (binding : Binding) : String :=
+  let operands := binding.kind.operands.map (fun value => jsonString value.name)
+  "    {\n" ++
+    "      \"id\": " ++ jsonString s!"op{index}" ++ ",\n" ++
+    "      \"result\": " ++ jsonString binding.result.name ++ ",\n" ++
+    "      \"op\": " ++ jsonString binding.kind.stableOpName ++ ",\n" ++
+    "      \"operands\": " ++ jsonArray operands ++ ",\n" ++
+    "      \"result_type\": " ++ jsonString binding.result.ty.stableName ++ ",\n" ++
+    "      \"mlir_line\": " ++ toString (index + 3) ++ "\n" ++
+    "    }"
+
+def enumerateBindings : Nat -> List Binding -> List String
+  | _, [] => []
+  | index, binding :: rest => binding.renderManifest index :: enumerateBindings (index + 1) rest
+
+def Module.renderLoweringManifest (modu : Module) (generatedPath : String) : String :=
+  "{\n" ++
+    "  \"schema\": \"leanax.lowering.v1\",\n" ++
+    "  \"generated\": " ++ jsonString generatedPath ++ ",\n" ++
+    "  \"module\": " ++ jsonString modu.name ++ ",\n" ++
+    "  \"function\": " ++ jsonString modu.functionName ++ ",\n" ++
+    "  \"inputs\": " ++ jsonArray (modu.inputs.map ValueRef.renderManifest) ++ ",\n" ++
+    "  \"outputs\": " ++ jsonArray [modu.returns.renderManifest] ++ ",\n" ++
+    "  \"operations\": [\n" ++
+    joinSep ",\n" (enumerateBindings 0 modu.bindings) ++ "\n" ++
+    "  ]\n" ++
+    "}\n"
 
 def affineModule? : Except ValidationError Module := do
   let shape := [2, 3]

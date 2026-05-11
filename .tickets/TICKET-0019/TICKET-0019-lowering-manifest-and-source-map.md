@@ -35,3 +35,10 @@ case and compare at least one checked-in golden manifest.
 
 Add sidecar output for `affine` and validate it before expanding to every case.
 
+## Status
+
+Completed. `emit-stablehlo` accepts `--manifest-out` and writes a JSON sidecar
+with module, function, generated path, inputs, outputs, stable operation IDs,
+operands, result types, and MLIR line numbers. The e2e runner validates a
+sidecar for every passing generated module and compares the `affine` sidecar to
+a checked-in golden fixture.

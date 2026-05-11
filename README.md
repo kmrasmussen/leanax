@@ -73,6 +73,10 @@ See [docs/stablehlo-verification.md](docs/stablehlo-verification.md) for the
 current boundary between generic MLIR parsing and StableHLO semantic
 verification.
 
+`emit-stablehlo` also writes lowering manifest sidecars when passed
+`--manifest-out`. The e2e runner validates those manifests for every passing
+generated module, and the `affine` sidecar has a checked-in golden fixture.
+
 ## A Useful First Milestone
 
 The smallest meaningful prototype would be:

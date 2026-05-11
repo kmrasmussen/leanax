@@ -309,6 +309,14 @@ fn compare(repo: &Path, actual: &str, expected: &str) -> Result<(), String> {
     }
 }
 
+fn lowering_manifest_path(output: &str) -> String {
+    format!("{output}.manifest.json")
+}
+
+fn golden_lowering_manifest_path(golden: &str) -> String {
+    format!("{golden}.manifest.json")
+}
+
 fn run_pass_case(
     repo: &Path,
     stablehlo_verifier: &Option<String>,
@@ -316,6 +324,7 @@ fn run_pass_case(
     output: &str,
     golden: &str,
 ) -> Result<(), String> {
+    let lowering_manifest = lowering_manifest_path(output);
     if let Some(parent) = repo.join(output).parent() {
         fs::create_dir_all(parent)
             .map_err(|err| format!("failed creating output dir {}: {err}", parent.display()))?;
@@ -332,12 +341,23 @@ fn run_pass_case(
             &case.name,
             "--out",
             output,
+            "--manifest-out",
+            &lowering_manifest,
         ],
     )?;
     compare(repo, output, golden)?;
     run_python_project(repo, "e2e/python/verify_stablehlo_text.py", &[output])?;
     run_mlir_parse(repo, output)?;
     run_stablehlo_semantic_verify(repo, stablehlo_verifier, output)?;
+    run_python_project(
+        repo,
+        "e2e/python/verify_lowering_manifest.py",
+        &[&lowering_manifest, output],
+    )?;
+    let golden_manifest = golden_lowering_manifest_path(golden);
+    if repo.join(&golden_manifest).is_file() {
+        compare(repo, &lowering_manifest, &golden_manifest)?;
+    }
     Ok(())
 }
 
@@ -563,5 +583,17 @@ validation-fail bad-add-shape stablehlo.add operands: expected matching tensor t
         let selected = select_stablehlo_verifier(&["missing-a", "missing-b"], |_| false);
 
         assert!(selected.is_none());
+    }
+
+    #[test]
+    fn derives_lowering_manifest_paths() {
+        assert_eq!(
+            lowering_manifest_path("generated/affine.mlir"),
+            "generated/affine.mlir.manifest.json"
+        );
+        assert_eq!(
+            golden_lowering_manifest_path("e2e/golden/affine.mlir"),
+            "e2e/golden/affine.mlir.manifest.json"
+        );
     }
 }

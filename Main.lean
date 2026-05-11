@@ -5,7 +5,7 @@ namespace LeanAX.Cli
 
 def usage : String :=
   "leanax commands:\n" ++
-  "  emit-stablehlo --case NAME --out PATH\n" ++
+  "  emit-stablehlo --case NAME --out PATH [--manifest-out PATH]\n" ++
   "  list-cases\n" ++
   "\n" ++
   "Available cases: " ++ LeanAX.joinSep ", " LeanAX.availableCases ++ "\n"
@@ -18,6 +18,7 @@ partial def parseFlag (flag : String) : List String -> Option String
 def emitStableHLO (args : List String) : IO UInt32 := do
   let caseName := parseFlag "--case" args
   let outPath := parseFlag "--out" args
+  let manifestOutPath := parseFlag "--manifest-out" args
   match caseName, outPath with
   | some name, some path =>
       match LeanAX.moduleByName name with
@@ -25,6 +26,9 @@ def emitStableHLO (args : List String) : IO UInt32 := do
           match modu.validate with
           | .ok () =>
               IO.FS.writeFile path modu.render
+              if let some manifestPath := manifestOutPath then
+                IO.FS.writeFile manifestPath (modu.renderLoweringManifest path)
+                IO.println s!"wrote {manifestPath}"
               IO.println s!"wrote {path}"
               pure 0
           | .error err =>

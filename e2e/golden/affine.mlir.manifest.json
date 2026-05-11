@@ -1,0 +1,26 @@
+{
+  "schema": "leanax.lowering.v1",
+  "generated": "generated/affine.mlir",
+  "module": "leanax_affine",
+  "function": "main",
+  "inputs": [{"name": "x", "type": "tensor<2x3xf32>"}, {"name": "bias", "type": "tensor<2x3xf32>"}],
+  "outputs": [{"name": "out", "type": "tensor<2x3xf32>"}],
+  "operations": [
+    {
+      "id": "op0",
+      "result": "sum",
+      "op": "stablehlo.add",
+      "operands": ["x", "bias"],
+      "result_type": "tensor<2x3xf32>",
+      "mlir_line": 3
+    },
+    {
+      "id": "op1",
+      "result": "out",
+      "op": "stablehlo.multiply",
+      "operands": ["sum", "sum"],
+      "result_type": "tensor<2x3xf32>",
+      "mlir_line": 4
+    }
+  ]
+}
