@@ -34,6 +34,12 @@ The next phase should make the MNIST MLP target less distant:
 2. Add constants, reshape, transpose, broadcast, and reduce-sum.
 3. Validate generated text with real StableHLO/MLIR tooling.
 4. Add numeric oracle checks for small kernels.
-5. Add a first `vmap` transform over elementwise modules.
-6. Add reverse-mode autodiff for scalar losses.
-7. Add a minimal host-side training loop.
+5. Design a JAX-shaped LeanAX DSL surface for `forward`, `loss`, and
+   `trainStep`.
+6. Add a first `vmap` transform over elementwise modules.
+7. Add reverse-mode autodiff for scalar losses.
+8. Add a minimal host-side training loop.
+
+`TICKET-0007` is intentionally an analysis ticket. It captures the north-star
+direction and roadmap; future tickets should break implementation work out of
+that analysis.

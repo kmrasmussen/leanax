@@ -41,6 +41,8 @@ directly, with shape and dtype facts available before lowering.
   pipeline.
 - [docs/mnist-mlp-goal.md](docs/mnist-mlp-goal.md): the high-level north star:
   train a small MLP on MNIST through LeanAX.
+- [docs/mnist-mlp-roadmap.md](docs/mnist-mlp-roadmap.md): a staged path from
+  the current prototype to a JAX-shaped MNIST training loop.
 - [examples/first-sketch.lean](examples/first-sketch.lean): pseudocode for the
   kind of API this project is imagining.
 - [notes/dialogue-001.md](notes/dialogue-001.md): first set of discussion
@@ -77,7 +79,9 @@ That would prove the core idea without pretending that the hard parts are solved
 ## North Star
 
 The larger target is to train a small multilayer perceptron on MNIST from a
-Lean-native tensor program. That means LeanAX eventually needs real numeric
-execution, batching, loss functions, reverse-mode autodiff, optimizer updates,
-and an end-to-end training loop. The project should grow toward that target in
-checked slices rather than jumping straight to a large runtime.
+Lean-native tensor program. The program should stay close to how a pure JAX MLP
+training loop is structured: pure `forward`, `loss`, and `train_step` functions,
+explicit parameters and batches, and transforms such as `jit`, `vmap`, and
+`grad`. LeanAX will differ by making shapes, dtypes, IR construction, and
+selected correctness arguments explicit. The project should grow toward that
+target in checked slices rather than jumping straight to a large runtime.

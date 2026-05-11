@@ -23,6 +23,12 @@ Possible approaches:
 
 The embedded DSL is probably the best first prototype.
 
+For model training, the DSL should stay close to pure JAX structure even though
+the syntax is Lean. A LeanAX MLP should be organized around pure functions such
+as `forward`, `loss`, and `trainStep`, with explicit parameter values and batch
+inputs. Transformations such as `jit`, `vmap`, and `grad` should be visible at
+the same conceptual boundaries a JAX user would expect.
+
 ## Layer 2: Typed Tensor IR
 
 The core IR should be small and boring:
@@ -111,9 +117,12 @@ small.
 2. Shape-aware smart constructors with readable errors.
 3. StableHLO-like text emitter.
 4. Golden tests for emitted modules.
-5. `vmap` transform for elementwise ops and matmul.
-6. Reverse-mode `grad` for a tiny scalar-output subset.
-7. External verification through StableHLO/MLIR tools.
+5. External verification through StableHLO/MLIR tools.
+6. Numeric execution checks against Python/JAX-style oracles.
+7. A JAX-shaped DSL example for a two-layer MLP forward pass.
+8. `vmap` transform for elementwise ops and matmul.
+9. Reverse-mode `grad` for a tiny scalar-output subset.
+10. A host-side training loop that can eventually run MNIST.
 
 ## Main Risks
 

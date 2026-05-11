@@ -25,6 +25,23 @@ This does not require matching JAX performance in the early versions. It does
 require a real end-to-end training loop where the important compiler and
 transformation boundaries are exercised.
 
+## Stay Close To JAX
+
+LeanAX should be recognizable to someone who already understands pure JAX. The
+surface syntax will be Lean, and the implementation will be staged through a
+typed Lean IR, but the conceptual program shape should stay close to:
+
+1. define pure functions for `forward`, `loss`, `accuracy`, and `update`,
+2. transform those functions with `jit`, `vmap`, and `grad`,
+3. keep parameters and batches explicit,
+4. avoid hidden mutable model state,
+5. run a host-side training loop that repeatedly calls compiled steps.
+
+The point is not to copy JAX syntax. The point is to preserve the useful JAX
+discipline: small pure tensor functions plus explicit transformations. LeanAX
+then adds static shape/dtype evidence, checked lowering, and eventually proofs
+around selected transformations.
+
 ## Milestone Ladder
 
 1. **Checked Tensor IR**
@@ -71,3 +88,6 @@ but rich enough to force the hard parts:
 Reaching this point would prove LeanAX is more than a pretty-printer. It would
 show that Lean can serve as a serious typed front end for array programming while
 delegating backend code generation to the ecosystem that already exists.
+
+See [mnist-mlp-roadmap.md](mnist-mlp-roadmap.md) for the staged path from the
+current prototype to that goal.
