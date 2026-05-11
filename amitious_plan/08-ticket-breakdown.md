@@ -79,3 +79,25 @@ e2e gate that covers the behavior it introduces.
 7. `TICKET-0014`: First `vmap` transform.
 8. `TICKET-0015`: Reverse-mode `grad` for scalar losses.
 9. `TICKET-0016`: Minimal host-side training loop.
+
+## Phase-Two Ticket Queue
+
+The next queue starts from the completed phase-one slice and aims at the MNIST
+MLP north star. These tickets should land one by one, each with an observable
+e2e gate.
+
+1. `TICKET-0017`: Add the strongest practical StableHLO semantic verifier.
+2. `TICKET-0018`: Execute generated modules through an external runtime path.
+3. `TICKET-0019`: Emit lowering manifests and source maps for generated modules.
+4. `TICKET-0020`: Add ReLU and select-style primitives.
+5. `TICKET-0021`: Add softmax cross-entropy loss coverage.
+6. `TICKET-0022`: Extend `vmap` to batched dense-layer patterns.
+7. `TICKET-0023`: Generate gradients for a tiny dense-model loss.
+8. `TICKET-0024`: Represent parameter trees and multi-parameter SGD updates.
+9. `TICKET-0025`: Add an MNIST-shaped host-side data loader.
+10. `TICKET-0026`: Add the MNIST MLP training smoke command.
+
+The intended order is verifier/runtime first, then model expressivity, then data
+and the final training command. If runtime execution blocks, the model tickets
+can still proceed against the current MLIR plus numeric-oracle gate while the
+blocker is documented.
