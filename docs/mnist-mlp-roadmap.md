@@ -59,11 +59,12 @@ Already implemented:
 - Rust e2e runner with golden comparisons.
 - Python structural verifier.
 - Expected-failure validation case.
+- Unified e2e manifest with explicit expected outcomes.
 
 Gate:
 
 ```sh
-nix develop --command bash -lc 'lake build && cargo run --locked --manifest-path e2e/runner/Cargo.toml'
+nix develop --command bash -lc 'lake build && cargo test --locked --manifest-path e2e/runner/Cargo.toml && cargo run --locked --manifest-path e2e/runner/Cargo.toml'
 ```
 
 ## Phase 1: Make The IR Usable

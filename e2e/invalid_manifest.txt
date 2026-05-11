@@ -1,2 +1,0 @@
-# case|expected stderr
-bad-add-shape|stablehlo.add operands: expected matching tensor types

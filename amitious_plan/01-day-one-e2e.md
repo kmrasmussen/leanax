@@ -22,7 +22,7 @@ It proves the project can cross all important boundaries:
 ## Acceptance Gate
 
 ```sh
-nix develop --command bash -lc 'lake build && cargo run --locked --manifest-path e2e/runner/Cargo.toml'
+nix develop --command bash -lc 'lake build && cargo test --locked --manifest-path e2e/runner/Cargo.toml && cargo run --locked --manifest-path e2e/runner/Cargo.toml'
 ```
 
 The command should generate a StableHLO-like file and verify it against the

@@ -56,13 +56,14 @@ directly, with shape and dtype facts available before lowering.
 The repository now contains a minimal Lean package and a reproducible e2e path:
 
 ```sh
-nix develop --command bash -lc 'lake build && cargo run --locked --manifest-path e2e/runner/Cargo.toml'
+nix develop --command bash -lc 'lake build && cargo test --locked --manifest-path e2e/runner/Cargo.toml && cargo run --locked --manifest-path e2e/runner/Cargo.toml'
 ```
 
-That command builds the Lean executable, emits StableHLO-like text for the
-manifested examples, compares the output against `e2e/golden`, and runs a
-no-dependency Python verifier through `uv`. The same Rust runner also checks an
-expected validation failure for a malformed elementwise-add module.
+That command builds the Lean executable, tests the Rust manifest parser, emits
+StableHLO-like text for the manifested examples, compares the output against
+`e2e/golden`, and runs a no-dependency Python verifier through `uv`. The unified
+e2e manifest records expected outcomes, including validation failures, so
+unexpected successes and unexpected failures are checked by the same runner.
 
 ## A Useful First Milestone
 

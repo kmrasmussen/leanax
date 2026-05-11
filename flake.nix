@@ -31,6 +31,7 @@
           chmod -R u+w source
           cd source
           lake build
+          cargo test --locked --manifest-path e2e/runner/Cargo.toml
           cargo run --locked --manifest-path e2e/runner/Cargo.toml
           touch "$out"
         '';
