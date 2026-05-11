@@ -1,4 +1,5 @@
 import LeanAX.Build
+import LeanAX.DSL
 
 namespace LeanAX
 
@@ -37,5 +38,27 @@ def scalarPointwiseModule? : Except ValidationError Module := do
 def vmapPointwiseModule? : Except ValidationError Module := do
   let scalar ← scalarPointwiseModule?
   scalar.vmapPointwise 4 "leanax_vmap_pointwise"
+
+def vmapDenseLayer
+    (batch : Nat)
+    (layerPrefix : String)
+    (exampleInput : ValueRef)
+    (weight : ValueRef)
+    (bias : ValueRef) :
+    Except ValidationError DSL.LayerResult := do
+  match exampleInput.ty.shape with
+  | [features] =>
+      let batchedInput := { exampleInput with ty := { exampleInput.ty with shape := [batch, features] } }
+      DSL.denseLayer layerPrefix batchedInput weight bias
+  | _ =>
+      throw (.unsupportedTransform "vmap-dense" exampleInput.name)
+
+def vmapDenseModule? : Except ValidationError Module := do
+  let x := tensor "x" .f32 [4]
+  let w := tensor "w" .f32 [4, 3]
+  let b := tensor "b" .f32 [3]
+  let batchedX := x.prependBatch 2
+  let dense ← vmapDenseLayer 2 "dense" x w b
+  checkedModule "leanax_vmap_dense" "main" [batchedX, w, b] dense.bindings dense.output
 
 end LeanAX

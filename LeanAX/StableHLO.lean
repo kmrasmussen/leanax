@@ -335,6 +335,23 @@ def badCrossEntropyShapeModule : Module :=
     ],
     returns := loss }
 
+def badVmapDenseRankModule : Module :=
+  let x := tensor "x" .f32 [2, 2, 4]
+  let w := tensor "w" .f32 [4, 3]
+  let b := tensor "b" .f32 [3]
+  let linear := tensor "dense_linear" .f32 [2, 3]
+  let bias := tensor "dense_bias" .f32 [2, 3]
+  let out := tensor "dense_out" .f32 [2, 3]
+  { name := "leanax_bad_vmap_dense_rank",
+    functionName := "main",
+    inputs := [x, w, b],
+    bindings := [
+      { result := linear, kind := .dotGeneral x w },
+      { result := bias, kind := .broadcastInDim b },
+      { result := out, kind := .add linear bias }
+    ],
+    returns := out }
+
 def moduleByName (name : String) : Option Module :=
   match name with
   | "affine" => affineModule?.toOption
@@ -344,6 +361,7 @@ def moduleByName (name : String) : Option Module :=
   | "relu-forward" => DSL.reluForwardModule?.toOption
   | "cross-entropy-loss" => DSL.crossEntropyLossModule?.toOption
   | "vmap-pointwise" => vmapPointwiseModule?.toOption
+  | "vmap-dense" => vmapDenseModule?.toOption
   | "square-sum" => squareSumModule?.toOption
   | "grad-square-sum" => gradSquareSumModule?.toOption
   | "linear-train-step" => linearTrainStepModule?.toOption
@@ -360,6 +378,7 @@ def moduleByName (name : String) : Option Module :=
   | "bad-reduce" => some badReduceModule
   | "bad-maximum-shape" => some badMaximumShapeModule
   | "bad-cross-entropy-shape" => some badCrossEntropyShapeModule
+  | "bad-vmap-dense-rank" => some badVmapDenseRankModule
   | _ => none
 
 def availableCases : List String :=
@@ -371,6 +390,7 @@ def availableCases : List String :=
     "relu-forward",
     "cross-entropy-loss",
     "vmap-pointwise",
+    "vmap-dense",
     "square-sum",
     "grad-square-sum",
     "linear-train-step",
@@ -386,7 +406,8 @@ def availableCases : List String :=
     "bad-transpose",
     "bad-reduce",
     "bad-maximum-shape",
-    "bad-cross-entropy-shape"
+    "bad-cross-entropy-shape",
+    "bad-vmap-dense-rank"
   ]
 
 end LeanAX

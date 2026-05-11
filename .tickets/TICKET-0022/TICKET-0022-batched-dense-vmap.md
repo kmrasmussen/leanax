@@ -35,3 +35,11 @@ batched module and compares it against a manually batched oracle.
 Support one dense shape, such as `4 -> 3` over a batch of `2`, then generalize
 the shape rule.
 
+## Status
+
+Completed. `LeanAX/Transform.lean` now has a first dense-layer batching helper
+that keeps weight and bias parameters unbatched while prepending a batch axis to
+the per-example input. The new `vmap-dense` case is checked by golden text,
+MLIR parsing, lowering manifest validation, and a Python numeric oracle.
+`bad-vmap-dense-rank` covers an unsupported batched rank as an expected
+validation failure.

@@ -221,6 +221,12 @@ def oracle_inputs(name: str) -> dict[str, Tensor]:
                 "x": tensor((4,), [1, 2, -1, 0.5]),
                 "y": tensor((4,), [0.5, -3, 4, 1.5]),
             }
+        case "vmap-dense":
+            return {
+                "x": tensor((2, 4), [1, -2, 0.5, 3, -1, 2, -0.5, 0]),
+                "w": tensor((4, 3), [1, -1, 0.5, 2, 0, -0.5, -1, 1.5, 2, 0.25, -2, 1]),
+                "b": tensor((3,), [-1, 0.5, 2]),
+            }
         case "square-sum" | "grad-square-sum":
             return {"x": tensor((2, 3), [1, -2, 3, -4, 0.5, 2.5])}
         case "linear-train-step":
@@ -259,6 +265,8 @@ def expected(name: str, inputs: dict[str, Tensor]) -> Tensor:
         case "vmap-pointwise":
             summed = elementwise(inputs["x"], inputs["y"], lambda a, b: a + b)
             return elementwise(summed, summed, lambda a, b: a * b)
+        case "vmap-dense":
+            return elementwise(matmul(inputs["x"], inputs["w"]), broadcast_to(inputs["b"], (2, 3)), lambda a, b: a + b)
         case "square-sum":
             return Tensor.scalar(sum(value * value for value in inputs["x"].data))
         case "grad-square-sum":

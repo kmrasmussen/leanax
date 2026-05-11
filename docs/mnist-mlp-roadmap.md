@@ -198,6 +198,9 @@ Current progress:
 
 - `LeanAX/Transform.lean` batches a pointwise scalar module by prepending a batch
   dimension, and `vmap-pointwise` is checked numerically.
+- The first dense-layer batching slice is implemented as `vmap-dense`: it keeps
+  weights and bias unbatched, prepends a batch axis to the per-example input,
+  and checks the resulting dense module against a manually batched oracle.
 
 ## Phase 6: Reverse-Mode `grad`
 
