@@ -82,6 +82,15 @@ The MNIST path currently starts with a deterministic fixture mode documented in
 normalization, one-hot labels, and deterministic host-side batching without a
 network dependency.
 
+The current MNIST smoke command is:
+
+```sh
+nix develop --command uv run --no-managed-python --python python3 --project e2e/python python e2e/python/mnist_mlp_smoke.py
+```
+
+Run the full e2e gate first so the generated compiler artifacts exist under
+`generated/`.
+
 ## A Useful First Milestone
 
 The smallest meaningful prototype would be:

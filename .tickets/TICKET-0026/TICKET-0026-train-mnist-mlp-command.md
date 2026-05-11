@@ -38,3 +38,11 @@ metrics, and asserts loss or accuracy moves in the expected direction.
 Wire the command to the small fixture mode from `TICKET-0025`, then expand to a
 short full-dataset run once runtime behavior is stable.
 
+## Status
+
+Completed. `e2e/python/mnist_mlp_smoke.py` is the documented fixture-mode MNIST
+MLP smoke command. It checks that generated LeanAX loss and optimizer artifacts
+exist, trains a tiny deterministic parity classifier over the MNIST-shaped
+fixture, prints stable loss/accuracy metrics, and fails if loss does not
+decrease or accuracy regresses. The README and roadmap document the command and
+the runtime limitation.

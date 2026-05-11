@@ -279,6 +279,10 @@ Current progress:
   path with flattened `28x28` image batches, normalized pixel values, and
   one-hot labels. The e2e manifest has a dedicated `data-loader` check for this
   host-side contract.
+- `e2e/python/mnist_mlp_smoke.py` is the first documented MNIST MLP smoke
+  command. It runs over the fixture path, asserts generated loss and optimizer
+  artifacts are present, trains a tiny parity classifier for stable metrics, and
+  stays explicit about not being full runtime execution yet.
 
 ## What Not To Do Yet
 
