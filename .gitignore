@@ -1,0 +1,7 @@
+.lake/
+generated/*
+!generated/.gitkeep
+e2e/runner/target/
+e2e/python/.venv/
+__pycache__/
+*.pyc

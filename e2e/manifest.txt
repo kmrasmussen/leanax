@@ -1,0 +1,3 @@
+# case output golden
+affine generated/affine.mlir e2e/golden/affine.mlir
+matmul generated/matmul.mlir e2e/golden/matmul.mlir
