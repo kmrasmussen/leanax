@@ -304,6 +304,8 @@ Current progress:
 - `mnist-train-step-artifact` stitches the generated forward, loss, gradient,
   and full parameter-tree artifacts for one fixture batch and checks loss
   reduction plus non-zero updates.
+- `mnist-classifier-smoke` trains the ten-class fixture classifier for a short
+  deterministic run and asserts loss improves without accuracy regression.
 
 ## Where We Are Relative To A Real Classifier
 
@@ -333,8 +335,8 @@ What is still missing for an honest MNIST classifier:
   ReLU MLP trained with cross entropy.
 - The generated classifier artifacts are now stitched by an e2e train-step
   check, but not yet lowered as one monolithic Lean train-step module.
-- The MNIST smoke command uses Python training logic and checks that compiler
-  artifacts exist; it does not yet execute a LeanAX-generated full train step.
+- The MNIST classifier smoke command is ten-class and artifact-checked, but it
+  is still host-orchestrated rather than a single compiled train-loop runtime.
 - Full dataset loading and stable short-epoch metrics remain future work.
 
 Pragmatically, the project is close enough to define the real classifier path in
@@ -419,6 +421,12 @@ Exit gate:
 
 - One command trains the fixture-mode ten-class classifier, proves loss improves
   or accuracy does not regress, and the full Nix e2e gate covers it.
+
+Current progress:
+
+- `mnist-classifier-smoke` is the current ten-class fixture-mode command. It
+  uses checked LeanAX artifacts for the compiler path and host Python for the
+  short training loop.
 
 ## What Not To Do Yet
 

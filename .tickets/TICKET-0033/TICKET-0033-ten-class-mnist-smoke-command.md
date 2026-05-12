@@ -37,3 +37,12 @@ loss improves or accuracy does not regress over a deterministic short run.
 
 Run over the deterministic fixture only; full-dataset support is a separate
 ticket.
+
+## Status
+
+Completed. `e2e/python/mnist_classifier_smoke.py` is the ten-class fixture-mode
+classifier smoke command. It trains the `784 -> 8 -> 10` classifier over the
+deterministic MNIST-shaped fixture, requires the generated forward, loss,
+gradient, and full parameter-tree artifacts, prints first/final loss and
+accuracy, and fails if loss does not improve or accuracy regresses. The e2e
+manifest covers it as a `training-loop` case.
