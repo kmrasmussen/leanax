@@ -565,6 +565,16 @@ Exit gate:
 - The readiness report, roadmap, and ticket statuses agree after the next phase
   of classifier work.
 
+Current progress:
+
+- `mnist-progress-report` now covers every ticket in the `TICKET-0036` through
+  `TICKET-0044` phase. It marks the monolithic train step, command wrapper,
+  cache resolver, optional full-dataset smoke, runtime capability matrix, dense
+  runtime, and MNIST-forward runtime as true.
+- The same report keeps full real-dataset training and direct full MNIST
+  external-runtime execution false, because those are still harder follow-up
+  milestones rather than proven default-gate capabilities.
+
 Tickets:
 
 - `TICKET-0044`: Classifier Readiness Report V2.

@@ -37,3 +37,12 @@ the normal e2e gate.
 
 Add the new fields as false first, then flip them only in the implementation
 commits that prove each milestone.
+
+## Status
+
+Completed. `mnist-progress-report` now includes booleans for the monolithic
+train step, command wrapper, cache resolver, optional full-dataset smoke,
+runtime capability matrix, dense runtime fixture, and MNIST-forward runtime
+slice. The expected report keeps full real-dataset training and direct full
+MNIST external-runtime execution false until those harder milestones are
+actually proven.

@@ -11,15 +11,21 @@ MANIFEST = REPO / "e2e/manifest.txt"
 EXPECTED = {
     "affine_external_runtime": True,
     "artifact_composed_train_step": True,
+    "cache_resolver": True,
+    "dense_runtime": True,
     "direct_mnist_external_runtime": False,
     "fixture_only_default": True,
     "full_dataset_training": False,
     "idx_full_dataset_loader": True,
+    "mnist_forward_runtime": True,
+    "mnist_train_command": True,
     "monolithic_mnist_train_step": True,
     "mnist_cross_entropy_artifact": True,
     "mnist_forward_artifact": True,
     "mnist_parameter_tree_artifact": True,
+    "optional_full_dataset_smoke": True,
     "relu_dense_gradient_artifact": True,
+    "runtime_capability_matrix": True,
     "softmax_dense_gradient_artifact": True,
     "ten_class_fixture_training": True,
 }
@@ -57,10 +63,20 @@ def report() -> dict[str, bool]:
             and artifact_contains("generated/grad-relu-dense.mlir", ["%grad_w1", "%grad_b1"])
             and artifact_contains("generated/mnist-parameter-tree.mlir", ["%next_w1", "%next_b1"])
         ),
+        "cache_resolver": ("data-loader", "mnist-cache-resolver") in entries,
+        "dense_runtime": (
+            ("runtime", "dense-runtime") in entries
+            and artifact_contains("e2e/golden/dense-runtime.mlir", ["llvm.func @main", "llvm.return"])
+        ),
         "direct_mnist_external_runtime": False,
         "fixture_only_default": ("data-loader", "mnist-fixture") in entries,
         "full_dataset_training": False,
         "idx_full_dataset_loader": ("data-loader", "mnist-idx-sample") in entries,
+        "mnist_forward_runtime": (
+            ("runtime", "mnist-forward-runtime") in entries
+            and artifact_contains("e2e/golden/mnist-forward-runtime.mlir", ["llvm.fcmp", "llvm.select"])
+        ),
+        "mnist_train_command": ("training-loop", "mnist-train-command") in entries,
         "monolithic_mnist_train_step": (
             ("numeric", "mnist-train-step") in entries
             and artifact_contains(
@@ -89,10 +105,12 @@ def report() -> dict[str, bool]:
                 ["%next_w1", "%next_b1", "%next_w2", "%next_b2"],
             )
         ),
+        "optional_full_dataset_smoke": ("training-loop", "mnist-full-dataset-smoke") in entries,
         "relu_dense_gradient_artifact": (
             ("numeric", "grad-relu-dense") in entries
             and artifact_contains("generated/grad-relu-dense.mlir", ["%grad_w1", "%grad_b1", "%relu_mask"])
         ),
+        "runtime_capability_matrix": ("data-loader", "runtime-capability-matrix") in entries,
         "softmax_dense_gradient_artifact": (
             ("numeric", "grad-softmax-dense") in entries
             and artifact_contains("generated/grad-softmax-dense.mlir", ["%grad_w2", "%grad_b2"])
