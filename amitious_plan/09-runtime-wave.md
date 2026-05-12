@@ -43,7 +43,8 @@ auditable runtime bridge for the operation surface used by
    helper-generated `generated-arithmetic-runtime` case.
 2. `TICKET-0060`: Runtime Shape Ops Lowering Fixtures. Completed by the
    helper-generated broadcast, reshape, and transpose runtime checksums.
-3. `TICKET-0061`: Runtime Reduce Lowering Fixtures.
+3. `TICKET-0061`: Runtime Reduce Lowering Fixtures. Completed by row-wise,
+   all-elements, and keepdim-style runtime checksums.
 4. `TICKET-0062`: Runtime Dot/Dense Lowering Fixture.
 5. `TICKET-0063`: Generated MNIST Forward Runtime Checksum.
 6. `TICKET-0064`: Generated Derived-Mask Train-Step Runtime Checksum.

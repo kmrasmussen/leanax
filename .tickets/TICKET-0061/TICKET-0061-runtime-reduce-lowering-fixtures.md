@@ -40,4 +40,10 @@ needed by the softmax/loss path.
 
 ## Status
 
-Ready for analysis.
+Completed. `reduce-row-runtime`, `reduce-all-runtime`, and
+`reduce-keepdim-runtime` now use the shared runtime skeleton to cover row-wise
+sum reduction, all-elements sum reduction, and the keepdim-style rebroadcast
+pattern needed around softmax/loss lowering. The default manifest executes them
+through `mlir-runner` with deterministic checksums `36.0`, `21.0`, and `261.0`.
+The runtime operation inventory now includes `stablehlo.reduce` in the covered
+fixture surface and reports no unsupported operation names.

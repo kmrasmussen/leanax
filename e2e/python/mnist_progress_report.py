@@ -24,6 +24,7 @@ EXPECTED = {
     "idx_full_dataset_loader": True,
     "cached_dataset_training_sweep": True,
     "runtime_operation_inventory": True,
+    "runtime_reduce_fixtures": True,
     "runtime_scalar_math_fixture": True,
     "runtime_shape_ops_fixtures": True,
     "runtime_tiny_train_step_fixture": True,
@@ -143,6 +144,14 @@ def report() -> dict[str, bool]:
         ),
         "runtime_operation_inventory": (
             ("data-loader", "runtime-operation-inventory") in entries
+        ),
+        "runtime_reduce_fixtures": (
+            ("runtime", "reduce-row-runtime") in entries
+            and ("runtime", "reduce-all-runtime") in entries
+            and ("runtime", "reduce-keepdim-runtime") in entries
+            and artifact_contains("e2e/golden/reduce-row-runtime.mlir", ["%row0", "%row1", "%reduce_row_acc0"])
+            and artifact_contains("e2e/golden/reduce-all-runtime.mlir", ["%sum04", "%checksum"])
+            and artifact_contains("e2e/golden/reduce-keepdim-runtime.mlir", ["%reduce_keepdim_p5", "%reduce_keepdim_acc0"])
         ),
         "runtime_scalar_math_fixture": (
             ("runtime", "softmax-loss-runtime") in entries

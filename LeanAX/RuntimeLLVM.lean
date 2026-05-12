@@ -71,6 +71,35 @@ def runtimeWeightedChecksumProgram (label : String) (values : List String) : Run
   let checksum := runtimeWeightedChecksumAux label 0 values
   { body := checksum.fst, result := checksum.snd }
 
+def runtimeWeightedChecksumRefsAux
+    (label : String)
+    (index : Nat)
+    (refs : List String) : List String × String :=
+  match refs with
+  | [] =>
+      let zeroName := label ++ "_zero"
+      ([runtimeConstF32 zeroName "0.0"], zeroName)
+  | ref :: rest =>
+      let weightName := label ++ "_w" ++ toString index
+      let productName := label ++ "_p" ++ toString index
+      let currentLines := [
+        runtimeConstF32 weightName (runtimeF32NatLit (index + 1)),
+        runtimeBinaryF32 productName "fmul" ref weightName
+      ]
+      match rest with
+      | [] => (currentLines, productName)
+      | _ =>
+          let tail := runtimeWeightedChecksumRefsAux label (index + 1) rest
+          let accName := label ++ "_acc" ++ toString index
+          (currentLines ++ tail.fst ++ [runtimeBinaryF32 accName "fadd" productName tail.snd], accName)
+
+def runtimeWeightedChecksumRefsProgram
+    (body : List String)
+    (label : String)
+    (refs : List String) : RuntimeLLVMProgram :=
+  let checksum := runtimeWeightedChecksumRefsAux label 0 refs
+  { body := body ++ checksum.fst, result := checksum.snd }
+
 def broadcastShapeRuntimeProgram : RuntimeLLVMProgram :=
   runtimeWeightedChecksumProgram
     "broadcast_target"
@@ -94,6 +123,57 @@ def reshapeShapeRuntimeLLVM : String :=
 
 def transposeShapeRuntimeLLVM : String :=
   transposeShapeRuntimeProgram.render
+
+def reduceBaseConstants : List String :=
+  [
+    runtimeConstF32 "x00" "1.0",
+    runtimeConstF32 "x01" "2.0",
+    runtimeConstF32 "x02" "3.0",
+    runtimeConstF32 "x10" "4.0",
+    runtimeConstF32 "x11" "5.0",
+    runtimeConstF32 "x12" "6.0"
+  ]
+
+def reduceRowSums : List String :=
+  [
+    runtimeBinaryF32 "row0_s0" "fadd" "x00" "x01",
+    runtimeBinaryF32 "row0" "fadd" "row0_s0" "x02",
+    runtimeBinaryF32 "row1_s0" "fadd" "x10" "x11",
+    runtimeBinaryF32 "row1" "fadd" "row1_s0" "x12"
+  ]
+
+def reduceRowRuntimeProgram : RuntimeLLVMProgram :=
+  runtimeWeightedChecksumRefsProgram
+    (reduceBaseConstants ++ reduceRowSums)
+    "reduce_row"
+    ["row0", "row1"]
+
+def reduceAllRuntimeProgram : RuntimeLLVMProgram :=
+  {
+    body := reduceBaseConstants ++ [
+      runtimeBinaryF32 "sum01" "fadd" "x00" "x01",
+      runtimeBinaryF32 "sum02" "fadd" "sum01" "x02",
+      runtimeBinaryF32 "sum03" "fadd" "sum02" "x10",
+      runtimeBinaryF32 "sum04" "fadd" "sum03" "x11",
+      runtimeBinaryF32 "checksum" "fadd" "sum04" "x12"
+    ],
+    result := "checksum"
+  }
+
+def reduceKeepdimRuntimeProgram : RuntimeLLVMProgram :=
+  runtimeWeightedChecksumRefsProgram
+    (reduceBaseConstants ++ reduceRowSums)
+    "reduce_keepdim"
+    ["row0", "row0", "row0", "row1", "row1", "row1"]
+
+def reduceRowRuntimeLLVM : String :=
+  reduceRowRuntimeProgram.render
+
+def reduceAllRuntimeLLVM : String :=
+  reduceAllRuntimeProgram.render
+
+def reduceKeepdimRuntimeLLVM : String :=
+  reduceKeepdimRuntimeProgram.render
 
 def affineRuntimeLLVM : String :=
   LeanAX.joinSep "\n" [
@@ -384,7 +464,10 @@ def runtimeLLVMCases : List RuntimeLLVMCase :=
     { name := "generated-arithmetic-runtime", llvm := generatedArithmeticRuntimeLLVM },
     { name := "broadcast-shape-runtime", llvm := broadcastShapeRuntimeLLVM },
     { name := "reshape-shape-runtime", llvm := reshapeShapeRuntimeLLVM },
-    { name := "transpose-shape-runtime", llvm := transposeShapeRuntimeLLVM }
+    { name := "transpose-shape-runtime", llvm := transposeShapeRuntimeLLVM },
+    { name := "reduce-row-runtime", llvm := reduceRowRuntimeLLVM },
+    { name := "reduce-all-runtime", llvm := reduceAllRuntimeLLVM },
+    { name := "reduce-keepdim-runtime", llvm := reduceKeepdimRuntimeLLVM }
   ]
 
 def runtimeLLVMByName (name : String) : Option String :=

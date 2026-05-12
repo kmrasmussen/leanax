@@ -14,6 +14,8 @@ gate now covers:
 - cached IDX training and structured metrics,
 - LLVM `mlir-runner` execution for scalar runtime fixtures,
 - helper-generated runtime fixtures for broadcast, reshape, and transpose,
+- helper-generated runtime fixtures for row-wise, all-elements, and
+  keepdim-style reductions,
 - a tiny derived-mask train-step runtime checksum.
 
 The direct full MNIST runtime flag remains false. The current runtime fixtures
@@ -48,14 +50,9 @@ classifier-shaped train-step artifact.
 
 ## Runtime Expansion Surface
 
-The remaining operation gap for generated classifier-shaped runtime execution is
-small enough to name directly:
-
-- `stablehlo.reduce`
-
-Broadcast, reshape, and transpose are now covered by helper-generated runtime
-fixtures. The next wave should lower reduce through the existing LLVM-oriented
-route before revisiting broader IREE or StableHLO runtime packaging.
+The named operation surface for `mnist-train-step-derived-mask` is now covered
+by helper-generated runtime fixtures. The next gap is composition: generated
+dot/dense lowering and then generated forward/train-step runtime checksums.
 
 ## Next Wave
 
@@ -64,7 +61,7 @@ runtime fixtures to generated runtime checks in this order:
 
 1. shared LLVM codegen skeleton and ABI,
 2. shape-op fixtures (completed),
-3. reduce fixtures,
+3. reduce fixtures (completed),
 4. dot/dense fixture,
 5. generated MNIST forward checksum,
 6. generated derived-mask train-step checksum,

@@ -37,6 +37,10 @@ The implemented first slice is intentionally narrow:
   `transpose-shape-runtime` are helper-generated fixed-shape indexing fixtures.
   They scalarize the target tensor order, apply weighted checksums so index
   drift is visible, and return `46.0`, `91.0`, and `86.0`.
+- `reduce-row-runtime`, `reduce-all-runtime`, and `reduce-keepdim-runtime`
+  scalarize row-wise reduction, all-elements reduction, and a keepdim-style
+  rebroadcast checksum. The runner compares them against `36.0`, `21.0`, and
+  `261.0`.
 - `lake exe leanax emit-runtime-llvm --case affine-runtime --out
   generated/affine-runtime.mlir` emits an executable LLVM-dialect MLIR module.
 - The module hardcodes the same `affine` fixture values used by the Python

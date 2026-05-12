@@ -35,6 +35,9 @@ The current runtime gate proves:
 - `broadcast-shape-runtime`, `reshape-shape-runtime`, and
   `transpose-shape-runtime`: helper-generated fixed-shape indexing checksums
   execute through `mlir-runner` and return `46.0`, `91.0`, and `86.0`.
+- `reduce-row-runtime`, `reduce-all-runtime`, and `reduce-keepdim-runtime`:
+  helper-generated reduction checksums execute through `mlir-runner` and return
+  `36.0`, `21.0`, and `261.0`.
 
 The current classifier artifact proves the compiler-side shape:
 
@@ -113,13 +116,12 @@ runtime can execute train-step semantics, not that the full fixed
 
 `mnist-progress-report` now distinguishes these runtime milestones from direct
 full MNIST runtime execution. Runtime operation inventory, scalar math runtime,
-shape-op runtime fixtures, and tiny train-step runtime are true;
+shape-op runtime fixtures, reduce runtime fixtures, and tiny train-step runtime
+are true;
 `direct_mnist_external_runtime` remains false until the full classifier-shaped
 train-step artifact executes externally.
 
-The remaining runtime expansion gap is:
-
-- `stablehlo.reduce`
-
-Reduce lowering is the next concrete bridge between the existing generated
-shape-op runtime fixtures and a direct runtime train-step artifact.
+The runtime operation inventory no longer reports unsupported operation names.
+The remaining bridge is generated composition of the full classifier-shaped
+train-step path, starting with a generated dot/dense lowering fixture and then
+generated forward/train-step runtime checksums.
