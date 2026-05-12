@@ -37,3 +37,13 @@ manifest outcome that compares loss and every updated parameter against Python.
 
 Allow the runner to stitch separately generated forward, gradient, and update
 artifacts if a single monolithic module is too large for the first pass.
+
+## Status
+
+Completed. The e2e manifest now includes `mnist-train-step-artifact`, a
+fixture-mode train-step check that stitches the generated `mnist-forward`,
+`mnist-cross-entropy`, `grad-softmax-dense`, `grad-relu-dense`, and
+`mnist-parameter-tree` artifacts. The script computes one analytic fixture batch
+update, checks loss reduction and non-zero parameter deltas, and fails if any
+required generated artifact is stale or missing. This is intentionally still a
+host-orchestrated first slice, not a monolithic Lean train-step module.
