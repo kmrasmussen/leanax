@@ -5,6 +5,7 @@ numeric nn-primitives generated/nn-primitives.mlir e2e/golden/nn-primitives.mlir
 numeric compare-select generated/compare-select.mlir e2e/golden/compare-select.mlir compare-select
 numeric mlp-forward generated/mlp-forward.mlir e2e/golden/mlp-forward.mlir mlp-forward
 numeric relu-forward generated/relu-forward.mlir e2e/golden/relu-forward.mlir relu-forward
+numeric relu-derived-mask generated/relu-derived-mask.mlir e2e/golden/relu-derived-mask.mlir relu-derived-mask
 numeric mnist-forward generated/mnist-forward.mlir e2e/golden/mnist-forward.mlir mnist-forward
 numeric cross-entropy-loss generated/cross-entropy-loss.mlir e2e/golden/cross-entropy-loss.mlir cross-entropy-loss
 numeric mnist-cross-entropy generated/mnist-cross-entropy.mlir e2e/golden/mnist-cross-entropy.mlir mnist-cross-entropy

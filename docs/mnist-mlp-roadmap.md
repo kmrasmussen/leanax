@@ -610,6 +610,9 @@ Current progress:
   `stablehlo.compare` with a predicate tensor result and feeds that predicate to
   `stablehlo.select`; the golden text, lowering manifest, MLIR parse, structural
   verifier, and Python oracle all cover the path.
+- `relu-derived-mask` now derives both ReLU activations and an f32 mask from a
+  `2x8` hidden pre-activation tensor. This proves the mask can come from LeanAX
+  IR instead of from host-side Python.
 
 Tickets:
 

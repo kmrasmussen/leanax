@@ -531,6 +531,7 @@ def moduleByName (name : String) : Option Module :=
   | "compare-select" => compareSelectModule?.toOption
   | "mlp-forward" => DSL.mlpForwardModule?.toOption
   | "relu-forward" => DSL.reluForwardModule?.toOption
+  | "relu-derived-mask" => DSL.reluDerivedMaskModule?.toOption
   | "mnist-forward" => DSL.mnistForwardModule?.toOption
   | "cross-entropy-loss" => DSL.crossEntropyLossModule?.toOption
   | "mnist-cross-entropy" => DSL.mnistCrossEntropyModule?.toOption
@@ -579,6 +580,7 @@ def availableCases : List String :=
     "compare-select",
     "mlp-forward",
     "relu-forward",
+    "relu-derived-mask",
     "mnist-forward",
     "cross-entropy-loss",
     "mnist-cross-entropy",

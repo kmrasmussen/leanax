@@ -34,3 +34,10 @@ positive, zero, and negative values.
 ## First Slice
 
 Use the existing `2x8` hidden shape from the MNIST fixture classifier.
+
+## Status
+
+Completed. The new `relu-derived-mask` artifact accepts
+`hidden_pre : tensor<2x8xf32>`, derives a predicate with `hidden_pre > 0`, and
+returns both selected ReLU activations and an f32 `relu_mask`. The manifest
+case covers positive, zero, and negative values through the Python oracle.

@@ -7,6 +7,11 @@ structure LayerResult where
   bindings : List Binding
   output : ValueRef
 
+structure ReLUMaskResult where
+  bindings : List Binding
+  hidden : ValueRef
+  mask : ValueRef
+
 def denseLayer
     (layerPrefix : String)
     (input : ValueRef)
@@ -29,6 +34,28 @@ def reluActivation (layerPrefix : String) (input : ValueRef) :
   let zeroBatched ← checkedBroadcastInDim (layerPrefix ++ "_zero_batched") zero.result input.ty.shape
   let out ← checkedMaximum (layerPrefix ++ "_out") input zeroBatched.result
   pure { bindings := [zero, zeroBatched, out], output := out.result }
+
+def reluActivationWithMask (layerPrefix : String) (input : ValueRef) :
+    Except ValidationError ReLUMaskResult := do
+  let zero ← checkedConstant (layerPrefix ++ "_zero") .f32 [] "0.0"
+  let one ← checkedConstant (layerPrefix ++ "_one") .f32 [] "1.0"
+  let zeroBatched ← checkedBroadcastInDim (layerPrefix ++ "_zero_batched") zero.result input.ty.shape
+  let oneBatched ← checkedBroadcastInDim (layerPrefix ++ "_one_batched") one.result input.ty.shape
+  let positive ← checkedCompareGt (layerPrefix ++ "_positive") input zeroBatched.result
+  let hidden ← checkedSelect (layerPrefix ++ "_hidden") positive.result input zeroBatched.result
+  let mask ← checkedSelect (layerPrefix ++ "_mask") positive.result oneBatched.result zeroBatched.result
+  pure {
+    bindings := [zero, one, zeroBatched, oneBatched, positive, hidden, mask],
+    hidden := hidden.result,
+    mask := mask.result
+  }
+
+def reluDerivedMaskModule? : Except ValidationError Module := do
+  let hiddenPre := tensor "hidden_pre" .f32 [2, 8]
+  let relu ← reluActivationWithMask "relu" hiddenPre
+  checkedModuleMulti "leanax_relu_derived_mask" "main" [hiddenPre]
+    relu.bindings
+    [relu.hidden, relu.mask]
 
 def mlpForwardModule? : Except ValidationError Module := do
   let x := tensor "x" .f32 [2, 4]

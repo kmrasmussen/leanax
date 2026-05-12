@@ -277,6 +277,16 @@ def oracle_inputs(name: str) -> dict[str, Tensor]:
                 "w": tensor((4, 3), [1, -1, 0.5, 2, 0, -0.5, -1, 1.5, 2, 0.25, -2, 1]),
                 "b": tensor((3,), [-1, 0.5, 2]),
             }
+        case "relu-derived-mask":
+            return {
+                "hidden_pre": tensor(
+                    (2, 8),
+                    [
+                        -1.0, 0.0, 0.25, 2.0, -0.5, 3.0, 0.0, 1.5,
+                        4.0, -2.0, 0.0, 0.75, -0.25, 5.0, 1.0, -3.0,
+                    ],
+                ),
+            }
         case "mnist-forward":
             return {
                 "x": patterned_tensor((2, 784), 0.01, 1),
@@ -399,6 +409,16 @@ def expected(name: str, inputs: dict[str, Tensor]) -> Tensor | list[Tensor]:
         case "relu-forward":
             h = elementwise(matmul(inputs["x"], inputs["w"]), broadcast_to(inputs["b"], (2, 3)), lambda a, b: a + b)
             return elementwise(h, broadcast_to(Tensor.scalar(0.0), (2, 3)), max)
+        case "relu-derived-mask":
+            hidden = Tensor(
+                inputs["hidden_pre"].shape,
+                tuple(value if value > 0.0 else 0.0 for value in inputs["hidden_pre"].data),
+            )
+            mask = Tensor(
+                inputs["hidden_pre"].shape,
+                tuple(1.0 if value > 0.0 else 0.0 for value in inputs["hidden_pre"].data),
+            )
+            return [hidden, mask]
         case "mnist-forward":
             hidden = elementwise(matmul(inputs["x"], inputs["w1"]), broadcast_to(inputs["b1"], (2, 8)), lambda a, b: a + b)
             activated = elementwise(hidden, broadcast_to(Tensor.scalar(0.0), (2, 8)), max)
