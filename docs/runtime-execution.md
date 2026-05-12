@@ -43,7 +43,9 @@ The implemented first slice is intentionally narrow:
   `261.0`.
 - `generated-dense-runtime` uses the shared runtime skeleton for a tiny
   generated `2x2 @ 2x2 + bias` dense composition and returns the weighted output
-  checksum `15.25`.
+  checksum `15.25`. This case now exercises the reusable `RuntimeTensor`
+  helper layer for row-major scalar refs, deterministic tensor constants, dense
+  products, and weighted checksums while preserving the existing golden text.
 - `generated-mnist-forward-runtime` uses the same skeleton for a scaled
   dense-ReLU-dense classifier-forward representative and returns the weighted
   logits checksum `-0.525`.

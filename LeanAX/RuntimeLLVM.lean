@@ -23,6 +23,125 @@ def runtimeConstF32 (name : String) (value : String) : String :=
 def runtimeBinaryF32 (result op lhs rhs : String) : String :=
   "%" ++ result ++ " = llvm." ++ op ++ " %" ++ lhs ++ ", %" ++ rhs ++ " : f32"
 
+def runtimeIndexSuffix (indices : List Nat) : String :=
+  LeanAX.joinSep "" (indices.map toString)
+
+def runtimeListBind {α β : Type} (xs : List α) (f : α -> List β) : List β :=
+  xs.foldr (fun x acc => f x ++ acc) []
+
+def runtimeEnumAux {α : Type} : Nat -> List α -> List (Nat × α)
+  | _, [] => []
+  | index, value :: rest => (index, value) :: runtimeEnumAux (index + 1) rest
+
+def runtimeEnum {α : Type} (xs : List α) : List (Nat × α) :=
+  runtimeEnumAux 0 xs
+
+structure RuntimeTensor where
+  name : String
+  shape : List Nat
+  deriving Repr
+
+def RuntimeTensor.ref (tensor : RuntimeTensor) (indices : List Nat) : String :=
+  tensor.name ++ runtimeIndexSuffix indices
+
+def runtimeShapeSize : List Nat -> Nat
+  | [] => 1
+  | dim :: rest => dim * runtimeShapeSize rest
+
+def runtimeRowMajorOffset? : List Nat -> List Nat -> Option Nat
+  | [], [] => some 0
+  | dim :: restShape, index :: restIndices =>
+      if index < dim then
+        match runtimeRowMajorOffset? restShape restIndices with
+        | some tail => some (index * runtimeShapeSize restShape + tail)
+        | none => none
+      else
+        none
+  | _, _ => none
+
+def runtimeShapeIndices : List Nat -> List (List Nat)
+  | [] => [[]]
+  | dim :: rest =>
+      runtimeListBind (List.range dim) fun index =>
+        (runtimeShapeIndices rest).map fun tail => index :: tail
+
+def runtimeTensorConstF32 (tensor : RuntimeTensor) (values : List String) : List String :=
+  ((runtimeShapeIndices tensor.shape).zip values).map fun indexed =>
+    runtimeConstF32 (tensor.ref indexed.fst) indexed.snd
+
+def runtimeTensorRefs (tensor : RuntimeTensor) : List String :=
+  (runtimeShapeIndices tensor.shape).map tensor.ref
+
+def runtimeReduceRefsF32 (label op : String) (refs : List String) : List String × String :=
+  match refs with
+  | [] =>
+      let zeroName := label ++ "_zero"
+      ([runtimeConstF32 zeroName "0.0"], zeroName)
+  | first :: rest =>
+      let rec go (acc : String) (nextIndex : Nat) (remaining : List String) : List String × String :=
+        match remaining with
+        | [] => ([], acc)
+        | ref :: tail =>
+            let result := label ++ "_r" ++ toString nextIndex
+            let step := runtimeBinaryF32 result op acc ref
+            let tailResult := go result (nextIndex + 1) tail
+            (step :: tailResult.fst, tailResult.snd)
+      go first 0 rest
+
+def runtimeTranspose2DRefs (source : RuntimeTensor) (rows cols : Nat) : List String :=
+  runtimeListBind (List.range cols) fun col =>
+    (List.range rows).map fun row => source.ref [row, col]
+
+def runtimeReluRefs
+    (label : String)
+    (refs : List String)
+    (zeroRef : String) : List String × List String :=
+  let indexed := runtimeEnum refs
+  let lines := runtimeListBind indexed fun pair =>
+    let index := pair.fst
+    let ref := pair.snd
+    let pred := label ++ toString index ++ "_pos"
+    let result := label ++ toString index
+    [
+      "%" ++ pred ++ " = llvm.fcmp \"ogt\" %" ++ ref ++ ", %" ++ zeroRef ++ " : f32",
+      "%" ++ result ++ " = llvm.select %" ++ pred ++ ", %" ++ ref ++ ", %" ++ zeroRef ++ " : i1, f32"
+    ]
+  (lines, indexed.map fun pair => label ++ toString pair.fst)
+
+def runtimeDense2DLines
+    (x w b y : RuntimeTensor)
+    (batch input output : Nat) : List String :=
+  runtimeListBind (List.range batch) fun row =>
+    runtimeListBind (List.range output) fun col =>
+      let products := (List.range input).map fun k =>
+        let productName := "p" ++ toString row ++ toString k ++ toString col
+        runtimeBinaryF32 productName "fmul" (x.ref [row, k]) (w.ref [k, col])
+      let productRefs := (List.range input).map fun k =>
+        "p" ++ toString row ++ toString k ++ toString col
+      let sumName := "s" ++ toString row ++ toString col
+      let sumLines :=
+        match productRefs with
+        | [] => [runtimeConstF32 sumName "0.0"]
+        | [single] => [runtimeBinaryF32 (y.ref [row, col]) "fadd" single (b.ref [col])]
+        | first :: second :: rest =>
+            let firstSum := runtimeBinaryF32 sumName "fadd" first second
+            let rec go (acc : String) (nextIndex : Nat) (remaining : List String) : List String × String :=
+              match remaining with
+              | [] => ([], acc)
+              | ref :: tail =>
+                  let next := sumName ++ "_" ++ toString nextIndex
+                  let line := runtimeBinaryF32 next "fadd" acc ref
+                  let tailResult := go next (nextIndex + 1) tail
+                  (line :: tailResult.fst, tailResult.snd)
+            let restResult := go sumName 0 rest
+            firstSum :: restResult.fst ++ [
+              runtimeBinaryF32 (y.ref [row, col]) "fadd" restResult.snd (b.ref [col])
+            ]
+      match input with
+      | 0 => sumLines ++ [runtimeBinaryF32 (y.ref [row, col]) "fadd" sumName (b.ref [col])]
+      | 1 => sumLines
+      | _ => products ++ sumLines
+
 def generatedArithmeticRuntimeProgram : RuntimeLLVMProgram :=
   {
     body := [
@@ -176,37 +295,17 @@ def reduceKeepdimRuntimeLLVM : String :=
   reduceKeepdimRuntimeProgram.render
 
 def generatedDenseRuntimeProgram : RuntimeLLVMProgram :=
+  let x : RuntimeTensor := { name := "x", shape := [2, 2] }
+  let w : RuntimeTensor := { name := "w", shape := [2, 2] }
+  let b : RuntimeTensor := { name := "b", shape := [2] }
+  let y : RuntimeTensor := { name := "y", shape := [2, 2] }
   runtimeWeightedChecksumRefsProgram
-    [
-      runtimeConstF32 "x00" "1.0",
-      runtimeConstF32 "x01" "-2.0",
-      runtimeConstF32 "x10" "0.5",
-      runtimeConstF32 "x11" "3.0",
-      runtimeConstF32 "w00" "2.0",
-      runtimeConstF32 "w01" "-1.0",
-      runtimeConstF32 "w10" "0.25",
-      runtimeConstF32 "w11" "1.5",
-      runtimeConstF32 "b0" "0.5",
-      runtimeConstF32 "b1" "-0.25",
-      runtimeBinaryF32 "p000" "fmul" "x00" "w00",
-      runtimeBinaryF32 "p010" "fmul" "x01" "w10",
-      runtimeBinaryF32 "s00" "fadd" "p000" "p010",
-      runtimeBinaryF32 "y00" "fadd" "s00" "b0",
-      runtimeBinaryF32 "p001" "fmul" "x00" "w01",
-      runtimeBinaryF32 "p011" "fmul" "x01" "w11",
-      runtimeBinaryF32 "s01" "fadd" "p001" "p011",
-      runtimeBinaryF32 "y01" "fadd" "s01" "b1",
-      runtimeBinaryF32 "p100" "fmul" "x10" "w00",
-      runtimeBinaryF32 "p110" "fmul" "x11" "w10",
-      runtimeBinaryF32 "s10" "fadd" "p100" "p110",
-      runtimeBinaryF32 "y10" "fadd" "s10" "b0",
-      runtimeBinaryF32 "p101" "fmul" "x10" "w01",
-      runtimeBinaryF32 "p111" "fmul" "x11" "w11",
-      runtimeBinaryF32 "s11" "fadd" "p101" "p111",
-      runtimeBinaryF32 "y11" "fadd" "s11" "b1"
-    ]
+    (runtimeTensorConstF32 x ["1.0", "-2.0", "0.5", "3.0"] ++
+      runtimeTensorConstF32 w ["2.0", "-1.0", "0.25", "1.5"] ++
+      runtimeTensorConstF32 b ["0.5", "-0.25"] ++
+      runtimeDense2DLines x w b y 2 2 2)
     "generated_dense"
-    ["y00", "y01", "y10", "y11"]
+    (runtimeTensorRefs y)
 
 def generatedDenseRuntimeLLVM : String :=
   generatedDenseRuntimeProgram.render

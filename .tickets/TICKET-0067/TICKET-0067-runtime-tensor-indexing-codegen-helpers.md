@@ -41,4 +41,9 @@ helpers before generating exact-shape artifacts.
 
 ## Status
 
-Ready for analysis.
+Completed. `LeanAX/RuntimeLLVM.lean` now has a `RuntimeTensor` helper layer for
+deterministic scalar names, row-major offsets, fixed-shape index enumeration,
+tensor constants, dense products, reduction refs, transpose refs, ReLU
+elementwise refs, and weighted checksums. `generated-dense-runtime` now uses the
+helpers while continuing to match its golden LLVM MLIR and `mlir-runner`
+checksum.

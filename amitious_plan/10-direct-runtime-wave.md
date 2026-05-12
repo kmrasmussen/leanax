@@ -51,7 +51,9 @@ by the default e2e gate.
 
 1. `TICKET-0066`: Full Runtime Scaling Budget And Gate Plan. Completed with
    the checked `runtime-scaling-budget` report.
-2. `TICKET-0067`: Runtime Tensor Indexing Codegen Helpers.
+2. `TICKET-0067`: Runtime Tensor Indexing Codegen Helpers. Completed by
+   routing `generated-dense-runtime` through reusable `RuntimeTensor` helpers
+   while preserving its golden output.
 3. `TICKET-0068`: Exact-Shape MNIST Forward Runtime Checksum.
 4. `TICKET-0069`: Exact-Shape MNIST Loss Runtime Checksum.
 5. `TICKET-0070`: Exact-Shape Derived-Mask Gradient Runtime Checksum.

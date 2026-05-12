@@ -160,3 +160,8 @@ is still false.
 `runtime-scaling-budget` now records the planned exact-shape scalarized LLVM
 budget and default-gate policy before the next wave starts generating large
 runtime artifacts.
+
+`generated-dense-runtime` now runs through the reusable `RuntimeTensor` helper
+layer. That gives the exact-shape forward/loss/train-step tickets a structured
+way to enumerate row-major scalar refs instead of growing more handwritten
+runtime strings.
