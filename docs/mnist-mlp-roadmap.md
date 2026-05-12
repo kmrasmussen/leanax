@@ -327,23 +327,22 @@ What is already solid:
 
 What is still missing for an honest MNIST classifier:
 
-- The MNIST-shaped forward artifact exists, but it is not yet connected to the
-  ten-class loss or a full train step.
-- The ten-class cross-entropy artifact exists, but it is not yet connected to an
-  MNIST-shaped forward module or full train step.
-- Gradients cover square loss and a one-layer dense case, not a two-layer
-  ReLU MLP trained with cross entropy.
-- The generated classifier artifacts are now stitched by an e2e train-step
-  check, but not yet lowered as one monolithic Lean train-step module.
+- The generated classifier artifacts are stitched by an e2e train-step check,
+  but not yet lowered as one monolithic Lean train-step module.
 - The MNIST classifier smoke command is ten-class and artifact-checked, but it
-  is still host-orchestrated rather than a single compiled train-loop runtime.
-- Full dataset loading and stable short-epoch metrics remain future work.
+  is still a Python e2e script rather than a user-facing LeanAX command.
+- The IDX parser exists, but full-dataset cache discovery, split selection, and
+  opt-in short-epoch metrics remain future work.
+- Runtime execution is proven only for a tiny LLVM-dialect affine fixture, not
+  for classifier-shaped StableHLO or dense kernels.
+- The current Nix shell still lacks a direct StableHLO semantic verifier, so
+  generic MLIR parsing and numeric oracles carry most of the generated-artifact
+  coverage.
 
-Pragmatically, the project is close enough to define the real classifier path in
-small implementation tickets, but not close enough to claim classifier training.
-The next milestone should be a small checked ten-class MNIST classifier over a
-fixture batch, followed by a short optional full-dataset run once the artifacts
-and metrics are stable.
+Pragmatically, the project now has enough checked pieces to move from
+artifact-composed fixture training toward a cleaner classifier product surface:
+first one monolithic train-step artifact, then a user-facing runner, then an
+opt-in full-dataset smoke path, and finally direct runtime hardening.
 
 ## Phase 9: Ten-Class MNIST Semantics
 
@@ -433,6 +432,115 @@ Current progress:
 - The report currently marks the IDX loader and fixture ten-class training as
   present, while keeping full-dataset training, a monolithic MNIST train-step
   artifact, and direct MNIST external-runtime execution as future work.
+
+## Phase 12: Monolithic Classifier Artifact
+
+Goal: reduce the current host-composed train step into one fixed-shape LeanAX
+artifact that owns the classifier update contract.
+
+Work:
+
+- Add a fixed `mnist-train-step` module with inputs for one `2x784` batch,
+  one-hot labels, explicit `relu_mask`, `w1`, `b1`, `w2`, and `b2`.
+- Return updated `w1`, `b1`, `w2`, `b2`, and enough loss/logit information for
+  a deterministic oracle to prove the update.
+- Reuse the existing explicit ReLU mask semantics until compare/select support
+  is strong enough to derive the mask inside the artifact.
+- Add a numeric oracle that compares the monolithic artifact with the current
+  artifact-composed Python train step.
+- Add validation failures for mismatched batch, class, hidden, and parameter
+  tree shapes.
+
+Exit gate:
+
+- `mnist-train-step` is a manifested numeric case with golden text, lowering
+  manifest validation, MLIR parsing, and oracle coverage. The progress report
+  flips `monolithic_mnist_train_step` to true in the same commit.
+
+Tickets:
+
+- `TICKET-0036`: Monolithic MNIST Train-Step Artifact.
+- `TICKET-0037`: MNIST Train-Step Shape Validation Suite.
+
+## Phase 13: Product Runner And Full-Dataset Smoke
+
+Goal: make the classifier path usable from one command while keeping default CI
+fast, hermetic, and fixture-based.
+
+Work:
+
+- Add a user-facing runner command or wrapper for fixture-mode
+  `leanax train mnist-mlp`.
+- Print metrics with stable field names: mode, samples, batches, epochs,
+  first/final loss, first/final accuracy, and artifact paths.
+- Resolve full MNIST IDX files from explicit paths or the documented cache
+  directory without downloading in the default gate.
+- Add an opt-in full-dataset smoke that can run a short epoch when the cache is
+  present and skip with a clear diagnostic when it is absent.
+- Keep the e2e manifest network-free by testing cache resolution against tiny
+  local IDX files and fixture mode by default.
+
+Exit gate:
+
+- One command runs the fixture classifier through the checked compiler path and
+  prints stable metrics. A separate opt-in command can use cached MNIST IDX
+  files and report short-run metrics without changing the default Nix e2e gate.
+
+Tickets:
+
+- `TICKET-0038`: MNIST Train Command Wrapper.
+- `TICKET-0039`: MNIST Cache Resolver And Split Loader.
+- `TICKET-0040`: Optional Full-Dataset Metrics Smoke.
+
+## Phase 14: Runtime Hardening
+
+Goal: move runtime execution from the tiny affine fixture toward classifier
+shaped kernels without pretending the StableHLO runtime story is solved.
+
+Work:
+
+- Record a runtime capability matrix for the current Nix shell: generic MLIR
+  parsing, optional `stablehlo-opt`, LLVM `mlir-runner`, and any available IREE
+  or StableHLO execution route.
+- Add a dense or ReLU runtime fixture that exercises more of the classifier op
+  mix than `affine-runtime`.
+- Add a direct classifier-forward runtime slice only when the available runtime
+  path can execute it deterministically.
+- Keep fallback diagnostics explicit when direct StableHLO runtime tooling is
+  missing.
+
+Exit gate:
+
+- Runtime coverage expands beyond the affine checksum, and the progress report
+  distinguishes dense-kernel runtime coverage from full MNIST runtime execution.
+
+Tickets:
+
+- `TICKET-0041`: Runtime Capability Matrix.
+- `TICKET-0042`: Dense Kernel Runtime Fixture.
+- `TICKET-0043`: MNIST Forward Runtime Slice.
+
+## Phase 15: Progress Report Closeout
+
+Goal: keep the roadmap, ticket queue, and e2e readiness report synchronized as
+the next classifier phase lands.
+
+Work:
+
+- Extend `mnist-progress-report` with booleans for monolithic train step,
+  command wrapper, full-dataset smoke, dense runtime, and MNIST-forward runtime.
+- Link the report output to the phase/ticket table in this roadmap.
+- Add a closeout audit note that lists which future milestones remain false and
+  why.
+
+Exit gate:
+
+- The readiness report, roadmap, and ticket statuses agree after the next phase
+  of classifier work.
+
+Tickets:
+
+- `TICKET-0044`: Classifier Readiness Report V2.
 
 ## What Not To Do Yet
 
