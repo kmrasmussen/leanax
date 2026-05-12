@@ -579,6 +579,39 @@ Tickets:
 
 - `TICKET-0044`: Classifier Readiness Report V2.
 
+## Phase 16: Derived ReLU Mask And Cleaner Train Step
+
+Goal: remove the explicit ReLU-mask input from the classifier train-step path by
+adding the smallest comparison/select surface needed to derive masks inside
+LeanAX IR.
+
+Work:
+
+- Add checked comparison and select primitives to the IR, renderer, verifier,
+  numeric oracle, and validation failures.
+- Add a small derived ReLU-mask artifact that returns both activated values and
+  an f32-compatible mask.
+- Add a derived-mask MNIST train-step artifact that accepts the batch, labels,
+  and parameter tree but no `relu_mask` input.
+- Keep the existing explicit-mask train step as a compatibility and debugging
+  fixture until the derived-mask path has enough soak time.
+- Extend the readiness report so the mask-derivation milestone cannot drift.
+
+Exit gate:
+
+- `compare-select`, `relu-derived-mask`, and
+  `mnist-train-step-derived-mask` are manifested numeric cases with golden text,
+  lowering manifests, MLIR parsing, and Python oracle coverage. The progress
+  report marks derived ReLU mask and derived-mask train step as true.
+
+Tickets:
+
+- `TICKET-0045`: Compare And Select Primitives.
+- `TICKET-0046`: Derived ReLU Mask Artifact.
+- `TICKET-0047`: MNIST Train Step With Derived Mask.
+- `TICKET-0048`: Derived Mask Validation Suite.
+- `TICKET-0049`: Classifier Readiness Report V3.
+
 ## What Not To Do Yet
 
 - Do not chase a full NumPy surface area.
