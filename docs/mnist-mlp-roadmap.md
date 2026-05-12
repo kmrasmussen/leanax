@@ -631,6 +631,40 @@ Tickets:
 - `TICKET-0048`: Derived Mask Validation Suite.
 - `TICKET-0049`: Classifier Readiness Report V3.
 
+## Phase 17: Derived Command Path And Real Dataset Training
+
+Goal: move the command-facing classifier path onto the derived-mask train-step
+and turn cached IDX MNIST training from a tiny smoke into an explicit,
+reportable real-dataset milestone.
+
+Work:
+
+- Update the train command and artifact composition checks so the derived-mask
+  train-step is the preferred generated update artifact.
+- Keep the explicit-mask train-step as a compatibility fixture, but stop making
+  command-facing training depend on a host-provided ReLU mask.
+- Add a cached real-dataset training sweep that uses actual IDX samples from the
+  resolver, not the tiny fixture batch, with bounded default-gate runtime.
+- Emit stable machine-readable metrics for dataset size, sample count, loss,
+  accuracy, and artifact paths.
+- Extend the readiness report so derived command wiring and cached real-dataset
+  training cannot drift.
+
+Exit gate:
+
+- The default e2e manifest includes derived-mask command coverage and a cached
+  real-dataset training sweep. `mnist-progress-report` distinguishes fixture
+  training, cached real-dataset training, and still-unproven direct full MNIST
+  external runtime.
+
+Tickets:
+
+- `TICKET-0050`: Derived Mask Train Command Wiring.
+- `TICKET-0051`: Cached Real Dataset Training Sweep.
+- `TICKET-0052`: Dataset Training Metrics Artifact.
+- `TICKET-0053`: Classifier Readiness Report V4.
+- `TICKET-0054`: Direct MNIST Runtime Boundary Plan.
+
 ## What Not To Do Yet
 
 - Do not chase a full NumPy surface area.
