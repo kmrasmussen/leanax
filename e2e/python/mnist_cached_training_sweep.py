@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import struct
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -23,6 +24,7 @@ from mnist_train_command import (
 
 SAMPLE_COUNT = 16
 EPOCHS = 4
+METRICS_ARTIFACT = Path("generated/mnist-real-dataset-metrics.json")
 
 
 def sweep_images() -> bytes:
@@ -47,6 +49,27 @@ def write_cache(root: Path) -> None:
     images_path, labels_path = split_idx_paths("train", root)
     images_path.write_bytes(sweep_images())
     labels_path.write_bytes(sweep_labels())
+
+
+def write_metrics_artifact(metrics, artifacts: list[str]) -> None:
+    METRICS_ARTIFACT.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "schema": "leanax.mnist_dataset_metrics.v1",
+        "mode": metrics.mode,
+        "split": "train",
+        "epochs": metrics.epochs,
+        "samples": metrics.samples,
+        "batches": metrics.batches,
+        "first_loss": metrics.first_loss,
+        "final_loss": metrics.final_loss,
+        "first_accuracy": metrics.first_accuracy,
+        "final_accuracy": metrics.final_accuracy,
+        "artifacts": artifacts,
+    }
+    METRICS_ARTIFACT.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
 
 
 def verify_missing_cache(root: Path) -> None:
@@ -96,6 +119,7 @@ def verify() -> None:
             f"cached sweep accuracy regressed: {metrics.first_accuracy} -> {metrics.final_accuracy}"
         )
 
+    write_metrics_artifact(metrics, artifacts)
     print("mnist-cached-training-sweep " + render_metrics(metrics, artifacts).removeprefix("mnist-train "))
 
 

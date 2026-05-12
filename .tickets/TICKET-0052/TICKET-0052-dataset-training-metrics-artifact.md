@@ -32,3 +32,14 @@ real-dataset sweep.
 
 Write metrics into `generated/mnist-real-dataset-metrics.json` and validate it
 with a small Python checker.
+
+## Status
+
+Completed. The cached training sweep writes
+`generated/mnist-real-dataset-metrics.json` with schema
+`leanax.mnist_dataset_metrics.v1`, cached train split metadata, loss and
+accuracy metrics, sample and batch counts, and the generated artifact list. The
+manifest now runs `mnist-dataset-metrics` immediately after the cached sweep so
+`e2e/python/verify_mnist_dataset_metrics.py` checks the JSON schema, value
+ranges, loss/accuracy behavior, referenced artifact paths, and the derived-mask
+train-step artifact.

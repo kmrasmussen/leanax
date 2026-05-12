@@ -75,3 +75,10 @@ That keeps fixture mode as the default smoke path and keeps the full e2e gate
 network-free while still checking the parser, resolver, split names,
 partial-cache diagnostics, cached-mode metrics, and batch contract used by the
 full dataset route.
+
+`mnist-cached-training-sweep` extends that route to a bounded train-split cache
+with sixteen deterministic IDX samples. It writes
+`generated/mnist-real-dataset-metrics.json`, and the following
+`mnist-dataset-metrics` manifest case validates the machine-readable metrics
+schema, loss and accuracy ranges, sample and batch counts, and generated
+artifact references.
