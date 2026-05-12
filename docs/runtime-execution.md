@@ -39,6 +39,9 @@ The implemented first slice is intentionally narrow:
 - `mnist-forward-runtime` adds a small dense-ReLU-dense forward checksum. It is
   a documented stepping-stone shape, not the full `2x784 -> 8 -> 10` classifier
   artifact. The runner compares its scalar result against `66.6125`.
+- `softmax-loss-runtime` adds a scalar softmax cross-entropy checksum using
+  LLVM intrinsics for exp/log plus floating-point division. The runner compares
+  its scalar result against `0.31326166`.
 
 ## Capability Matrix
 

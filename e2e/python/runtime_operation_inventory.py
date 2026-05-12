@@ -41,7 +41,10 @@ CURRENT_RUNTIME_FIXTURE_OPS = {
     "stablehlo.add",
     "stablehlo.compare",
     "stablehlo.constant",
+    "stablehlo.divide",
     "stablehlo.dot_general",
+    "stablehlo.exponential",
+    "stablehlo.log",
     "stablehlo.multiply",
     "stablehlo.select",
 }

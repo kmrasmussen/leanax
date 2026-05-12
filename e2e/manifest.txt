@@ -38,6 +38,7 @@ data-loader mnist-progress-report e2e/python/mnist_progress_report.py
 runtime affine-runtime generated/affine-runtime.mlir e2e/golden/affine-runtime.mlir 94.25
 runtime dense-runtime generated/dense-runtime.mlir e2e/golden/dense-runtime.mlir 103.375
 runtime mnist-forward-runtime generated/mnist-forward-runtime.mlir e2e/golden/mnist-forward-runtime.mlir 66.6125
+runtime softmax-loss-runtime generated/softmax-loss-runtime.mlir e2e/golden/softmax-loss-runtime.mlir 0.31326166
 validation-fail bad-compare-shape stablehlo.compare operands: expected matching tensor types
 validation-fail bad-select-predicate-shape stablehlo.select predicate: expected matching tensor types
 validation-fail bad-add-shape stablehlo.add operands: expected matching tensor types

@@ -36,3 +36,11 @@ expected diagnostic if the current LLVM route cannot support the operation yet.
 
 Try the smallest standalone softmax-loss checksum before touching classifier
 parameter update logic.
+
+## Status
+
+Completed. `softmax-loss-runtime` emits an LLVM-dialect softmax cross-entropy
+checksum using `llvm.intr.exp`, `llvm.intr.log`, and `llvm.fdiv`, runs through
+`mlir-runner`, and compares against `0.31326166` in the Rust e2e runtime gate.
+The runtime operation inventory now treats divide, exponential, and log as
+covered by runtime fixture evidence.

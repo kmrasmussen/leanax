@@ -739,6 +739,10 @@ Current progress:
 - `runtime-operation-inventory` now verifies the derived-mask train-step
   lowering manifest in the default e2e gate and prints the unsupported runtime
   operation surface for the next LLVM expansion slice.
+- `softmax-loss-runtime` now executes a scalar softmax cross-entropy checksum
+  with LLVM exp/log intrinsics and floating-point division, proving the scalar
+  math route needed by the train-step loss before expanding to tensor-shaped
+  runtime code.
 
 ## What Not To Do Yet
 

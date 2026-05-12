@@ -93,15 +93,18 @@ training over generated text is not enough. Parsing StableHLO-shaped text with
 
 ## Current Progress
 
-`runtime-operation-inventory` now verifies the
-`mnist-train-step-derived-mask` lowering manifest during the default e2e gate.
-It checks the fixed input/output contract, the expected thirteen-operation
-surface, and the current runtime expansion gap:
+`runtime-operation-inventory` verifies the `mnist-train-step-derived-mask`
+lowering manifest during the default e2e gate. It checks the fixed input/output
+contract, the expected thirteen-operation surface, and the current runtime
+expansion gap.
+
+`softmax-loss-runtime` now covers scalar softmax loss math through LLVM
+intrinsics for exp/log plus floating-point division, so divide, exponential,
+and log are no longer in the unsupported fixture surface.
+
+The remaining runtime expansion gap is:
 
 - `stablehlo.broadcast_in_dim`
-- `stablehlo.divide`
-- `stablehlo.exponential`
-- `stablehlo.log`
 - `stablehlo.reduce`
 - `stablehlo.reshape`
 - `stablehlo.transpose`
