@@ -8,10 +8,10 @@ integration. Avoid tickets for every typo or tiny fixture adjustment.
 
 Every implementation ticket should point at an observable e2e capability.
 
-## Active Wave
+## Latest Completed Wave
 
-The current ready-for-analysis wave is `TICKET-0059` through `TICKET-0065`.
-It moves runtime work from handwritten scalar fixtures toward generated
+`TICKET-0059` through `TICKET-0065` moved runtime work from handwritten scalar
+fixtures toward generated
 classifier-shaped runtime checks:
 
 1. runtime LLVM codegen skeleton and ABI,
@@ -21,3 +21,7 @@ classifier-shaped runtime checks:
 5. generated MNIST forward runtime checksum,
 6. generated derived-mask train-step runtime checksum,
 7. runtime readiness report v6.
+
+The wave leaves `direct_mnist_external_runtime` false because the generated
+forward and train-step checks are scaled representatives, not the full
+`2x784 -> 8 -> 10` classifier-shaped train-step artifact.

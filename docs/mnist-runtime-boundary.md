@@ -134,3 +134,8 @@ and generated forward/train-step representatives now execute externally. The
 remaining bridge is scale: the full classifier-shaped `2x784 -> 8 -> 10`
 train-step artifact still has not executed externally, so
 `direct_mnist_external_runtime` remains false.
+
+`mnist-progress-report` records this as runtime readiness v6: generated runtime
+codegen, shape ops, reductions, dense composition, forward representative, and
+train-step representative are all true, while direct full MNIST external runtime
+is still false.

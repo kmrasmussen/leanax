@@ -52,11 +52,12 @@ auditable runtime bridge for the operation surface used by
 6. `TICKET-0064`: Generated Derived-Mask Train-Step Runtime Checksum. Completed
    by the generated scaled train-step representative; direct MNIST runtime
    remains false.
-7. `TICKET-0065`: Runtime Readiness Report V6.
+7. `TICKET-0065`: Runtime Readiness Report V6. Completed with
+   `runtime_readiness_v6` true and `direct_mnist_external_runtime` false.
 
 ## Exit Gate
 
-The wave is complete when the default e2e gate contains a generated external
-runtime checksum for the derived-mask train-step semantics and the readiness
-report explains whether that is strong enough to flip
+The wave is complete: the default e2e gate contains generated external runtime
+checksums through the derived-mask train-step representative, and the readiness
+report explains why that is not strong enough to flip
 `direct_mnist_external_runtime`.

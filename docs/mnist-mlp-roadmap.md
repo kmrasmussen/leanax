@@ -753,6 +753,51 @@ Current progress:
   `direct_mnist_external_runtime` false until the full classifier-shaped
   train-step artifact executes externally.
 
+## Phase 19: Generated Runtime Wave
+
+Goal: move the LLVM runtime route from handwritten scalar fixtures toward
+generated runtime checks without overclaiming full classifier execution.
+
+Work:
+
+- Add a shared runtime LLVM codegen skeleton and ABI for generated checksum
+  cases.
+- Add generated runtime fixtures for broadcast, reshape, transpose, row-wise
+  reduce, all-elements reduce, and keepdim-style reduce use.
+- Add generated dense, forward, and derived-mask train-step runtime
+  representatives.
+- Extend the readiness report so these milestones are separate from direct full
+  MNIST runtime.
+
+Exit gate:
+
+- The default e2e manifest executes the generated runtime wave through
+  `mlir-runner`, `mnist-progress-report` exposes runtime readiness v6, and
+  `direct_mnist_external_runtime` remains false unless full classifier-shaped
+  train-step execution exists.
+
+Tickets:
+
+- `TICKET-0059`: Runtime LLVM Codegen Skeleton And ABI.
+- `TICKET-0060`: Runtime Shape Ops Lowering Fixtures.
+- `TICKET-0061`: Runtime Reduce Lowering Fixtures.
+- `TICKET-0062`: Runtime Dot/Dense Lowering Fixture.
+- `TICKET-0063`: Generated MNIST Forward Runtime Checksum.
+- `TICKET-0064`: Generated Derived-Mask Train-Step Runtime Checksum.
+- `TICKET-0065`: Runtime Readiness Report V6.
+
+Current progress:
+
+- The generated runtime wave is in the default e2e gate. It covers the shared
+  skeleton, shape ops, reductions, generated dense composition, generated
+  forward representative, and generated derived-mask train-step representative.
+- `runtime-operation-inventory` no longer reports unsupported operation names
+  for the derived-mask train-step surface.
+- `mnist-progress-report` now includes `runtime_readiness_v6: true` while
+  keeping `direct_mnist_external_runtime: false`, because the generated forward
+  and train-step runtime checks are scaled representatives rather than the full
+  `2x784 -> 8 -> 10` classifier-shaped train-step artifact.
+
 ## What Not To Do Yet
 
 - Do not chase a full NumPy surface area.

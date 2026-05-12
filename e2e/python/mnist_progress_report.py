@@ -23,6 +23,7 @@ EXPECTED = {
     "full_dataset_training": True,
     "idx_full_dataset_loader": True,
     "cached_dataset_training_sweep": True,
+    "runtime_codegen_skeleton": True,
     "runtime_operation_inventory": True,
     "runtime_generated_dense_fixture": True,
     "runtime_generated_mnist_forward": True,
@@ -31,6 +32,7 @@ EXPECTED = {
     "runtime_scalar_math_fixture": True,
     "runtime_shape_ops_fixtures": True,
     "runtime_tiny_train_step_fixture": True,
+    "runtime_readiness_v6": True,
     "mnist_forward_runtime": True,
     "mnist_train_command": True,
     "monolithic_mnist_train_step": True,
@@ -92,7 +94,7 @@ def dataset_metrics_ready() -> bool:
 
 def report() -> dict[str, bool]:
     entries = manifest_entries()
-    return {
+    actual = {
         "affine_external_runtime": ("runtime", "affine-runtime") in entries,
         "artifact_composed_train_step": (
             ("training-loop", "mnist-train-step-artifact") in entries
@@ -147,6 +149,13 @@ def report() -> dict[str, bool]:
         ),
         "runtime_operation_inventory": (
             ("data-loader", "runtime-operation-inventory") in entries
+        ),
+        "runtime_codegen_skeleton": (
+            ("runtime", "generated-arithmetic-runtime") in entries
+            and artifact_contains(
+                "e2e/golden/generated-arithmetic-runtime.mlir",
+                ["%checksum", "llvm.return"],
+            )
         ),
         "runtime_generated_dense_fixture": (
             ("runtime", "generated-dense-runtime") in entries
@@ -255,6 +264,16 @@ def report() -> dict[str, bool]:
         ),
         "ten_class_fixture_training": ("training-loop", "mnist-classifier-smoke") in entries,
     }
+    actual["runtime_readiness_v6"] = (
+        actual["runtime_codegen_skeleton"]
+        and actual["runtime_shape_ops_fixtures"]
+        and actual["runtime_reduce_fixtures"]
+        and actual["runtime_generated_dense_fixture"]
+        and actual["runtime_generated_mnist_forward"]
+        and actual["runtime_generated_train_step"]
+        and not actual["direct_mnist_external_runtime"]
+    )
+    return actual
 
 
 def main() -> int:

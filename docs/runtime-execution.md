@@ -51,6 +51,10 @@ The implemented first slice is intentionally narrow:
   generated train-step representative with internal ReLU mask derivation,
   softmax loss, gradients, SGD updates, and a checksum over loss plus updated
   parameters. It returns `1.4609127`.
+- `mnist-progress-report` now includes `runtime_readiness_v6`, which requires
+  the codegen skeleton, shape-op fixtures, reduce fixtures, generated dense,
+  generated forward, generated train-step, and a still-false direct MNIST
+  runtime flag.
 - `lake exe leanax emit-runtime-llvm --case affine-runtime --out
   generated/affine-runtime.mlir` emits an executable LLVM-dialect MLIR module.
 - The module hardcodes the same `affine` fixture values used by the Python

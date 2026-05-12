@@ -40,4 +40,10 @@ blocker requires a partial report update.
 
 ## Status
 
-Ready for analysis.
+Completed. `mnist-progress-report` now includes `runtime_readiness_v6`, which
+requires generated runtime codegen, shape-op fixtures, reduce fixtures,
+generated dense, generated forward, generated train-step, and a still-false
+`direct_mnist_external_runtime` flag. Roadmap docs and ticket statuses now
+record that the generated runtime wave is complete as scaled representatives,
+while the full `2x784 -> 8 -> 10` classifier-shaped external train-step remains
+the next direct-runtime gap.
