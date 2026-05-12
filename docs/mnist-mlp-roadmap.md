@@ -616,6 +616,8 @@ Current progress:
 - `mnist-train-step-derived-mask` now exposes the classifier train-step contract
   without a `relu_mask` input. The mask is computed inside the module and the
   progress report marks the derived-mask train-step milestone true.
+- Compare/select validation now has expected-failure coverage for mismatched
+  compare operands and mismatched select predicate shape.
 
 Tickets:
 

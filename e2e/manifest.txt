@@ -35,6 +35,8 @@ training-loop mnist-full-dataset-smoke e2e/python/mnist_full_dataset_smoke.py
 runtime affine-runtime generated/affine-runtime.mlir e2e/golden/affine-runtime.mlir 94.25
 runtime dense-runtime generated/dense-runtime.mlir e2e/golden/dense-runtime.mlir 103.375
 runtime mnist-forward-runtime generated/mnist-forward-runtime.mlir e2e/golden/mnist-forward-runtime.mlir 66.6125
+validation-fail bad-compare-shape stablehlo.compare operands: expected matching tensor types
+validation-fail bad-select-predicate-shape stablehlo.select predicate: expected matching tensor types
 validation-fail bad-add-shape stablehlo.add operands: expected matching tensor types
 validation-fail duplicate-input module inputs contain duplicate name %x
 validation-fail undefined-ref stablehlo.add lhs: undefined reference %x

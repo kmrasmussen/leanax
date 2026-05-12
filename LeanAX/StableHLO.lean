@@ -217,6 +217,27 @@ def compareSelectModule? : Except ValidationError Module := do
   let out ← checkedSelect "out" pred.result x threshold
   checkedModule "leanax_compare_select" "main" [x, threshold] [pred, out] out.result
 
+def badCompareShapeModule : Module :=
+  let lhs := tensor "lhs" .f32 [2, 8]
+  let rhs := tensor "rhs" .f32 [2, 7]
+  let pred := tensor "pred" .pred [2, 8]
+  { name := "leanax_bad_compare_shape",
+    functionName := "main",
+    inputs := [lhs, rhs],
+    bindings := [{ result := pred, kind := .compareGt lhs rhs }],
+    returns := [pred] }
+
+def badSelectPredicateShapeModule : Module :=
+  let pred := tensor "pred" .pred [2, 7]
+  let onTrue := tensor "on_true" .f32 [2, 8]
+  let onFalse := tensor "on_false" .f32 [2, 8]
+  let out := tensor "out" .f32 [2, 8]
+  { name := "leanax_bad_select_predicate_shape",
+    functionName := "main",
+    inputs := [pred, onTrue, onFalse],
+    bindings := [{ result := out, kind := .select pred onTrue onFalse }],
+    returns := [out] }
+
 def badAddShapeModule : Module :=
   let x := tensor "x" .f32 [2, 3]
   let y := tensor "y" .f32 [3, 2]
@@ -547,6 +568,8 @@ def moduleByName (name : String) : Option Module :=
   | "mnist-parameter-tree" => mnistParameterTreeStepModule?.toOption
   | "mnist-train-step" => mnistTrainStepModule?.toOption
   | "mnist-train-step-derived-mask" => mnistTrainStepDerivedMaskModule?.toOption
+  | "bad-compare-shape" => some badCompareShapeModule
+  | "bad-select-predicate-shape" => some badSelectPredicateShapeModule
   | "bad-add-shape" => some badAddShapeModule
   | "duplicate-input" => some duplicateInputModule
   | "undefined-ref" => some undefinedReferenceModule
@@ -597,6 +620,8 @@ def availableCases : List String :=
     "mnist-parameter-tree",
     "mnist-train-step",
     "mnist-train-step-derived-mask",
+    "bad-compare-shape",
+    "bad-select-predicate-shape",
     "bad-add-shape",
     "duplicate-input",
     "undefined-ref",

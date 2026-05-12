@@ -33,3 +33,10 @@ cases with stable stderr snippets.
 ## First Slice
 
 Start with one compare shape mismatch and one select predicate shape mismatch.
+
+## Status
+
+Completed. The manifest now includes `bad-compare-shape` and
+`bad-select-predicate-shape` expected failures. They prove compare operands must
+match and select predicates must match the selected f32 tensor shape before any
+invalid MLIR is written.
