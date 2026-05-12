@@ -17,6 +17,7 @@ gate now covers:
 - helper-generated runtime fixtures for row-wise, all-elements, and
   keepdim-style reductions,
 - a helper-generated dense runtime fixture,
+- a helper-generated dense-ReLU-dense forward representative runtime fixture,
 - a tiny derived-mask train-step runtime checksum.
 
 The direct full MNIST runtime flag remains false. The current runtime fixtures
@@ -53,7 +54,7 @@ classifier-shaped train-step artifact.
 
 The named operation surface for `mnist-train-step-derived-mask` is now covered
 by helper-generated runtime fixtures. The next gap is composition at classifier
-scale: generated forward and then generated train-step runtime checksums.
+scale: generated derived-mask train-step runtime checksums.
 
 ## Next Wave
 
@@ -64,7 +65,7 @@ runtime fixtures to generated runtime checks in this order:
 2. shape-op fixtures (completed),
 3. reduce fixtures (completed),
 4. dot/dense fixture (completed),
-5. generated MNIST forward checksum,
+5. generated MNIST forward checksum (completed as a scaled representative),
 6. generated derived-mask train-step checksum,
 7. readiness report v6.
 

@@ -48,6 +48,7 @@ runtime reduce-row-runtime generated/reduce-row-runtime.mlir e2e/golden/reduce-r
 runtime reduce-all-runtime generated/reduce-all-runtime.mlir e2e/golden/reduce-all-runtime.mlir 21.0
 runtime reduce-keepdim-runtime generated/reduce-keepdim-runtime.mlir e2e/golden/reduce-keepdim-runtime.mlir 261.0
 runtime generated-dense-runtime generated/generated-dense-runtime.mlir e2e/golden/generated-dense-runtime.mlir 15.25
+runtime generated-mnist-forward-runtime generated/generated-mnist-forward-runtime.mlir e2e/golden/generated-mnist-forward-runtime.mlir -0.525
 validation-fail bad-compare-shape stablehlo.compare operands: expected matching tensor types
 validation-fail bad-select-predicate-shape stablehlo.select predicate: expected matching tensor types
 validation-fail bad-add-shape stablehlo.add operands: expected matching tensor types

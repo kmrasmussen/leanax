@@ -25,6 +25,7 @@ EXPECTED = {
     "cached_dataset_training_sweep": True,
     "runtime_operation_inventory": True,
     "runtime_generated_dense_fixture": True,
+    "runtime_generated_mnist_forward": True,
     "runtime_reduce_fixtures": True,
     "runtime_scalar_math_fixture": True,
     "runtime_shape_ops_fixtures": True,
@@ -151,6 +152,13 @@ def report() -> dict[str, bool]:
             and artifact_contains(
                 "e2e/golden/generated-dense-runtime.mlir",
                 ["%y00", "%y01", "%y10", "%y11", "%generated_dense_acc0"],
+            )
+        ),
+        "runtime_generated_mnist_forward": (
+            ("runtime", "generated-mnist-forward-runtime") in entries
+            and artifact_contains(
+                "e2e/golden/generated-mnist-forward-runtime.mlir",
+                ["%hidden_pre0", "llvm.fcmp", "llvm.select", "%logit0", "%generated_forward_acc0"],
             )
         ),
         "runtime_reduce_fixtures": (

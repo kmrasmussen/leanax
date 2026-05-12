@@ -40,6 +40,9 @@ The current runtime gate proves:
   `36.0`, `21.0`, and `261.0`.
 - `generated-dense-runtime`: a helper-generated dense composition executes
   through `mlir-runner` and returns `15.25`.
+- `generated-mnist-forward-runtime`: a helper-generated dense-ReLU-dense
+  classifier-forward representative executes through `mlir-runner` and returns
+  `-0.525`.
 
 The current classifier artifact proves the compiler-side shape:
 
@@ -125,5 +128,5 @@ train-step artifact executes externally.
 
 The runtime operation inventory no longer reports unsupported operation names.
 The remaining bridge is generated composition of the full classifier-shaped
-train-step path, starting with generated forward and then generated train-step
-runtime checksums.
+train-step path. The generated forward representative is now covered; the next
+runtime bridge is generated derived-mask train-step execution.

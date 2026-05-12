@@ -44,6 +44,9 @@ The implemented first slice is intentionally narrow:
 - `generated-dense-runtime` uses the shared runtime skeleton for a tiny
   generated `2x2 @ 2x2 + bias` dense composition and returns the weighted output
   checksum `15.25`.
+- `generated-mnist-forward-runtime` uses the same skeleton for a scaled
+  dense-ReLU-dense classifier-forward representative and returns the weighted
+  logits checksum `-0.525`.
 - `lake exe leanax emit-runtime-llvm --case affine-runtime --out
   generated/affine-runtime.mlir` emits an executable LLVM-dialect MLIR module.
 - The module hardcodes the same `affine` fixture values used by the Python

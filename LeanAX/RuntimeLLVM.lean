@@ -211,6 +211,51 @@ def generatedDenseRuntimeProgram : RuntimeLLVMProgram :=
 def generatedDenseRuntimeLLVM : String :=
   generatedDenseRuntimeProgram.render
 
+def generatedMnistForwardRuntimeProgram : RuntimeLLVMProgram :=
+  runtimeWeightedChecksumRefsProgram
+    [
+      runtimeConstF32 "x0" "1.0",
+      runtimeConstF32 "x1" "-2.0",
+      runtimeConstF32 "w100" "0.5",
+      runtimeConstF32 "w101" "-0.25",
+      runtimeConstF32 "w110" "1.0",
+      runtimeConstF32 "w111" "0.75",
+      runtimeConstF32 "b10" "2.0",
+      runtimeConstF32 "b11" "1.0",
+      runtimeConstF32 "w200" "0.25",
+      runtimeConstF32 "w201" "-0.5",
+      runtimeConstF32 "w210" "1.5",
+      runtimeConstF32 "w211" "0.75",
+      runtimeConstF32 "b20" "0.05",
+      runtimeConstF32 "b21" "-0.1",
+      runtimeConstF32 "zero" "0.0",
+      runtimeBinaryF32 "h00" "fmul" "x0" "w100",
+      runtimeBinaryF32 "h01" "fmul" "x1" "w110",
+      runtimeBinaryF32 "h02" "fadd" "h00" "h01",
+      runtimeBinaryF32 "hidden_pre0" "fadd" "h02" "b10",
+      runtimeBinaryF32 "h10" "fmul" "x0" "w101",
+      runtimeBinaryF32 "h11" "fmul" "x1" "w111",
+      runtimeBinaryF32 "h12" "fadd" "h10" "h11",
+      runtimeBinaryF32 "hidden_pre1" "fadd" "h12" "b11",
+      "%hidden0_pos = llvm.fcmp \"ogt\" %hidden_pre0, %zero : f32",
+      "%hidden1_pos = llvm.fcmp \"ogt\" %hidden_pre1, %zero : f32",
+      "%hidden0 = llvm.select %hidden0_pos, %hidden_pre0, %zero : i1, f32",
+      "%hidden1 = llvm.select %hidden1_pos, %hidden_pre1, %zero : i1, f32",
+      runtimeBinaryF32 "l00" "fmul" "hidden0" "w200",
+      runtimeBinaryF32 "l01" "fmul" "hidden1" "w210",
+      runtimeBinaryF32 "l02" "fadd" "l00" "l01",
+      runtimeBinaryF32 "logit0" "fadd" "l02" "b20",
+      runtimeBinaryF32 "l10" "fmul" "hidden0" "w201",
+      runtimeBinaryF32 "l11" "fmul" "hidden1" "w211",
+      runtimeBinaryF32 "l12" "fadd" "l10" "l11",
+      runtimeBinaryF32 "logit1" "fadd" "l12" "b21"
+    ]
+    "generated_forward"
+    ["logit0", "logit1"]
+
+def generatedMnistForwardRuntimeLLVM : String :=
+  generatedMnistForwardRuntimeProgram.render
+
 def affineRuntimeLLVM : String :=
   LeanAX.joinSep "\n" [
     "module {",
@@ -504,7 +549,8 @@ def runtimeLLVMCases : List RuntimeLLVMCase :=
     { name := "reduce-row-runtime", llvm := reduceRowRuntimeLLVM },
     { name := "reduce-all-runtime", llvm := reduceAllRuntimeLLVM },
     { name := "reduce-keepdim-runtime", llvm := reduceKeepdimRuntimeLLVM },
-    { name := "generated-dense-runtime", llvm := generatedDenseRuntimeLLVM }
+    { name := "generated-dense-runtime", llvm := generatedDenseRuntimeLLVM },
+    { name := "generated-mnist-forward-runtime", llvm := generatedMnistForwardRuntimeLLVM }
   ]
 
 def runtimeLLVMByName (name : String) : Option String :=

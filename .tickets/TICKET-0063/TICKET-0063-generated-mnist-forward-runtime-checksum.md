@@ -44,4 +44,9 @@ remaining gap.
 
 ## Status
 
-Ready for analysis.
+Completed as a scaled representative. `generated-mnist-forward-runtime` now uses
+the shared runtime skeleton for a generated dense-ReLU-dense forward path with
+ReLU compare/select and a weighted logits checksum. The fixture executes through
+`mlir-runner` in the default manifest and checks `-0.525`. It is documented as a
+representative bridge rather than the full `2x784 -> 8 -> 10` classifier-shaped
+runtime artifact.
