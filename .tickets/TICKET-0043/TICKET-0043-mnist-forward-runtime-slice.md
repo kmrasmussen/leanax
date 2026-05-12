@@ -37,3 +37,11 @@ inside the Nix shell.
 
 Prototype a checksum-style forward runtime fixture and only manifest it after
 the Nix shell can execute it reliably.
+
+## Status
+
+Completed. LeanAX now emits `mnist-forward-runtime`, a small dense-ReLU-dense
+LLVM runtime checksum that mirrors the MNIST forward pattern as a stepping-stone
+shape. The manifest runs it through `mlir-runner` and compares the scalar result
+against `66.6125`. This is documented as MNIST-forward runtime coverage, not
+full `2x784 -> 8 -> 10` runtime execution.

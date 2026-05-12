@@ -36,6 +36,9 @@ The implemented first slice is intentionally narrow:
 - `dense-runtime` adds a second LLVM runtime fixture: a fixed dense-layer
   checksum for one `1x4 @ 4x3 + 3` computation. The runner compares its scalar
   result against `103.375`.
+- `mnist-forward-runtime` adds a small dense-ReLU-dense forward checksum. It is
+  a documented stepping-stone shape, not the full `2x784 -> 8 -> 10` classifier
+  artifact. The runner compares its scalar result against `66.6125`.
 
 ## Capability Matrix
 

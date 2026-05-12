@@ -466,6 +466,9 @@ Exit gate:
 
 Current progress:
 
+- `mnist-forward-runtime` runs a small dense-ReLU-dense forward checksum through
+  LLVM `mlir-runner` as a documented stepping stone toward full classifier
+  runtime execution.
 - `dense-runtime` runs a fixed dense-layer checksum through LLVM `mlir-runner`,
   expanding runtime coverage beyond the affine fixture while remaining separate
   from full MNIST runtime execution.
