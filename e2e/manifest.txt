@@ -25,6 +25,7 @@ data-loader mnist-fixture e2e/python/mnist_fixture.py
 data-loader mnist-idx-sample e2e/python/mnist_idx_sample.py
 data-loader mnist-cache-resolver e2e/python/mnist_cache_resolver.py
 data-loader runtime-capability-matrix e2e/python/runtime_capability_matrix.py
+data-loader runtime-operation-inventory e2e/python/runtime_operation_inventory.py
 training-loop synthetic-linear e2e/python/training_loop.py
 training-loop mnist-mlp-smoke e2e/python/mnist_mlp_smoke.py
 training-loop mnist-train-step-artifact e2e/python/mnist_train_step_artifact.py

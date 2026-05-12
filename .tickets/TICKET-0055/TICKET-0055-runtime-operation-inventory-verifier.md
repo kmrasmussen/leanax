@@ -35,3 +35,12 @@ artifact is generated.
 
 Use the lowering manifest when possible so the check does not depend on fragile
 text parsing.
+
+## Status
+
+Completed. `e2e/python/runtime_operation_inventory.py` reads
+`generated/mnist-train-step-derived-mask.mlir.manifest.json`, checks the
+train-step input/output contract, verifies the expected thirteen-operation
+surface, and prints stable operation counts plus the currently unsupported
+runtime expansion surface. The manifest runs it as `runtime-operation-inventory`
+after the derived-mask artifact has been generated.

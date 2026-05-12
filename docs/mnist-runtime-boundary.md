@@ -90,3 +90,21 @@ training over generated text is not enough. Parsing StableHLO-shaped text with
 2. `TICKET-0056`: Runtime Scalar Math Fixture.
 3. `TICKET-0057`: Tiny Derived-Mask Train-Step Runtime Fixture.
 4. `TICKET-0058`: Runtime Readiness Report V5.
+
+## Current Progress
+
+`runtime-operation-inventory` now verifies the
+`mnist-train-step-derived-mask` lowering manifest during the default e2e gate.
+It checks the fixed input/output contract, the expected thirteen-operation
+surface, and the current runtime expansion gap:
+
+- `stablehlo.broadcast_in_dim`
+- `stablehlo.divide`
+- `stablehlo.exponential`
+- `stablehlo.log`
+- `stablehlo.reduce`
+- `stablehlo.reshape`
+- `stablehlo.transpose`
+
+Those operations are the next concrete bridge between the existing handwritten
+LLVM runtime fixtures and a direct runtime train-step artifact.

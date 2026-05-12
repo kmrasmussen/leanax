@@ -736,6 +736,9 @@ Current progress:
 - The plan keeps `direct_mnist_external_runtime` false until an external
   runtime artifact executes the train-step semantics and compares loss plus
   updated parameter checksums against the existing oracle.
+- `runtime-operation-inventory` now verifies the derived-mask train-step
+  lowering manifest in the default e2e gate and prints the unsupported runtime
+  operation surface for the next LLVM expansion slice.
 
 ## What Not To Do Yet
 
