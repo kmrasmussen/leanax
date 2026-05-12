@@ -2,6 +2,44 @@ import LeanAX.IR
 
 namespace LeanAX
 
+structure RuntimeLLVMProgram where
+  body : List String
+  result : String
+  deriving Repr
+
+def runtimeLLVMMain (body : List String) (result : String) : String :=
+  LeanAX.joinSep "\n" (
+    ["module {", "  llvm.func @main() -> f32 {"] ++
+    body.map (fun line => "    " ++ line) ++
+    ["    llvm.return %" ++ result ++ " : f32", "  }", "}", ""]
+  )
+
+def RuntimeLLVMProgram.render (program : RuntimeLLVMProgram) : String :=
+  runtimeLLVMMain program.body program.result
+
+def runtimeConstF32 (name : String) (value : String) : String :=
+  "%" ++ name ++ " = llvm.mlir.constant(" ++ value ++ " : f32) : f32"
+
+def runtimeBinaryF32 (result op lhs rhs : String) : String :=
+  "%" ++ result ++ " = llvm." ++ op ++ " %" ++ lhs ++ ", %" ++ rhs ++ " : f32"
+
+def generatedArithmeticRuntimeProgram : RuntimeLLVMProgram :=
+  {
+    body := [
+      runtimeConstF32 "a" "1.5",
+      runtimeConstF32 "b" "2.25",
+      runtimeBinaryF32 "sum" "fadd" "a" "b",
+      runtimeConstF32 "scale" "0.5",
+      runtimeBinaryF32 "scaled" "fmul" "sum" "scale",
+      runtimeConstF32 "offset" "0.125",
+      runtimeBinaryF32 "checksum" "fadd" "scaled" "offset"
+    ],
+    result := "checksum"
+  }
+
+def generatedArithmeticRuntimeLLVM : String :=
+  generatedArithmeticRuntimeProgram.render
+
 def affineRuntimeLLVM : String :=
   LeanAX.joinSep "\n" [
     "module {",
@@ -276,22 +314,26 @@ def tinyTrainStepRuntimeLLVM : String :=
     ""
   ]
 
+structure RuntimeLLVMCase where
+  name : String
+  llvm : String
+  deriving Repr
+
+def runtimeLLVMCases : List RuntimeLLVMCase :=
+  [
+    { name := "affine-runtime", llvm := affineRuntimeLLVM },
+    { name := "dense-runtime", llvm := denseRuntimeLLVM },
+    { name := "mnist-forward-runtime", llvm := mnistForwardRuntimeLLVM },
+    { name := "softmax-loss-runtime", llvm := softmaxLossRuntimeLLVM },
+    { name := "tiny-train-step-runtime", llvm := tinyTrainStepRuntimeLLVM },
+    { name := "generated-arithmetic-runtime", llvm := generatedArithmeticRuntimeLLVM }
+  ]
+
 def runtimeLLVMByName (name : String) : Option String :=
-  match name with
-  | "affine-runtime" => some affineRuntimeLLVM
-  | "dense-runtime" => some denseRuntimeLLVM
-  | "mnist-forward-runtime" => some mnistForwardRuntimeLLVM
-  | "softmax-loss-runtime" => some softmaxLossRuntimeLLVM
-  | "tiny-train-step-runtime" => some tinyTrainStepRuntimeLLVM
-  | _ => none
+  (runtimeLLVMCases.find? (fun runtimeCase => runtimeCase.name == name)).map
+    (fun runtimeCase => runtimeCase.llvm)
 
 def availableRuntimeCases : List String :=
-  [
-    "affine-runtime",
-    "dense-runtime",
-    "mnist-forward-runtime",
-    "softmax-loss-runtime",
-    "tiny-train-step-runtime"
-  ]
+  runtimeLLVMCases.map (fun runtimeCase => runtimeCase.name)
 
 end LeanAX

@@ -39,7 +39,8 @@ auditable runtime bridge for the operation surface used by
 
 ## Ticket Wave
 
-1. `TICKET-0059`: Runtime LLVM Codegen Skeleton And ABI.
+1. `TICKET-0059`: Runtime LLVM Codegen Skeleton And ABI. Completed by the
+   helper-generated `generated-arithmetic-runtime` case.
 2. `TICKET-0060`: Runtime Shape Ops Lowering Fixtures.
 3. `TICKET-0061`: Runtime Reduce Lowering Fixtures.
 4. `TICKET-0062`: Runtime Dot/Dense Lowering Fixture.

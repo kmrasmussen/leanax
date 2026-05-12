@@ -25,6 +25,14 @@ Future routes toward direct StableHLO runtime execution are still:
 
 The implemented first slice is intentionally narrow:
 
+- Runtime LLVM cases now share a small ABI/codegen skeleton in
+  `LeanAX/RuntimeLLVM.lean`: every generated runtime program emits
+  `llvm.func @main() -> f32`, uses scalar `f32` SSA values, and returns one
+  checksum through `llvm.return`. The CLI registry is a data list rather than an
+  open-coded match so later generated runtime cases can join the same path.
+- `generated-arithmetic-runtime` is the first helper-generated runtime case. It
+  uses the shared skeleton, executes with `mlir-runner`, and returns the
+  checksum `2.0`.
 - `lake exe leanax emit-runtime-llvm --case affine-runtime --out
   generated/affine-runtime.mlir` emits an executable LLVM-dialect MLIR module.
 - The module hardcodes the same `affine` fixture values used by the Python

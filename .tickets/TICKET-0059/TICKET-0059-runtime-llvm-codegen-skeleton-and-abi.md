@@ -45,4 +45,8 @@ shape. Avoid pulling classifier tensor ops into this ticket.
 
 ## Status
 
-Ready for analysis.
+Completed. Runtime LLVM cases now share a small fixed-shape scalar ABI renderer:
+`llvm.func @main() -> f32`, scalar `f32` SSA lines, and one checksum returned
+through `llvm.return`. The CLI runtime registry is now data-driven through
+`runtimeLLVMCases`, and `generated-arithmetic-runtime` proves the skeleton in
+the default manifest with an external `mlir-runner` checksum of `2.0`.
