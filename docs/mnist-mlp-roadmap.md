@@ -689,6 +689,54 @@ Current progress:
   dataset metrics, and `full_dataset_training` true while keeping direct MNIST
   external runtime false.
 
+## Phase 18: Direct Runtime Boundary
+
+Goal: make the next runtime hardening slice concrete without depending on
+unpackaged StableHLO or IREE tooling.
+
+Work:
+
+- Document the direct MNIST runtime boundary and what would count as a real
+  external-runtime classifier milestone.
+- Use the current runtime capability matrix and
+  `mnist-train-step-derived-mask` artifacts as the evidence base.
+- Prefer expanding the existing LLVM `mlir-runner` route for the next slice,
+  because required MLIR runtime tools are available in the Nix shell while
+  optional StableHLO and IREE tools are not.
+- Add a verifier that inventories the operations and shapes required by the
+  derived-mask train-step artifact.
+- Add focused LLVM runtime fixtures for scalar math and then a tiny
+  derived-mask train-step checksum before attempting the full fixed
+  `2x784 -> 8 -> 10` runtime artifact.
+- Extend the readiness report only after the runtime fixture is actually
+  manifested.
+
+Exit gate:
+
+- The runtime plan names the chosen route, rejects premature runtime routes, and
+  breaks the next implementation slice into concrete tickets.
+
+Tickets:
+
+- `TICKET-0054`: Direct MNIST Runtime Boundary Plan.
+- `TICKET-0055`: Runtime Operation Inventory Verifier.
+- `TICKET-0056`: Runtime Scalar Math Fixture.
+- `TICKET-0057`: Tiny Derived-Mask Train-Step Runtime Fixture.
+- `TICKET-0058`: Runtime Readiness Report V5.
+
+Current progress:
+
+- `docs/mnist-runtime-boundary.md` chooses LLVM lowering expansion through
+  `mlir-runner` for the next slice, because the current Nix shell has
+  `mlir-opt` and `mlir-runner` but not `stablehlo-opt`, `iree-compile`, or
+  `iree-run-module`.
+- The plan maps the classifier train-step inputs, outputs, intermediate tensor
+  shapes, and required StableHLO-shaped operations from
+  `mnist-train-step-derived-mask`.
+- The plan keeps `direct_mnist_external_runtime` false until an external
+  runtime artifact executes the train-step semantics and compares loss plus
+  updated parameter checksums against the existing oracle.
+
 ## What Not To Do Yet
 
 - Do not chase a full NumPy surface area.

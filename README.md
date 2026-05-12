@@ -43,6 +43,8 @@ directly, with shape and dtype facts available before lowering.
   train a small MLP on MNIST through LeanAX.
 - [docs/mnist-mlp-roadmap.md](docs/mnist-mlp-roadmap.md): a staged path from
   the current prototype to a JAX-shaped MNIST training loop.
+- [docs/mnist-runtime-boundary.md](docs/mnist-runtime-boundary.md): the current
+  direct-runtime boundary for the MNIST train-step path.
 - [examples/first-sketch.lean](examples/first-sketch.lean): pseudocode for the
   kind of API this project is imagining.
 - [notes/dialogue-001.md](notes/dialogue-001.md): first set of discussion

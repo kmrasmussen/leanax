@@ -35,3 +35,13 @@ capability matrix and generated classifier artifacts.
 
 Use the current `runtime-capability-matrix` output and derived-mask classifier
 artifacts as the evidence base.
+
+## Status
+
+Completed. `docs/mnist-runtime-boundary.md` chooses LLVM lowering expansion
+through the existing `mlir-runner` path as the next route, while rejecting
+unpackaged StableHLO/IREE/FHS routes for the default gate until tooling is
+reproducible. The plan maps the `mnist-train-step-derived-mask` inputs,
+outputs, required operations, and key tensor shapes, defines what would count as
+direct full MNIST runtime execution, and breaks the next runtime slice into
+`TICKET-0055` through `TICKET-0058`.

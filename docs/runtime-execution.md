@@ -56,3 +56,8 @@ This proves LeanAX can emit a module that runs through an external compiler/JIT
 path available in the project shell. It is not yet direct StableHLO execution;
 that remains a later hardening step when StableHLO/IREE/XLA runtime tooling is
 packaged cleanly for this project.
+
+See [mnist-runtime-boundary.md](mnist-runtime-boundary.md) for the direct MNIST
+runtime boundary. The next runtime slice expands LLVM lowering through the
+existing `mlir-runner` path before revisiting unpackaged StableHLO or IREE
+routes.
