@@ -33,3 +33,13 @@ in the normal e2e gate.
 ## First Slice
 
 Add new fields after TICKET-0050 through TICKET-0052 land.
+
+## Status
+
+Completed. `mnist-progress-report` now runs after the cached sweep and metrics
+verifier in the manifest, so it inspects current generated metrics rather than
+stale local state. The report distinguishes derived-mask command wiring,
+cached dataset training sweep coverage, structured dataset metrics, fixture
+training, and direct MNIST external runtime. `full_dataset_training` now means
+the bounded cached IDX sweep is proven by the default gate; direct full MNIST
+external runtime remains explicitly false.

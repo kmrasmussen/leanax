@@ -24,7 +24,6 @@ numeric mnist-train-step-derived-mask generated/mnist-train-step-derived-mask.ml
 data-loader mnist-fixture e2e/python/mnist_fixture.py
 data-loader mnist-idx-sample e2e/python/mnist_idx_sample.py
 data-loader mnist-cache-resolver e2e/python/mnist_cache_resolver.py
-data-loader mnist-progress-report e2e/python/mnist_progress_report.py
 data-loader runtime-capability-matrix e2e/python/runtime_capability_matrix.py
 training-loop synthetic-linear e2e/python/training_loop.py
 training-loop mnist-mlp-smoke e2e/python/mnist_mlp_smoke.py
@@ -34,6 +33,7 @@ training-loop mnist-train-command e2e/python/mnist_train_command.py
 training-loop mnist-full-dataset-smoke e2e/python/mnist_full_dataset_smoke.py
 training-loop mnist-cached-training-sweep e2e/python/mnist_cached_training_sweep.py
 data-loader mnist-dataset-metrics e2e/python/verify_mnist_dataset_metrics.py
+data-loader mnist-progress-report e2e/python/mnist_progress_report.py
 runtime affine-runtime generated/affine-runtime.mlir e2e/golden/affine-runtime.mlir 94.25
 runtime dense-runtime generated/dense-runtime.mlir e2e/golden/dense-runtime.mlir 103.375
 runtime mnist-forward-runtime generated/mnist-forward-runtime.mlir e2e/golden/mnist-forward-runtime.mlir 66.6125

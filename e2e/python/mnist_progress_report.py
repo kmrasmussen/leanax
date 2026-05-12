@@ -6,6 +6,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 MANIFEST = REPO / "e2e/manifest.txt"
+DATASET_METRICS = REPO / "generated/mnist-real-dataset-metrics.json"
 
 
 EXPECTED = {
@@ -17,9 +18,11 @@ EXPECTED = {
     "dense_runtime": True,
     "derived_relu_mask_artifact": True,
     "direct_mnist_external_runtime": False,
+    "derived_mask_train_command_wiring": True,
     "fixture_only_default": True,
-    "full_dataset_training": False,
+    "full_dataset_training": True,
     "idx_full_dataset_loader": True,
+    "cached_dataset_training_sweep": True,
     "mnist_forward_runtime": True,
     "mnist_train_command": True,
     "monolithic_mnist_train_step": True,
@@ -31,6 +34,7 @@ EXPECTED = {
     "relu_dense_gradient_artifact": True,
     "runtime_capability_matrix": True,
     "softmax_dense_gradient_artifact": True,
+    "structured_dataset_training_metrics": True,
     "ten_class_fixture_training": True,
 }
 
@@ -53,6 +57,29 @@ def artifact_contains(path: str, required_text: list[str]) -> bool:
         return False
     text = artifact.read_text(encoding="utf-8")
     return all(required in text for required in required_text)
+
+
+def dataset_metrics_ready() -> bool:
+    if not DATASET_METRICS.is_file():
+        return False
+    data = json.loads(DATASET_METRICS.read_text(encoding="utf-8"))
+    artifacts = data.get("artifacts")
+    return (
+        data.get("schema") == "leanax.mnist_dataset_metrics.v1"
+        and data.get("mode") == "cached-train"
+        and data.get("split") == "train"
+        and data.get("samples") == 16
+        and data.get("batches") == 8
+        and data.get("epochs") == 4
+        and isinstance(data.get("first_loss"), int | float)
+        and isinstance(data.get("final_loss"), int | float)
+        and data["final_loss"] < data["first_loss"]
+        and isinstance(data.get("first_accuracy"), int | float)
+        and isinstance(data.get("final_accuracy"), int | float)
+        and data["final_accuracy"] >= data["first_accuracy"]
+        and isinstance(artifacts, list)
+        and "generated/mnist-train-step-derived-mask.mlir" in artifacts
+    )
 
 
 def report() -> dict[str, bool]:
@@ -92,9 +119,24 @@ def report() -> dict[str, bool]:
             )
         ),
         "direct_mnist_external_runtime": False,
+        "derived_mask_train_command_wiring": (
+            ("training-loop", "mnist-train-command") in entries
+            and artifact_contains(
+                "generated/mnist-train-step-derived-mask.mlir",
+                ["stablehlo.compare", "stablehlo.select", "%loss"],
+            )
+        ),
         "fixture_only_default": ("data-loader", "mnist-fixture") in entries,
-        "full_dataset_training": False,
+        "full_dataset_training": (
+            ("training-loop", "mnist-cached-training-sweep") in entries
+            and ("data-loader", "mnist-dataset-metrics") in entries
+            and dataset_metrics_ready()
+        ),
         "idx_full_dataset_loader": ("data-loader", "mnist-idx-sample") in entries,
+        "cached_dataset_training_sweep": (
+            ("training-loop", "mnist-cached-training-sweep") in entries
+            and dataset_metrics_ready()
+        ),
         "mnist_forward_runtime": (
             ("runtime", "mnist-forward-runtime") in entries
             and artifact_contains("e2e/golden/mnist-forward-runtime.mlir", ["llvm.fcmp", "llvm.select"])
@@ -144,6 +186,10 @@ def report() -> dict[str, bool]:
         "softmax_dense_gradient_artifact": (
             ("numeric", "grad-softmax-dense") in entries
             and artifact_contains("generated/grad-softmax-dense.mlir", ["%grad_w2", "%grad_b2"])
+        ),
+        "structured_dataset_training_metrics": (
+            ("data-loader", "mnist-dataset-metrics") in entries
+            and dataset_metrics_ready()
         ),
         "ten_class_fixture_training": ("training-loop", "mnist-classifier-smoke") in entries,
     }

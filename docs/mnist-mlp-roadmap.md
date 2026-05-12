@@ -677,6 +677,17 @@ Current progress:
   `generated/mnist-train-step-derived-mask.mlir` as its command-facing
   train-step artifact. The explicit-mask artifact remains a compatibility
   numeric case.
+- `mnist-cached-training-sweep` now exercises a bounded train-split IDX cache
+  with sixteen samples through the resolver, not the embedded fixture batch.
+  It proves loss improvement and non-regressing accuracy in the default gate.
+- `generated/mnist-real-dataset-metrics.json` records stable cached training
+  metrics with schema `leanax.mnist_dataset_metrics.v1`, and
+  `mnist-dataset-metrics` verifies the schema, values, and generated artifact
+  references immediately after the sweep.
+- `mnist-progress-report` now runs after the cached sweep and metrics verifier.
+  It marks derived-mask command wiring, cached dataset training, structured
+  dataset metrics, and `full_dataset_training` true while keeping direct MNIST
+  external runtime false.
 
 ## What Not To Do Yet
 
