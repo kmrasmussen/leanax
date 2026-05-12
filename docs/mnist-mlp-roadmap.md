@@ -618,6 +618,10 @@ Current progress:
   progress report marks the derived-mask train-step milestone true.
 - Compare/select validation now has expected-failure coverage for mismatched
   compare operands and mismatched select predicate shape.
+- `mnist-progress-report` now covers the full phase-16 surface: compare/select
+  artifact support, derived ReLU mask artifact, derived-mask train step, and
+  compare/select validation failures. The explicit-mask train step remains as a
+  compatibility fixture.
 
 Tickets:
 

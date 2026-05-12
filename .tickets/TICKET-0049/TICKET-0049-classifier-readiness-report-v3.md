@@ -33,3 +33,10 @@ normal e2e gate.
 ## First Slice
 
 Add the new fields only after the corresponding artifacts are manifested.
+
+## Status
+
+Completed. `mnist-progress-report` now covers the full phase-16 surface:
+compare/select artifact support, derived ReLU mask artifact, derived-mask MNIST
+train step, and compare/select validation failures. The report keeps full
+real-dataset training and direct full MNIST external-runtime execution false.

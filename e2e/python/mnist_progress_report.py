@@ -12,7 +12,10 @@ EXPECTED = {
     "affine_external_runtime": True,
     "artifact_composed_train_step": True,
     "cache_resolver": True,
+    "compare_select_artifact": True,
+    "compare_select_validation": True,
     "dense_runtime": True,
+    "derived_relu_mask_artifact": True,
     "direct_mnist_external_runtime": False,
     "fixture_only_default": True,
     "full_dataset_training": False,
@@ -65,9 +68,27 @@ def report() -> dict[str, bool]:
             and artifact_contains("generated/mnist-parameter-tree.mlir", ["%next_w1", "%next_b1"])
         ),
         "cache_resolver": ("data-loader", "mnist-cache-resolver") in entries,
+        "compare_select_artifact": (
+            ("numeric", "compare-select") in entries
+            and artifact_contains(
+                "generated/compare-select.mlir",
+                ["stablehlo.compare", "stablehlo.select", "tensor<2x3xi1>"],
+            )
+        ),
+        "compare_select_validation": (
+            ("validation-fail", "bad-compare-shape") in entries
+            and ("validation-fail", "bad-select-predicate-shape") in entries
+        ),
         "dense_runtime": (
             ("runtime", "dense-runtime") in entries
             and artifact_contains("e2e/golden/dense-runtime.mlir", ["llvm.func @main", "llvm.return"])
+        ),
+        "derived_relu_mask_artifact": (
+            ("numeric", "relu-derived-mask") in entries
+            and artifact_contains(
+                "generated/relu-derived-mask.mlir",
+                ["stablehlo.compare", "stablehlo.select", "%relu_mask", "tensor<2x8xi1>"],
+            )
         ),
         "direct_mnist_external_runtime": False,
         "fixture_only_default": ("data-loader", "mnist-fixture") in entries,
