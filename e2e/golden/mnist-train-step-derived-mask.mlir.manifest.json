@@ -1,0 +1,458 @@
+{
+  "schema": "leanax.lowering.v1",
+  "generated": "generated/mnist-train-step-derived-mask.mlir",
+  "module": "leanax_mnist_train_step_derived_mask",
+  "function": "main",
+  "inputs": [{"name": "x", "type": "tensor<2x784xf32>"}, {"name": "labels", "type": "tensor<2x10xf32>"}, {"name": "w1", "type": "tensor<784x8xf32>"}, {"name": "b1", "type": "tensor<8xf32>"}, {"name": "w2", "type": "tensor<8x10xf32>"}, {"name": "b2", "type": "tensor<10xf32>"}],
+  "outputs": [{"name": "next_w1", "type": "tensor<784x8xf32>"}, {"name": "next_b1", "type": "tensor<8xf32>"}, {"name": "next_w2", "type": "tensor<8x10xf32>"}, {"name": "next_b2", "type": "tensor<10xf32>"}, {"name": "loss", "type": "tensor<f32>"}],
+  "operations": [
+    {
+      "id": "op0",
+      "result": "hidden_linear",
+      "op": "stablehlo.dot_general",
+      "operands": ["x", "w1"],
+      "result_type": "tensor<2x8xf32>",
+      "mlir_line": 3
+    },
+    {
+      "id": "op1",
+      "result": "hidden_bias",
+      "op": "stablehlo.broadcast_in_dim",
+      "operands": ["b1"],
+      "result_type": "tensor<2x8xf32>",
+      "mlir_line": 4
+    },
+    {
+      "id": "op2",
+      "result": "hidden_pre",
+      "op": "stablehlo.add",
+      "operands": ["hidden_linear", "hidden_bias"],
+      "result_type": "tensor<2x8xf32>",
+      "mlir_line": 5
+    },
+    {
+      "id": "op3",
+      "result": "relu_zero",
+      "op": "stablehlo.constant",
+      "operands": [],
+      "result_type": "tensor<f32>",
+      "mlir_line": 6
+    },
+    {
+      "id": "op4",
+      "result": "relu_one",
+      "op": "stablehlo.constant",
+      "operands": [],
+      "result_type": "tensor<f32>",
+      "mlir_line": 7
+    },
+    {
+      "id": "op5",
+      "result": "relu_zero_batched",
+      "op": "stablehlo.broadcast_in_dim",
+      "operands": ["relu_zero"],
+      "result_type": "tensor<2x8xf32>",
+      "mlir_line": 8
+    },
+    {
+      "id": "op6",
+      "result": "relu_one_batched",
+      "op": "stablehlo.broadcast_in_dim",
+      "operands": ["relu_one"],
+      "result_type": "tensor<2x8xf32>",
+      "mlir_line": 9
+    },
+    {
+      "id": "op7",
+      "result": "relu_positive",
+      "op": "stablehlo.compare",
+      "operands": ["hidden_pre", "relu_zero_batched"],
+      "result_type": "tensor<2x8xi1>",
+      "mlir_line": 10
+    },
+    {
+      "id": "op8",
+      "result": "relu_hidden",
+      "op": "stablehlo.select",
+      "operands": ["relu_positive", "hidden_pre", "relu_zero_batched"],
+      "result_type": "tensor<2x8xf32>",
+      "mlir_line": 11
+    },
+    {
+      "id": "op9",
+      "result": "relu_mask",
+      "op": "stablehlo.select",
+      "operands": ["relu_positive", "relu_one_batched", "relu_zero_batched"],
+      "result_type": "tensor<2x8xf32>",
+      "mlir_line": 12
+    },
+    {
+      "id": "op10",
+      "result": "logits_linear",
+      "op": "stablehlo.dot_general",
+      "operands": ["relu_hidden", "w2"],
+      "result_type": "tensor<2x10xf32>",
+      "mlir_line": 13
+    },
+    {
+      "id": "op11",
+      "result": "logits_bias",
+      "op": "stablehlo.broadcast_in_dim",
+      "operands": ["b2"],
+      "result_type": "tensor<2x10xf32>",
+      "mlir_line": 14
+    },
+    {
+      "id": "op12",
+      "result": "logits",
+      "op": "stablehlo.add",
+      "operands": ["logits_linear", "logits_bias"],
+      "result_type": "tensor<2x10xf32>",
+      "mlir_line": 15
+    },
+    {
+      "id": "op13",
+      "result": "softmax_exp",
+      "op": "stablehlo.exponential",
+      "operands": ["logits"],
+      "result_type": "tensor<2x10xf32>",
+      "mlir_line": 16
+    },
+    {
+      "id": "op14",
+      "result": "softmax_denom",
+      "op": "stablehlo.reduce",
+      "operands": ["softmax_exp"],
+      "result_type": "tensor<2x1xf32>",
+      "mlir_line": 17
+    },
+    {
+      "id": "op15",
+      "result": "softmax_denom_batched",
+      "op": "stablehlo.broadcast_in_dim",
+      "operands": ["softmax_denom"],
+      "result_type": "tensor<2x10xf32>",
+      "mlir_line": 18
+    },
+    {
+      "id": "op16",
+      "result": "softmax_probs",
+      "op": "stablehlo.divide",
+      "operands": ["softmax_exp", "softmax_denom_batched"],
+      "result_type": "tensor<2x10xf32>",
+      "mlir_line": 19
+    },
+    {
+      "id": "op17",
+      "result": "softmax_log_probs",
+      "op": "stablehlo.log",
+      "operands": ["softmax_probs"],
+      "result_type": "tensor<2x10xf32>",
+      "mlir_line": 20
+    },
+    {
+      "id": "op18",
+      "result": "loss_weighted",
+      "op": "stablehlo.multiply",
+      "operands": ["labels", "softmax_log_probs"],
+      "result_type": "tensor<2x10xf32>",
+      "mlir_line": 21
+    },
+    {
+      "id": "op19",
+      "result": "loss_per_example",
+      "op": "stablehlo.reduce",
+      "operands": ["loss_weighted"],
+      "result_type": "tensor<2x1xf32>",
+      "mlir_line": 22
+    },
+    {
+      "id": "op20",
+      "result": "loss_sum",
+      "op": "stablehlo.reduce",
+      "operands": ["loss_per_example"],
+      "result_type": "tensor<f32>",
+      "mlir_line": 23
+    },
+    {
+      "id": "op21",
+      "result": "loss_neg_mean",
+      "op": "stablehlo.constant",
+      "operands": [],
+      "result_type": "tensor<f32>",
+      "mlir_line": 24
+    },
+    {
+      "id": "op22",
+      "result": "loss",
+      "op": "stablehlo.multiply",
+      "operands": ["loss_sum", "loss_neg_mean"],
+      "result_type": "tensor<f32>",
+      "mlir_line": 25
+    },
+    {
+      "id": "op23",
+      "result": "neg_one",
+      "op": "stablehlo.constant",
+      "operands": [],
+      "result_type": "tensor<f32>",
+      "mlir_line": 26
+    },
+    {
+      "id": "op24",
+      "result": "neg_one_batched",
+      "op": "stablehlo.broadcast_in_dim",
+      "operands": ["neg_one"],
+      "result_type": "tensor<2x10xf32>",
+      "mlir_line": 27
+    },
+    {
+      "id": "op25",
+      "result": "neg_labels",
+      "op": "stablehlo.multiply",
+      "operands": ["labels", "neg_one_batched"],
+      "result_type": "tensor<2x10xf32>",
+      "mlir_line": 28
+    },
+    {
+      "id": "op26",
+      "result": "logit_delta_unscaled",
+      "op": "stablehlo.add",
+      "operands": ["softmax_probs", "neg_labels"],
+      "result_type": "tensor<2x10xf32>",
+      "mlir_line": 29
+    },
+    {
+      "id": "op27",
+      "result": "mean_scale",
+      "op": "stablehlo.constant",
+      "operands": [],
+      "result_type": "tensor<f32>",
+      "mlir_line": 30
+    },
+    {
+      "id": "op28",
+      "result": "mean_scale_batched",
+      "op": "stablehlo.broadcast_in_dim",
+      "operands": ["mean_scale"],
+      "result_type": "tensor<2x10xf32>",
+      "mlir_line": 31
+    },
+    {
+      "id": "op29",
+      "result": "logit_delta",
+      "op": "stablehlo.multiply",
+      "operands": ["logit_delta_unscaled", "mean_scale_batched"],
+      "result_type": "tensor<2x10xf32>",
+      "mlir_line": 32
+    },
+    {
+      "id": "op30",
+      "result": "hidden_t",
+      "op": "stablehlo.transpose",
+      "operands": ["relu_hidden"],
+      "result_type": "tensor<8x2xf32>",
+      "mlir_line": 33
+    },
+    {
+      "id": "op31",
+      "result": "grad_w2",
+      "op": "stablehlo.dot_general",
+      "operands": ["hidden_t", "logit_delta"],
+      "result_type": "tensor<8x10xf32>",
+      "mlir_line": 34
+    },
+    {
+      "id": "op32",
+      "result": "logit_delta_t",
+      "op": "stablehlo.transpose",
+      "operands": ["logit_delta"],
+      "result_type": "tensor<10x2xf32>",
+      "mlir_line": 35
+    },
+    {
+      "id": "op33",
+      "result": "grad_b2_keepdim",
+      "op": "stablehlo.reduce",
+      "operands": ["logit_delta_t"],
+      "result_type": "tensor<10x1xf32>",
+      "mlir_line": 36
+    },
+    {
+      "id": "op34",
+      "result": "grad_b2",
+      "op": "stablehlo.reshape",
+      "operands": ["grad_b2_keepdim"],
+      "result_type": "tensor<10xf32>",
+      "mlir_line": 37
+    },
+    {
+      "id": "op35",
+      "result": "w2_t",
+      "op": "stablehlo.transpose",
+      "operands": ["w2"],
+      "result_type": "tensor<10x8xf32>",
+      "mlir_line": 38
+    },
+    {
+      "id": "op36",
+      "result": "hidden_grad",
+      "op": "stablehlo.dot_general",
+      "operands": ["logit_delta", "w2_t"],
+      "result_type": "tensor<2x8xf32>",
+      "mlir_line": 39
+    },
+    {
+      "id": "op37",
+      "result": "pre_activation_grad",
+      "op": "stablehlo.multiply",
+      "operands": ["hidden_grad", "relu_mask"],
+      "result_type": "tensor<2x8xf32>",
+      "mlir_line": 40
+    },
+    {
+      "id": "op38",
+      "result": "x_t",
+      "op": "stablehlo.transpose",
+      "operands": ["x"],
+      "result_type": "tensor<784x2xf32>",
+      "mlir_line": 41
+    },
+    {
+      "id": "op39",
+      "result": "grad_w1",
+      "op": "stablehlo.dot_general",
+      "operands": ["x_t", "pre_activation_grad"],
+      "result_type": "tensor<784x8xf32>",
+      "mlir_line": 42
+    },
+    {
+      "id": "op40",
+      "result": "pre_activation_grad_t",
+      "op": "stablehlo.transpose",
+      "operands": ["pre_activation_grad"],
+      "result_type": "tensor<8x2xf32>",
+      "mlir_line": 43
+    },
+    {
+      "id": "op41",
+      "result": "grad_b1_keepdim",
+      "op": "stablehlo.reduce",
+      "operands": ["pre_activation_grad_t"],
+      "result_type": "tensor<8x1xf32>",
+      "mlir_line": 44
+    },
+    {
+      "id": "op42",
+      "result": "grad_b1",
+      "op": "stablehlo.reshape",
+      "operands": ["grad_b1_keepdim"],
+      "result_type": "tensor<8xf32>",
+      "mlir_line": 45
+    },
+    {
+      "id": "op43",
+      "result": "mnist_train_neg_lr",
+      "op": "stablehlo.constant",
+      "operands": [],
+      "result_type": "tensor<f32>",
+      "mlir_line": 46
+    },
+    {
+      "id": "op44",
+      "result": "mnist_train_neg_lr_w1",
+      "op": "stablehlo.broadcast_in_dim",
+      "operands": ["mnist_train_neg_lr"],
+      "result_type": "tensor<784x8xf32>",
+      "mlir_line": 47
+    },
+    {
+      "id": "op45",
+      "result": "delta_w1",
+      "op": "stablehlo.multiply",
+      "operands": ["grad_w1", "mnist_train_neg_lr_w1"],
+      "result_type": "tensor<784x8xf32>",
+      "mlir_line": 48
+    },
+    {
+      "id": "op46",
+      "result": "next_w1",
+      "op": "stablehlo.add",
+      "operands": ["w1", "delta_w1"],
+      "result_type": "tensor<784x8xf32>",
+      "mlir_line": 49
+    },
+    {
+      "id": "op47",
+      "result": "mnist_train_neg_lr_b1",
+      "op": "stablehlo.broadcast_in_dim",
+      "operands": ["mnist_train_neg_lr"],
+      "result_type": "tensor<8xf32>",
+      "mlir_line": 50
+    },
+    {
+      "id": "op48",
+      "result": "delta_b1",
+      "op": "stablehlo.multiply",
+      "operands": ["grad_b1", "mnist_train_neg_lr_b1"],
+      "result_type": "tensor<8xf32>",
+      "mlir_line": 51
+    },
+    {
+      "id": "op49",
+      "result": "next_b1",
+      "op": "stablehlo.add",
+      "operands": ["b1", "delta_b1"],
+      "result_type": "tensor<8xf32>",
+      "mlir_line": 52
+    },
+    {
+      "id": "op50",
+      "result": "mnist_train_neg_lr_w2",
+      "op": "stablehlo.broadcast_in_dim",
+      "operands": ["mnist_train_neg_lr"],
+      "result_type": "tensor<8x10xf32>",
+      "mlir_line": 53
+    },
+    {
+      "id": "op51",
+      "result": "delta_w2",
+      "op": "stablehlo.multiply",
+      "operands": ["grad_w2", "mnist_train_neg_lr_w2"],
+      "result_type": "tensor<8x10xf32>",
+      "mlir_line": 54
+    },
+    {
+      "id": "op52",
+      "result": "next_w2",
+      "op": "stablehlo.add",
+      "operands": ["w2", "delta_w2"],
+      "result_type": "tensor<8x10xf32>",
+      "mlir_line": 55
+    },
+    {
+      "id": "op53",
+      "result": "mnist_train_neg_lr_b2",
+      "op": "stablehlo.broadcast_in_dim",
+      "operands": ["mnist_train_neg_lr"],
+      "result_type": "tensor<10xf32>",
+      "mlir_line": 56
+    },
+    {
+      "id": "op54",
+      "result": "delta_b2",
+      "op": "stablehlo.multiply",
+      "operands": ["grad_b2", "mnist_train_neg_lr_b2"],
+      "result_type": "tensor<10xf32>",
+      "mlir_line": 57
+    },
+    {
+      "id": "op55",
+      "result": "next_b2",
+      "op": "stablehlo.add",
+      "operands": ["b2", "delta_b2"],
+      "result_type": "tensor<10xf32>",
+      "mlir_line": 58
+    }
+  ]
+}

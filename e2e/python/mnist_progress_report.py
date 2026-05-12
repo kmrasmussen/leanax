@@ -23,6 +23,7 @@ EXPECTED = {
     "mnist_cross_entropy_artifact": True,
     "mnist_forward_artifact": True,
     "mnist_parameter_tree_artifact": True,
+    "mnist_train_step_derived_mask": True,
     "optional_full_dataset_smoke": True,
     "relu_dense_gradient_artifact": True,
     "runtime_capability_matrix": True,
@@ -103,6 +104,13 @@ def report() -> dict[str, bool]:
             and artifact_contains(
                 "generated/mnist-parameter-tree.mlir",
                 ["%next_w1", "%next_b1", "%next_w2", "%next_b2"],
+            )
+        ),
+        "mnist_train_step_derived_mask": (
+            ("numeric", "mnist-train-step-derived-mask") in entries
+            and artifact_contains(
+                "generated/mnist-train-step-derived-mask.mlir",
+                ["stablehlo.compare", "stablehlo.select", "%relu_mask", "%next_w1", "%loss"],
             )
         ),
         "optional_full_dataset_smoke": ("training-loop", "mnist-full-dataset-smoke") in entries,

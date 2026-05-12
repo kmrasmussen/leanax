@@ -546,6 +546,7 @@ def moduleByName (name : String) : Option Module :=
   | "sgd-parameter-tree" => parameterTreeStepModule?.toOption
   | "mnist-parameter-tree" => mnistParameterTreeStepModule?.toOption
   | "mnist-train-step" => mnistTrainStepModule?.toOption
+  | "mnist-train-step-derived-mask" => mnistTrainStepDerivedMaskModule?.toOption
   | "bad-add-shape" => some badAddShapeModule
   | "duplicate-input" => some duplicateInputModule
   | "undefined-ref" => some undefinedReferenceModule
@@ -595,6 +596,7 @@ def availableCases : List String :=
     "sgd-parameter-tree",
     "mnist-parameter-tree",
     "mnist-train-step",
+    "mnist-train-step-derived-mask",
     "bad-add-shape",
     "duplicate-input",
     "undefined-ref",

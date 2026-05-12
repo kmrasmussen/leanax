@@ -34,3 +34,11 @@ existing explicit-mask `mnist-train-step` case as a compatibility fixture.
 ## First Slice
 
 Reuse the fixed `2x784 -> 8 -> 10` classifier shape.
+
+## Status
+
+Completed. `mnist-train-step-derived-mask` accepts images, labels, and the
+parameter tree with no `relu_mask` input. It derives the ReLU activation and f32
+mask internally with `stablehlo.compare` and `stablehlo.select`, then returns
+the same four updated parameter tensors plus loss as the explicit-mask fixture.
+The progress report now marks this milestone true.

@@ -20,6 +20,7 @@ numeric linear-train-step generated/linear-train-step.mlir e2e/golden/linear-tra
 numeric sgd-parameter-tree generated/sgd-parameter-tree.mlir e2e/golden/sgd-parameter-tree.mlir sgd-parameter-tree
 numeric mnist-parameter-tree generated/mnist-parameter-tree.mlir e2e/golden/mnist-parameter-tree.mlir mnist-parameter-tree
 numeric mnist-train-step generated/mnist-train-step.mlir e2e/golden/mnist-train-step.mlir mnist-train-step
+numeric mnist-train-step-derived-mask generated/mnist-train-step-derived-mask.mlir e2e/golden/mnist-train-step-derived-mask.mlir mnist-train-step-derived-mask
 data-loader mnist-fixture e2e/python/mnist_fixture.py
 data-loader mnist-idx-sample e2e/python/mnist_idx_sample.py
 data-loader mnist-cache-resolver e2e/python/mnist_cache_resolver.py

@@ -613,6 +613,9 @@ Current progress:
 - `relu-derived-mask` now derives both ReLU activations and an f32 mask from a
   `2x8` hidden pre-activation tensor. This proves the mask can come from LeanAX
   IR instead of from host-side Python.
+- `mnist-train-step-derived-mask` now exposes the classifier train-step contract
+  without a `relu_mask` input. The mask is computed inside the module and the
+  progress report marks the derived-mask train-step milestone true.
 
 Tickets:
 
