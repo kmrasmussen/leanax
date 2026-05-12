@@ -40,6 +40,61 @@ def generatedArithmeticRuntimeProgram : RuntimeLLVMProgram :=
 def generatedArithmeticRuntimeLLVM : String :=
   generatedArithmeticRuntimeProgram.render
 
+def runtimeF32NatLit (value : Nat) : String :=
+  toString value ++ ".0"
+
+def runtimeWeightedChecksumAux
+    (label : String)
+    (index : Nat)
+    (values : List String) : List String × String :=
+  match values with
+  | [] =>
+      let zeroName := label ++ "_zero"
+      ([runtimeConstF32 zeroName "0.0"], zeroName)
+  | value :: rest =>
+      let valueName := label ++ "_v" ++ toString index
+      let weightName := label ++ "_w" ++ toString index
+      let productName := label ++ "_p" ++ toString index
+      let currentLines := [
+        runtimeConstF32 valueName value,
+        runtimeConstF32 weightName (runtimeF32NatLit (index + 1)),
+        runtimeBinaryF32 productName "fmul" valueName weightName
+      ]
+      match rest with
+      | [] => (currentLines, productName)
+      | _ =>
+          let tail := runtimeWeightedChecksumAux label (index + 1) rest
+          let accName := label ++ "_acc" ++ toString index
+          (currentLines ++ tail.fst ++ [runtimeBinaryF32 accName "fadd" productName tail.snd], accName)
+
+def runtimeWeightedChecksumProgram (label : String) (values : List String) : RuntimeLLVMProgram :=
+  let checksum := runtimeWeightedChecksumAux label 0 values
+  { body := checksum.fst, result := checksum.snd }
+
+def broadcastShapeRuntimeProgram : RuntimeLLVMProgram :=
+  runtimeWeightedChecksumProgram
+    "broadcast_target"
+    ["1.0", "2.0", "3.0", "1.0", "2.0", "3.0"]
+
+def reshapeShapeRuntimeProgram : RuntimeLLVMProgram :=
+  runtimeWeightedChecksumProgram
+    "reshape_target"
+    ["1.0", "2.0", "3.0", "4.0", "5.0", "6.0"]
+
+def transposeShapeRuntimeProgram : RuntimeLLVMProgram :=
+  runtimeWeightedChecksumProgram
+    "transpose_target"
+    ["1.0", "4.0", "2.0", "5.0", "3.0", "6.0"]
+
+def broadcastShapeRuntimeLLVM : String :=
+  broadcastShapeRuntimeProgram.render
+
+def reshapeShapeRuntimeLLVM : String :=
+  reshapeShapeRuntimeProgram.render
+
+def transposeShapeRuntimeLLVM : String :=
+  transposeShapeRuntimeProgram.render
+
 def affineRuntimeLLVM : String :=
   LeanAX.joinSep "\n" [
     "module {",
@@ -326,7 +381,10 @@ def runtimeLLVMCases : List RuntimeLLVMCase :=
     { name := "mnist-forward-runtime", llvm := mnistForwardRuntimeLLVM },
     { name := "softmax-loss-runtime", llvm := softmaxLossRuntimeLLVM },
     { name := "tiny-train-step-runtime", llvm := tinyTrainStepRuntimeLLVM },
-    { name := "generated-arithmetic-runtime", llvm := generatedArithmeticRuntimeLLVM }
+    { name := "generated-arithmetic-runtime", llvm := generatedArithmeticRuntimeLLVM },
+    { name := "broadcast-shape-runtime", llvm := broadcastShapeRuntimeLLVM },
+    { name := "reshape-shape-runtime", llvm := reshapeShapeRuntimeLLVM },
+    { name := "transpose-shape-runtime", llvm := transposeShapeRuntimeLLVM }
   ]
 
 def runtimeLLVMByName (name : String) : Option String :=

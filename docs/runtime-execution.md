@@ -33,6 +33,10 @@ The implemented first slice is intentionally narrow:
 - `generated-arithmetic-runtime` is the first helper-generated runtime case. It
   uses the shared skeleton, executes with `mlir-runner`, and returns the
   checksum `2.0`.
+- `broadcast-shape-runtime`, `reshape-shape-runtime`, and
+  `transpose-shape-runtime` are helper-generated fixed-shape indexing fixtures.
+  They scalarize the target tensor order, apply weighted checksums so index
+  drift is visible, and return `46.0`, `91.0`, and `86.0`.
 - `lake exe leanax emit-runtime-llvm --case affine-runtime --out
   generated/affine-runtime.mlir` emits an executable LLVM-dialect MLIR module.
 - The module hardcodes the same `affine` fixture values used by the Python

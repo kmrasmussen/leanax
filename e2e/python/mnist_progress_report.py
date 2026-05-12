@@ -25,6 +25,7 @@ EXPECTED = {
     "cached_dataset_training_sweep": True,
     "runtime_operation_inventory": True,
     "runtime_scalar_math_fixture": True,
+    "runtime_shape_ops_fixtures": True,
     "runtime_tiny_train_step_fixture": True,
     "mnist_forward_runtime": True,
     "mnist_train_command": True,
@@ -149,6 +150,14 @@ def report() -> dict[str, bool]:
                 "e2e/golden/softmax-loss-runtime.mlir",
                 ["llvm.intr.exp", "llvm.intr.log", "llvm.fdiv"],
             )
+        ),
+        "runtime_shape_ops_fixtures": (
+            ("runtime", "broadcast-shape-runtime") in entries
+            and ("runtime", "reshape-shape-runtime") in entries
+            and ("runtime", "transpose-shape-runtime") in entries
+            and artifact_contains("e2e/golden/broadcast-shape-runtime.mlir", ["%broadcast_target_v0", "%broadcast_target_acc0"])
+            and artifact_contains("e2e/golden/reshape-shape-runtime.mlir", ["%reshape_target_v5", "%reshape_target_acc0"])
+            and artifact_contains("e2e/golden/transpose-shape-runtime.mlir", ["%transpose_target_v1", "%transpose_target_acc0"])
         ),
         "runtime_tiny_train_step_fixture": (
             ("runtime", "tiny-train-step-runtime") in entries

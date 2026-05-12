@@ -41,6 +41,9 @@ runtime mnist-forward-runtime generated/mnist-forward-runtime.mlir e2e/golden/mn
 runtime softmax-loss-runtime generated/softmax-loss-runtime.mlir e2e/golden/softmax-loss-runtime.mlir 0.31326166
 runtime tiny-train-step-runtime generated/tiny-train-step-runtime.mlir e2e/golden/tiny-train-step-runtime.mlir 7.939712
 runtime generated-arithmetic-runtime generated/generated-arithmetic-runtime.mlir e2e/golden/generated-arithmetic-runtime.mlir 2.0
+runtime broadcast-shape-runtime generated/broadcast-shape-runtime.mlir e2e/golden/broadcast-shape-runtime.mlir 46.0
+runtime reshape-shape-runtime generated/reshape-shape-runtime.mlir e2e/golden/reshape-shape-runtime.mlir 91.0
+runtime transpose-shape-runtime generated/transpose-shape-runtime.mlir e2e/golden/transpose-shape-runtime.mlir 86.0
 validation-fail bad-compare-shape stablehlo.compare operands: expected matching tensor types
 validation-fail bad-select-predicate-shape stablehlo.select predicate: expected matching tensor types
 validation-fail bad-add-shape stablehlo.add operands: expected matching tensor types

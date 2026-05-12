@@ -39,6 +39,7 @@ EXPECTED_OPS = {
 
 CURRENT_RUNTIME_FIXTURE_OPS = {
     "stablehlo.add",
+    "stablehlo.broadcast_in_dim",
     "stablehlo.compare",
     "stablehlo.constant",
     "stablehlo.divide",
@@ -46,7 +47,9 @@ CURRENT_RUNTIME_FIXTURE_OPS = {
     "stablehlo.exponential",
     "stablehlo.log",
     "stablehlo.multiply",
+    "stablehlo.reshape",
     "stablehlo.select",
+    "stablehlo.transpose",
 }
 
 

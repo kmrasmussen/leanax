@@ -13,6 +13,7 @@ gate now covers:
 - Python numeric oracles for the MNIST-shaped path,
 - cached IDX training and structured metrics,
 - LLVM `mlir-runner` execution for scalar runtime fixtures,
+- helper-generated runtime fixtures for broadcast, reshape, and transpose,
 - a tiny derived-mask train-step runtime checksum.
 
 The direct full MNIST runtime flag remains false. The current runtime fixtures
@@ -50,14 +51,11 @@ classifier-shaped train-step artifact.
 The remaining operation gap for generated classifier-shaped runtime execution is
 small enough to name directly:
 
-- `stablehlo.broadcast_in_dim`
 - `stablehlo.reduce`
-- `stablehlo.reshape`
-- `stablehlo.transpose`
 
-The next wave should lower these fixed-shape patterns through the existing
-LLVM-oriented route before revisiting broader IREE or StableHLO runtime
-packaging.
+Broadcast, reshape, and transpose are now covered by helper-generated runtime
+fixtures. The next wave should lower reduce through the existing LLVM-oriented
+route before revisiting broader IREE or StableHLO runtime packaging.
 
 ## Next Wave
 
@@ -65,7 +63,7 @@ packaging.
 runtime fixtures to generated runtime checks in this order:
 
 1. shared LLVM codegen skeleton and ABI,
-2. shape-op fixtures,
+2. shape-op fixtures (completed),
 3. reduce fixtures,
 4. dot/dense fixture,
 5. generated MNIST forward checksum,

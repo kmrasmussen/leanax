@@ -42,4 +42,11 @@ trying to generate the whole forward pass.
 
 ## Status
 
-Ready for analysis.
+Completed. `broadcast-shape-runtime`, `reshape-shape-runtime`, and
+`transpose-shape-runtime` now use the shared runtime skeleton from
+`TICKET-0059`. Each fixture scalarizes a tiny fixed-shape target order, applies
+a weighted checksum so indexing drift is visible, executes through
+`mlir-runner`, and is part of the default manifest. The runtime operation
+inventory now treats broadcast, reshape, and transpose as covered, leaving
+`stablehlo.reduce` as the remaining unsupported operation in the derived-mask
+train-step surface.
