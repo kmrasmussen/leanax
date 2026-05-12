@@ -25,6 +25,7 @@ training-loop synthetic-linear e2e/python/training_loop.py
 training-loop mnist-mlp-smoke e2e/python/mnist_mlp_smoke.py
 training-loop mnist-train-step-artifact e2e/python/mnist_train_step_artifact.py
 training-loop mnist-classifier-smoke e2e/python/mnist_classifier_smoke.py
+training-loop mnist-train-command e2e/python/mnist_train_command.py
 runtime affine-runtime generated/affine-runtime.mlir e2e/golden/affine-runtime.mlir 94.25
 validation-fail bad-add-shape stablehlo.add operands: expected matching tensor types
 validation-fail duplicate-input module inputs contain duplicate name %x

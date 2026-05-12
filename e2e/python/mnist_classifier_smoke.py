@@ -83,18 +83,21 @@ def apply_batch(
     )
 
 
-def train() -> tuple[float, float, float, float]:
-    batches = fixture_batches()
+def train_batches(batches, epochs: int = EPOCHS) -> tuple[float, float, float, float]:
     w1 = patterned(28 * 28, HIDDEN, 0.002, 3)
     b1 = patterned_vector(HIDDEN, 0.01, 5)
     w2 = patterned(HIDDEN, CLASSES, 0.02, 7)
     b2 = patterned_vector(CLASSES, 0.01, 9)
     first_loss, first_accuracy = evaluate(batches, w1, b1, w2, b2)
-    for _epoch in range(EPOCHS):
+    for _epoch in range(epochs):
         for batch in batches:
             w1, b1, w2, b2 = apply_batch(batch.images, batch.labels, w1, b1, w2, b2)
     final_loss, final_accuracy = evaluate(batches, w1, b1, w2, b2)
     return first_loss, final_loss, first_accuracy, final_accuracy
+
+
+def train() -> tuple[float, float, float, float]:
+    return train_batches(fixture_batches(), EPOCHS)
 
 
 def main() -> int:

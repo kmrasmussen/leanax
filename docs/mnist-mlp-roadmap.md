@@ -423,6 +423,9 @@ Exit gate:
 
 Current progress:
 
+- `mnist_train_command.py --mode fixture` is the current user-facing training
+  wrapper. It checks the generated classifier artifacts, runs the deterministic
+  fixture classifier, and prints stable metric fields for future parsing.
 - `mnist-classifier-smoke` is the current ten-class fixture-mode command. It
   uses checked LeanAX artifacts for the compiler path and host Python for the
   short training loop.

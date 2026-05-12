@@ -38,3 +38,11 @@ metric fields.
 
 Wrap the existing `mnist-classifier-smoke` behavior without changing model
 math.
+
+## Status
+
+Completed. `e2e/python/mnist_train_command.py --mode fixture` is now the stable
+fixture-mode training wrapper. It checks the generated classifier artifacts,
+runs the same ten-class fixture training math as `mnist-classifier-smoke`, and
+prints stable metrics for mode, epochs, samples, batches, loss, accuracy, and
+artifact paths. The manifest covers it as `mnist-train-command`.
