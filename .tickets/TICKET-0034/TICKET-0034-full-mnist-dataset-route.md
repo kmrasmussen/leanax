@@ -37,3 +37,12 @@ network access.
 
 Implement IDX parsing against a tiny checked-in sample before adding download
 logic.
+
+## Status
+
+Completed. The host MNIST loader now parses canonical IDX image and label bytes
+or files, validates the static LeanAX classifier shape contract, normalizes
+images, and returns the same one-hot batched structure as the deterministic
+fixture. The manifest includes `mnist-idx-sample`, a network-free data-loader
+case built from tiny in-memory IDX bytes. `docs/mnist-data.md` documents cache
+layout, opt-in full-dataset usage, and failure modes.

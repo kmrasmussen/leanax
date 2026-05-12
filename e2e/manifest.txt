@@ -18,6 +18,7 @@ numeric linear-train-step generated/linear-train-step.mlir e2e/golden/linear-tra
 numeric sgd-parameter-tree generated/sgd-parameter-tree.mlir e2e/golden/sgd-parameter-tree.mlir sgd-parameter-tree
 numeric mnist-parameter-tree generated/mnist-parameter-tree.mlir e2e/golden/mnist-parameter-tree.mlir mnist-parameter-tree
 data-loader mnist-fixture e2e/python/mnist_fixture.py
+data-loader mnist-idx-sample e2e/python/mnist_idx_sample.py
 training-loop synthetic-linear e2e/python/training_loop.py
 training-loop mnist-mlp-smoke e2e/python/mnist_mlp_smoke.py
 training-loop mnist-train-step-artifact e2e/python/mnist_train_step_artifact.py
