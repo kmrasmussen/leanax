@@ -19,6 +19,7 @@ shape of the project.
 - [06-proof-roadmap.md](06-proof-roadmap.md): where proofs should enter.
 - [07-e2e-roadmap.md](07-e2e-roadmap.md): the verification ladder.
 - [08-ticket-breakdown.md](08-ticket-breakdown.md): phase-one tickets.
+- [09-runtime-wave.md](09-runtime-wave.md): the generated runtime ticket wave.
 
 ## Operating Rule
 

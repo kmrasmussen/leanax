@@ -1,8 +1,10 @@
-# Phase-One Ticket Breakdown
+# Ticket Breakdown
 
-Phase one is the first vertical slice from planning to checked artifact.
+Phase one was the first vertical slice from planning to checked artifact. The
+file now also records the later waves so the roadmap remains connected to the
+active backlog.
 
-## Tickets
+## Phase-One Tickets
 
 1. `TICKET-0001`: Create planning and ticket scaffolding.
 2. `TICKET-0002`: Add a reproducible Lean/Rust/uv project shell.
@@ -101,3 +103,38 @@ The intended order is verifier/runtime first, then model expressivity, then data
 and the final training command. If runtime execution blocks, the model tickets
 can still proceed against the current MLIR plus numeric-oracle gate while the
 blocker is documented.
+
+## MNIST Classifier And Runtime Frontier
+
+The completed later tickets moved the project from a synthetic training loop to
+real cached IDX data, generated MNIST-shaped artifacts, derived-mask train-step
+semantics, structured metrics, and the first LLVM runtime fixtures.
+
+Notable completed milestones:
+
+1. Generated classifier forward and train-step artifacts.
+2. Cached real-dataset training and metrics smoke checks.
+3. Runtime capability and operation inventory reporting.
+4. Scalar math runtime fixtures through `mlir-runner`.
+5. Tiny derived-mask train-step runtime checksum.
+6. Runtime readiness report v5 with `direct_mnist_external_runtime` still false.
+
+The remaining gap is generated runtime execution for the classifier-shaped
+train-step path, not another host-side training proof.
+
+## Runtime Wave Ticket Queue
+
+These tickets start from `TICKET-0058` and should land as small, reviewable
+runtime slices.
+
+1. `TICKET-0059`: Runtime LLVM Codegen Skeleton And ABI.
+2. `TICKET-0060`: Runtime Shape Ops Lowering Fixtures.
+3. `TICKET-0061`: Runtime Reduce Lowering Fixtures.
+4. `TICKET-0062`: Runtime Dot/Dense Lowering Fixture.
+5. `TICKET-0063`: Generated MNIST Forward Runtime Checksum.
+6. `TICKET-0064`: Generated Derived-Mask Train-Step Runtime Checksum.
+7. `TICKET-0065`: Runtime Readiness Report V6.
+
+The queue should keep `direct_mnist_external_runtime` false until generated
+classifier-shaped train-step semantics execute externally and the report can
+explain that evidence precisely.
