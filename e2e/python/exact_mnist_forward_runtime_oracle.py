@@ -15,7 +15,7 @@ def checksum(values: Tensor) -> float:
     return sum((index + 1) * value for index, value in enumerate(values.data))
 
 
-def expected_forward_checksum() -> float:
+def expected_forward_logits() -> Tensor:
     x = patterned_tensor((2, 784), 0.01, 1)
     w1 = patterned_tensor((784, 8), 0.002, 3)
     b1 = patterned_tensor((8,), 0.01, 5)
@@ -23,8 +23,11 @@ def expected_forward_checksum() -> float:
     b2 = patterned_tensor((10,), 0.01, 9)
     hidden_pre = elementwise(matmul(x, w1), broadcast_to(b1, (2, 8)), lambda a, b: a + b)
     hidden = elementwise(hidden_pre, broadcast_to(Tensor.scalar(0.0), (2, 8)), max)
-    logits = elementwise(matmul(hidden, w2), broadcast_to(b2, (2, 10)), lambda a, b: a + b)
-    return checksum(logits)
+    return elementwise(matmul(hidden, w2), broadcast_to(b2, (2, 10)), lambda a, b: a + b)
+
+
+def expected_forward_checksum() -> float:
+    return checksum(expected_forward_logits())
 
 
 def manifest_expected() -> float:

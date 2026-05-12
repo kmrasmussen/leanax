@@ -184,6 +184,43 @@ def runtimePatternedTensorValues
   (List.range (runtimeShapeSize shape)).map fun index =>
     runtimePatternedMilliValue index offset milliScale
 
+def runtimeExactMnistLabelValues : List String :=
+  [
+    "0.0", "0.0", "1.0", "0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "0.0",
+    "0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "1.0", "0.0", "0.0"
+  ]
+
+def runtimeSoftmaxCrossEntropyLossLines
+    (logits labels : RuntimeTensor)
+    (batch classes : Nat)
+    (lossName : String) : List String :=
+  let rowLinesAndRefs := (List.range batch).map fun row =>
+    let expLines := (List.range classes).map fun col =>
+      let expName := "loss_exp" ++ toString row ++ toString col
+      "%" ++ expName ++ " = llvm.intr.exp(%" ++ logits.ref [row, col] ++ ") : (f32) -> f32"
+    let expRefs := (List.range classes).map fun col =>
+      "loss_exp" ++ toString row ++ toString col
+    let denom := runtimeReduceRefsF32 ("loss_denom" ++ toString row) "fadd" expRefs
+    let probLines := runtimeListBind (List.range classes) fun col =>
+      let probName := "loss_prob" ++ toString row ++ toString col
+      let logName := "loss_log_prob" ++ toString row ++ toString col
+      let selectedName := "loss_selected" ++ toString row ++ toString col
+      [
+        runtimeBinaryF32 probName "fdiv" ("loss_exp" ++ toString row ++ toString col) denom.snd,
+        "%" ++ logName ++ " = llvm.intr.log(%" ++ probName ++ ") : (f32) -> f32",
+        runtimeBinaryF32 selectedName "fmul" (labels.ref [row, col]) logName
+      ]
+    let selectedRefs := (List.range classes).map fun col =>
+      "loss_selected" ++ toString row ++ toString col
+    let rowSum := runtimeReduceRefsF32 ("loss_row" ++ toString row) "fadd" selectedRefs
+    let rowLoss := "loss_row" ++ toString row ++ "_value"
+    (expLines ++ denom.fst ++ probLines ++ rowSum.fst ++
+      [runtimeBinaryF32 rowLoss "fmul" rowSum.snd "neg_one"], rowLoss)
+  let body := rowLinesAndRefs.foldr (fun pair acc => pair.fst ++ acc) []
+  let rowRefs := rowLinesAndRefs.map Prod.snd
+  let total := runtimeReduceRefsF32 "loss_total" "fadd" rowRefs
+  body ++ total.fst ++ [runtimeBinaryF32 lossName "fmul" total.snd "mean_scale"]
+
 def generatedArithmeticRuntimeProgram : RuntimeLLVMProgram :=
   {
     body := [
@@ -397,7 +434,7 @@ def generatedMnistForwardRuntimeProgram : RuntimeLLVMProgram :=
 def generatedMnistForwardRuntimeLLVM : String :=
   generatedMnistForwardRuntimeProgram.render
 
-def exactMnistForwardRuntimeProgram : RuntimeLLVMProgram :=
+def exactMnistForwardBodyAndLogits : List String × RuntimeTensor :=
   let x : RuntimeTensor := { name := "x", shape := [2, 784] }
   let w1 : RuntimeTensor := { name := "w1", shape := [784, 8] }
   let b1 : RuntimeTensor := { name := "b1", shape := [8] }
@@ -406,8 +443,8 @@ def exactMnistForwardRuntimeProgram : RuntimeLLVMProgram :=
   let w2 : RuntimeTensor := { name := "w2", shape := [8, 10] }
   let b2 : RuntimeTensor := { name := "b2", shape := [10] }
   let logits : RuntimeTensor := { name := "logits", shape := [2, 10] }
-  runtimeWeightedChecksumRefsProgram
-    (runtimeTensorConstF32 x (runtimePatternedTensorValues x.shape 10 1) ++
+  (
+    runtimeTensorConstF32 x (runtimePatternedTensorValues x.shape 10 1) ++
       runtimeTensorConstF32 w1 (runtimePatternedTensorValues w1.shape 2 3) ++
       runtimeTensorConstF32 b1 (runtimePatternedTensorValues b1.shape 10 5) ++
       runtimeTensorConstF32 w2 (runtimePatternedTensorValues w2.shape 20 7) ++
@@ -415,12 +452,36 @@ def exactMnistForwardRuntimeProgram : RuntimeLLVMProgram :=
       [runtimeConstF32 "zero" "0.0"] ++
       runtimeDense2DLabeledLines "h_" x w1 b1 hiddenPre 2 784 8 ++
       runtimeReluTensorLines hiddenPre hidden "zero" ++
-      runtimeDense2DLabeledLines "logit_" hidden w2 b2 logits 2 8 10)
+      runtimeDense2DLabeledLines "logit_" hidden w2 b2 logits 2 8 10,
+    logits
+  )
+
+def exactMnistForwardRuntimeProgram : RuntimeLLVMProgram :=
+  let forward := exactMnistForwardBodyAndLogits
+  runtimeWeightedChecksumRefsProgram
+    forward.fst
     "exact_forward"
-    (runtimeTensorRefs logits)
+    (runtimeTensorRefs forward.snd)
 
 def exactMnistForwardRuntimeLLVM : String :=
   exactMnistForwardRuntimeProgram.render
+
+def exactMnistLossRuntimeProgram : RuntimeLLVMProgram :=
+  let forward := exactMnistForwardBodyAndLogits
+  let labels : RuntimeTensor := { name := "labels", shape := [2, 10] }
+  {
+    body := forward.fst ++
+      runtimeTensorConstF32 labels runtimeExactMnistLabelValues ++
+      [
+        runtimeConstF32 "neg_one" "-1.0",
+        runtimeConstF32 "mean_scale" "0.5"
+      ] ++
+      runtimeSoftmaxCrossEntropyLossLines forward.snd labels 2 10 "loss",
+    result := "loss"
+  }
+
+def exactMnistLossRuntimeLLVM : String :=
+  exactMnistLossRuntimeProgram.render
 
 def generatedDerivedMaskTrainStepRuntimeProgram : RuntimeLLVMProgram :=
   {
@@ -782,6 +843,7 @@ def runtimeLLVMCases : List RuntimeLLVMCase :=
     { name := "generated-dense-runtime", llvm := generatedDenseRuntimeLLVM },
     { name := "generated-mnist-forward-runtime", llvm := generatedMnistForwardRuntimeLLVM },
     { name := "exact-mnist-forward-runtime", llvm := exactMnistForwardRuntimeLLVM },
+    { name := "exact-mnist-loss-runtime", llvm := exactMnistLossRuntimeLLVM },
     {
       name := "generated-derived-mask-train-step-runtime",
       llvm := generatedDerivedMaskTrainStepRuntimeLLVM

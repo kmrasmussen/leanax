@@ -54,14 +54,18 @@ The implemented first slice is intentionally narrow:
   runtime path. The generated golden is 33,443 lines, returns the logits
   checksum `3.970676` under `mlir-runner`, and is cross-checked by
   `exact-mnist-forward-runtime-oracle`.
+- `exact-mnist-loss-runtime` reuses the exact forward body, computes row-wise
+  softmax cross-entropy for the fixed `2x10` labels, and returns mean loss
+  `2.261078` under `mlir-runner`. `exact-mnist-loss-runtime-oracle` checks the
+  manifest expectation against the deterministic Python oracle.
 - `generated-derived-mask-train-step-runtime` uses the skeleton for a scaled
   generated train-step representative with internal ReLU mask derivation,
   softmax loss, gradients, SGD updates, and a checksum over loss plus updated
   parameters. It returns `1.4609127`.
 - `mnist-progress-report` now includes `runtime_readiness_v6`, which requires
   the codegen skeleton, shape-op fixtures, reduce fixtures, generated dense,
-  scaled generated forward, exact-shape forward, generated train-step, and a
-  still-false direct MNIST runtime flag.
+  scaled generated forward, exact-shape forward/loss, generated train-step, and
+  a still-false direct MNIST runtime flag.
 - `runtime-scaling-budget` records the exact-shape scalarized runtime budget for
   forward, loss, gradient, and train-step cases before the project commits to
   large checked-in artifacts.

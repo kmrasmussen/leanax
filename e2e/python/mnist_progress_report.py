@@ -9,6 +9,7 @@ MANIFEST = REPO / "e2e/manifest.txt"
 DATASET_METRICS = REPO / "generated/mnist-real-dataset-metrics.json"
 RUNTIME_SCALING_BUDGET = REPO / "generated/runtime-scaling-budget.json"
 EXACT_FORWARD_RUNTIME_ORACLE = REPO / "generated/exact-mnist-forward-runtime-oracle.json"
+EXACT_LOSS_RUNTIME_ORACLE = REPO / "generated/exact-mnist-loss-runtime-oracle.json"
 
 
 EXPECTED = {
@@ -30,6 +31,7 @@ EXPECTED = {
     "runtime_generated_dense_fixture": True,
     "runtime_generated_mnist_forward": True,
     "runtime_exact_mnist_forward": True,
+    "runtime_exact_mnist_loss": True,
     "runtime_generated_train_step": True,
     "runtime_reduce_fixtures": True,
     "runtime_scalar_math_fixture": True,
@@ -129,6 +131,18 @@ def exact_forward_runtime_oracle_ready() -> bool:
     )
 
 
+def exact_loss_runtime_oracle_ready() -> bool:
+    if not EXACT_LOSS_RUNTIME_ORACLE.is_file():
+        return False
+    data = json.loads(EXACT_LOSS_RUNTIME_ORACLE.read_text(encoding="utf-8"))
+    return (
+        data.get("schema") == "leanax.exact_mnist_loss_runtime_oracle.v1"
+        and data.get("classifier") == {"batch": 2, "classes": 10, "hidden": 8, "inputs": 784}
+        and isinstance(data.get("loss"), float)
+        and abs(data["loss"] - data.get("manifest_expected", 0.0)) <= data.get("tolerance", 0.0)
+    )
+
+
 def report() -> dict[str, bool]:
     entries = manifest_entries()
     actual = {
@@ -215,6 +229,15 @@ def report() -> dict[str, bool]:
             and artifact_contains(
                 "e2e/golden/exact-mnist-forward-runtime.mlir",
                 ["%hidden_pre00", "%hidden00", "%logits09", "%exact_forward_acc0"],
+            )
+        ),
+        "runtime_exact_mnist_loss": (
+            ("runtime", "exact-mnist-loss-runtime") in entries
+            and ("data-loader", "exact-mnist-loss-runtime-oracle") in entries
+            and exact_loss_runtime_oracle_ready()
+            and artifact_contains(
+                "e2e/golden/exact-mnist-loss-runtime.mlir",
+                ["%loss_exp00", "%loss_prob09", "%loss_row0_value", "%loss"],
             )
         ),
         "runtime_generated_train_step": (

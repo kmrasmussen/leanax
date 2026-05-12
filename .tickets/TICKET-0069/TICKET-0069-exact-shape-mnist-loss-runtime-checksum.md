@@ -36,4 +36,7 @@ Start with forward-plus-loss only. Do not update parameters in this ticket.
 
 ## Status
 
-Ready for analysis.
+Completed. `exact-mnist-loss-runtime` reuses the exact forward body, adds fixed
+`2x10` labels, computes row-wise softmax cross-entropy, and returns mean loss
+through `mlir-runner`. `exact-mnist-loss-runtime-oracle` checks the manifest
+expectation against the deterministic Python oracle.

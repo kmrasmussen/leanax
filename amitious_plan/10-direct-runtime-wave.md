@@ -56,7 +56,8 @@ by the default e2e gate.
    while preserving its golden output.
 3. `TICKET-0068`: Exact-Shape MNIST Forward Runtime Checksum. Completed with
    `exact-mnist-forward-runtime` and a checked Python checksum oracle.
-4. `TICKET-0069`: Exact-Shape MNIST Loss Runtime Checksum.
+4. `TICKET-0069`: Exact-Shape MNIST Loss Runtime Checksum. Completed with
+   `exact-mnist-loss-runtime` and a checked mean-loss oracle.
 5. `TICKET-0070`: Exact-Shape Derived-Mask Gradient Runtime Checksum.
 6. `TICKET-0071`: Exact-Shape Derived-Mask Train-Step Runtime Checksum.
 7. `TICKET-0072`: Direct Runtime Readiness Report V7.

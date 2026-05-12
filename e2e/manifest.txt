@@ -28,6 +28,7 @@ data-loader runtime-capability-matrix e2e/python/runtime_capability_matrix.py
 data-loader runtime-operation-inventory e2e/python/runtime_operation_inventory.py
 data-loader runtime-scaling-budget e2e/python/runtime_scaling_budget.py
 data-loader exact-mnist-forward-runtime-oracle e2e/python/exact_mnist_forward_runtime_oracle.py
+data-loader exact-mnist-loss-runtime-oracle e2e/python/exact_mnist_loss_runtime_oracle.py
 training-loop synthetic-linear e2e/python/training_loop.py
 training-loop mnist-mlp-smoke e2e/python/mnist_mlp_smoke.py
 training-loop mnist-train-step-artifact e2e/python/mnist_train_step_artifact.py
@@ -52,6 +53,7 @@ runtime reduce-keepdim-runtime generated/reduce-keepdim-runtime.mlir e2e/golden/
 runtime generated-dense-runtime generated/generated-dense-runtime.mlir e2e/golden/generated-dense-runtime.mlir 15.25
 runtime generated-mnist-forward-runtime generated/generated-mnist-forward-runtime.mlir e2e/golden/generated-mnist-forward-runtime.mlir -0.525
 runtime exact-mnist-forward-runtime generated/exact-mnist-forward-runtime.mlir e2e/golden/exact-mnist-forward-runtime.mlir 3.970676
+runtime exact-mnist-loss-runtime generated/exact-mnist-loss-runtime.mlir e2e/golden/exact-mnist-loss-runtime.mlir 2.261078
 runtime generated-derived-mask-train-step-runtime generated/generated-derived-mask-train-step-runtime.mlir e2e/golden/generated-derived-mask-train-step-runtime.mlir 1.4609127
 validation-fail bad-compare-shape stablehlo.compare operands: expected matching tensor types
 validation-fail bad-select-predicate-shape stablehlo.select predicate: expected matching tensor types
