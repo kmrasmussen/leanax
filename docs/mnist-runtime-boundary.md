@@ -43,6 +43,9 @@ The current runtime gate proves:
 - `generated-mnist-forward-runtime`: a helper-generated dense-ReLU-dense
   classifier-forward representative executes through `mlir-runner` and returns
   `-0.525`.
+- `generated-derived-mask-train-step-runtime`: a helper-generated derived-mask
+  train-step representative executes through `mlir-runner` and returns
+  `1.4609127`.
 
 The current classifier artifact proves the compiler-side shape:
 
@@ -126,7 +129,8 @@ are true;
 `direct_mnist_external_runtime` remains false until the full classifier-shaped
 train-step artifact executes externally.
 
-The runtime operation inventory no longer reports unsupported operation names.
-The remaining bridge is generated composition of the full classifier-shaped
-train-step path. The generated forward representative is now covered; the next
-runtime bridge is generated derived-mask train-step execution.
+The runtime operation inventory no longer reports unsupported operation names,
+and generated forward/train-step representatives now execute externally. The
+remaining bridge is scale: the full classifier-shaped `2x784 -> 8 -> 10`
+train-step artifact still has not executed externally, so
+`direct_mnist_external_runtime` remains false.

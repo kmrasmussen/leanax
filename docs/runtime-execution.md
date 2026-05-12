@@ -47,6 +47,10 @@ The implemented first slice is intentionally narrow:
 - `generated-mnist-forward-runtime` uses the same skeleton for a scaled
   dense-ReLU-dense classifier-forward representative and returns the weighted
   logits checksum `-0.525`.
+- `generated-derived-mask-train-step-runtime` uses the skeleton for a scaled
+  generated train-step representative with internal ReLU mask derivation,
+  softmax loss, gradients, SGD updates, and a checksum over loss plus updated
+  parameters. It returns `1.4609127`.
 - `lake exe leanax emit-runtime-llvm --case affine-runtime --out
   generated/affine-runtime.mlir` emits an executable LLVM-dialect MLIR module.
 - The module hardcodes the same `affine` fixture values used by the Python

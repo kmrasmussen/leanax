@@ -256,6 +256,70 @@ def generatedMnistForwardRuntimeProgram : RuntimeLLVMProgram :=
 def generatedMnistForwardRuntimeLLVM : String :=
   generatedMnistForwardRuntimeProgram.render
 
+def generatedDerivedMaskTrainStepRuntimeProgram : RuntimeLLVMProgram :=
+  {
+    body := [
+      runtimeConstF32 "x" "1.0",
+      runtimeConstF32 "w1" "0.5",
+      runtimeConstF32 "b1" "0.25",
+      runtimeConstF32 "w20" "0.25",
+      runtimeConstF32 "w21" "-0.5",
+      runtimeConstF32 "b20" "0.05",
+      runtimeConstF32 "b21" "-0.1",
+      runtimeConstF32 "zero" "0.0",
+      runtimeConstF32 "one" "1.0",
+      runtimeConstF32 "neg_one" "-1.0",
+      runtimeConstF32 "neg_lr" "-0.1",
+      runtimeBinaryF32 "h0" "fmul" "x" "w1",
+      runtimeBinaryF32 "hidden_pre" "fadd" "h0" "b1",
+      "%mask_bool = llvm.fcmp \"ogt\" %hidden_pre, %zero : f32",
+      "%hidden = llvm.select %mask_bool, %hidden_pre, %zero : i1, f32",
+      "%mask = llvm.select %mask_bool, %one, %zero : i1, f32",
+      runtimeBinaryF32 "l0" "fmul" "hidden" "w20",
+      runtimeBinaryF32 "logit0" "fadd" "l0" "b20",
+      runtimeBinaryF32 "l1" "fmul" "hidden" "w21",
+      runtimeBinaryF32 "logit1" "fadd" "l1" "b21",
+      "%exp0 = llvm.intr.exp(%logit0) : (f32) -> f32",
+      "%exp1 = llvm.intr.exp(%logit1) : (f32) -> f32",
+      runtimeBinaryF32 "denom" "fadd" "exp0" "exp1",
+      runtimeBinaryF32 "prob0" "fdiv" "exp0" "denom",
+      runtimeBinaryF32 "prob1" "fdiv" "exp1" "denom",
+      "%log_prob1 = llvm.intr.log(%prob1) : (f32) -> f32",
+      runtimeBinaryF32 "loss" "fmul" "log_prob1" "neg_one",
+      runtimeBinaryF32 "delta0" "fadd" "prob0" "zero",
+      runtimeBinaryF32 "delta1" "fadd" "prob1" "neg_one",
+      runtimeBinaryF32 "grad_w20" "fmul" "hidden" "delta0",
+      runtimeBinaryF32 "grad_w21" "fmul" "hidden" "delta1",
+      runtimeBinaryF32 "hg0" "fmul" "delta0" "w20",
+      runtimeBinaryF32 "hg1" "fmul" "delta1" "w21",
+      runtimeBinaryF32 "hidden_grad" "fadd" "hg0" "hg1",
+      runtimeBinaryF32 "pre_grad" "fmul" "hidden_grad" "mask",
+      runtimeBinaryF32 "grad_w1" "fmul" "x" "pre_grad",
+      runtimeBinaryF32 "dw1" "fmul" "grad_w1" "neg_lr",
+      runtimeBinaryF32 "next_w1" "fadd" "w1" "dw1",
+      runtimeBinaryF32 "db1" "fmul" "pre_grad" "neg_lr",
+      runtimeBinaryF32 "next_b1" "fadd" "b1" "db1",
+      runtimeBinaryF32 "dw20" "fmul" "grad_w20" "neg_lr",
+      runtimeBinaryF32 "next_w20" "fadd" "w20" "dw20",
+      runtimeBinaryF32 "dw21" "fmul" "grad_w21" "neg_lr",
+      runtimeBinaryF32 "next_w21" "fadd" "w21" "dw21",
+      runtimeBinaryF32 "db20" "fmul" "delta0" "neg_lr",
+      runtimeBinaryF32 "next_b20" "fadd" "b20" "db20",
+      runtimeBinaryF32 "db21" "fmul" "delta1" "neg_lr",
+      runtimeBinaryF32 "next_b21" "fadd" "b21" "db21",
+      runtimeBinaryF32 "sum0" "fadd" "loss" "next_w1",
+      runtimeBinaryF32 "sum1" "fadd" "sum0" "next_b1",
+      runtimeBinaryF32 "sum2" "fadd" "sum1" "next_w20",
+      runtimeBinaryF32 "sum3" "fadd" "sum2" "next_w21",
+      runtimeBinaryF32 "sum4" "fadd" "sum3" "next_b20",
+      runtimeBinaryF32 "checksum" "fadd" "sum4" "next_b21"
+    ],
+    result := "checksum"
+  }
+
+def generatedDerivedMaskTrainStepRuntimeLLVM : String :=
+  generatedDerivedMaskTrainStepRuntimeProgram.render
+
 def affineRuntimeLLVM : String :=
   LeanAX.joinSep "\n" [
     "module {",
@@ -550,7 +614,11 @@ def runtimeLLVMCases : List RuntimeLLVMCase :=
     { name := "reduce-all-runtime", llvm := reduceAllRuntimeLLVM },
     { name := "reduce-keepdim-runtime", llvm := reduceKeepdimRuntimeLLVM },
     { name := "generated-dense-runtime", llvm := generatedDenseRuntimeLLVM },
-    { name := "generated-mnist-forward-runtime", llvm := generatedMnistForwardRuntimeLLVM }
+    { name := "generated-mnist-forward-runtime", llvm := generatedMnistForwardRuntimeLLVM },
+    {
+      name := "generated-derived-mask-train-step-runtime",
+      llvm := generatedDerivedMaskTrainStepRuntimeLLVM
+    }
   ]
 
 def runtimeLLVMByName (name : String) : Option String :=

@@ -49,7 +49,9 @@ auditable runtime bridge for the operation surface used by
    helper-generated `2x2 @ 2x2 + bias` dense checksum.
 5. `TICKET-0063`: Generated MNIST Forward Runtime Checksum. Completed by the
    generated dense-ReLU-dense representative checksum.
-6. `TICKET-0064`: Generated Derived-Mask Train-Step Runtime Checksum.
+6. `TICKET-0064`: Generated Derived-Mask Train-Step Runtime Checksum. Completed
+   by the generated scaled train-step representative; direct MNIST runtime
+   remains false.
 7. `TICKET-0065`: Runtime Readiness Report V6.
 
 ## Exit Gate

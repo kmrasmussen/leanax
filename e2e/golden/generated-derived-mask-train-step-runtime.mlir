@@ -1,0 +1,59 @@
+module {
+  llvm.func @main() -> f32 {
+    %x = llvm.mlir.constant(1.0 : f32) : f32
+    %w1 = llvm.mlir.constant(0.5 : f32) : f32
+    %b1 = llvm.mlir.constant(0.25 : f32) : f32
+    %w20 = llvm.mlir.constant(0.25 : f32) : f32
+    %w21 = llvm.mlir.constant(-0.5 : f32) : f32
+    %b20 = llvm.mlir.constant(0.05 : f32) : f32
+    %b21 = llvm.mlir.constant(-0.1 : f32) : f32
+    %zero = llvm.mlir.constant(0.0 : f32) : f32
+    %one = llvm.mlir.constant(1.0 : f32) : f32
+    %neg_one = llvm.mlir.constant(-1.0 : f32) : f32
+    %neg_lr = llvm.mlir.constant(-0.1 : f32) : f32
+    %h0 = llvm.fmul %x, %w1 : f32
+    %hidden_pre = llvm.fadd %h0, %b1 : f32
+    %mask_bool = llvm.fcmp "ogt" %hidden_pre, %zero : f32
+    %hidden = llvm.select %mask_bool, %hidden_pre, %zero : i1, f32
+    %mask = llvm.select %mask_bool, %one, %zero : i1, f32
+    %l0 = llvm.fmul %hidden, %w20 : f32
+    %logit0 = llvm.fadd %l0, %b20 : f32
+    %l1 = llvm.fmul %hidden, %w21 : f32
+    %logit1 = llvm.fadd %l1, %b21 : f32
+    %exp0 = llvm.intr.exp(%logit0) : (f32) -> f32
+    %exp1 = llvm.intr.exp(%logit1) : (f32) -> f32
+    %denom = llvm.fadd %exp0, %exp1 : f32
+    %prob0 = llvm.fdiv %exp0, %denom : f32
+    %prob1 = llvm.fdiv %exp1, %denom : f32
+    %log_prob1 = llvm.intr.log(%prob1) : (f32) -> f32
+    %loss = llvm.fmul %log_prob1, %neg_one : f32
+    %delta0 = llvm.fadd %prob0, %zero : f32
+    %delta1 = llvm.fadd %prob1, %neg_one : f32
+    %grad_w20 = llvm.fmul %hidden, %delta0 : f32
+    %grad_w21 = llvm.fmul %hidden, %delta1 : f32
+    %hg0 = llvm.fmul %delta0, %w20 : f32
+    %hg1 = llvm.fmul %delta1, %w21 : f32
+    %hidden_grad = llvm.fadd %hg0, %hg1 : f32
+    %pre_grad = llvm.fmul %hidden_grad, %mask : f32
+    %grad_w1 = llvm.fmul %x, %pre_grad : f32
+    %dw1 = llvm.fmul %grad_w1, %neg_lr : f32
+    %next_w1 = llvm.fadd %w1, %dw1 : f32
+    %db1 = llvm.fmul %pre_grad, %neg_lr : f32
+    %next_b1 = llvm.fadd %b1, %db1 : f32
+    %dw20 = llvm.fmul %grad_w20, %neg_lr : f32
+    %next_w20 = llvm.fadd %w20, %dw20 : f32
+    %dw21 = llvm.fmul %grad_w21, %neg_lr : f32
+    %next_w21 = llvm.fadd %w21, %dw21 : f32
+    %db20 = llvm.fmul %delta0, %neg_lr : f32
+    %next_b20 = llvm.fadd %b20, %db20 : f32
+    %db21 = llvm.fmul %delta1, %neg_lr : f32
+    %next_b21 = llvm.fadd %b21, %db21 : f32
+    %sum0 = llvm.fadd %loss, %next_w1 : f32
+    %sum1 = llvm.fadd %sum0, %next_b1 : f32
+    %sum2 = llvm.fadd %sum1, %next_w20 : f32
+    %sum3 = llvm.fadd %sum2, %next_w21 : f32
+    %sum4 = llvm.fadd %sum3, %next_b20 : f32
+    %checksum = llvm.fadd %sum4, %next_b21 : f32
+    llvm.return %checksum : f32
+  }
+}

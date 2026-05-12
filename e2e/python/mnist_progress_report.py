@@ -26,6 +26,7 @@ EXPECTED = {
     "runtime_operation_inventory": True,
     "runtime_generated_dense_fixture": True,
     "runtime_generated_mnist_forward": True,
+    "runtime_generated_train_step": True,
     "runtime_reduce_fixtures": True,
     "runtime_scalar_math_fixture": True,
     "runtime_shape_ops_fixtures": True,
@@ -159,6 +160,13 @@ def report() -> dict[str, bool]:
             and artifact_contains(
                 "e2e/golden/generated-mnist-forward-runtime.mlir",
                 ["%hidden_pre0", "llvm.fcmp", "llvm.select", "%logit0", "%generated_forward_acc0"],
+            )
+        ),
+        "runtime_generated_train_step": (
+            ("runtime", "generated-derived-mask-train-step-runtime") in entries
+            and artifact_contains(
+                "e2e/golden/generated-derived-mask-train-step-runtime.mlir",
+                ["%mask_bool", "llvm.intr.exp", "llvm.intr.log", "%next_w1", "%checksum"],
             )
         ),
         "runtime_reduce_fixtures": (

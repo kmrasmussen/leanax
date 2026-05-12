@@ -41,4 +41,10 @@ surface needed to mirror `mnist-train-step-derived-mask`.
 
 ## Status
 
-Ready for analysis.
+Completed as a scaled representative. `generated-derived-mask-train-step-runtime`
+now uses the shared runtime skeleton for a generated train-step path with
+internal ReLU mask derivation, softmax loss, gradients, one SGD update, and a
+checksum over loss plus updated parameters. The default manifest runs it through
+`mlir-runner` and checks `1.4609127`. This is not strong enough to flip
+`direct_mnist_external_runtime`, because the full `2x784 -> 8 -> 10`
+classifier-shaped train-step artifact still has not executed externally.
