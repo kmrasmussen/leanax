@@ -38,3 +38,12 @@ milestones match the current ticket suite.
 
 Emit a simple text or JSON report from the e2e Python layer, then tighten it as
 the classifier artifacts land.
+
+## Status
+
+Completed. The manifest now runs `mnist-progress-report`, which computes stable
+classifier readiness booleans from generated artifacts and manifest outcomes,
+then compares them to the expected roadmap state. The report distinguishes the
+current artifact-composed fixture classifier path from future full-dataset
+training, a monolithic MNIST train-step artifact, and direct MNIST external
+runtime execution.

@@ -427,6 +427,12 @@ Current progress:
 - `mnist-classifier-smoke` is the current ten-class fixture-mode command. It
   uses checked LeanAX artifacts for the compiler path and host Python for the
   short training loop.
+- `mnist-progress-report` is the e2e-produced readiness report. It inspects the
+  manifest and generated artifacts, prints stable milestone booleans, and fails
+  if the report no longer matches this roadmap state.
+- The report currently marks the IDX loader and fixture ten-class training as
+  present, while keeping full-dataset training, a monolithic MNIST train-step
+  artifact, and direct MNIST external-runtime execution as future work.
 
 ## What Not To Do Yet
 
