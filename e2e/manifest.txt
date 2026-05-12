@@ -13,6 +13,7 @@ numeric square-sum generated/square-sum.mlir e2e/golden/square-sum.mlir square-s
 numeric grad-square-sum generated/grad-square-sum.mlir e2e/golden/grad-square-sum.mlir grad-square-sum
 numeric grad-dense-loss generated/grad-dense-loss.mlir e2e/golden/grad-dense-loss.mlir grad-dense-loss
 numeric grad-softmax-dense generated/grad-softmax-dense.mlir e2e/golden/grad-softmax-dense.mlir grad-softmax-dense
+numeric grad-relu-dense generated/grad-relu-dense.mlir e2e/golden/grad-relu-dense.mlir grad-relu-dense
 numeric linear-train-step generated/linear-train-step.mlir e2e/golden/linear-train-step.mlir linear-train-step
 numeric sgd-parameter-tree generated/sgd-parameter-tree.mlir e2e/golden/sgd-parameter-tree.mlir sgd-parameter-tree
 numeric mnist-parameter-tree generated/mnist-parameter-tree.mlir e2e/golden/mnist-parameter-tree.mlir mnist-parameter-tree
@@ -38,5 +39,6 @@ validation-fail bad-mnist-forward-shape stablehlo.dot_general: inner dimensions 
 validation-fail bad-vmap-dense-rank stablehlo.dot_general: expected rank-2 f32 operands and rank-2 f32 result
 validation-fail bad-grad-dense-shape stablehlo.dot_general: result shape must be tensor<3x2xf32>
 validation-fail bad-grad-softmax-dense-shape stablehlo.add operands: expected matching tensor types
+validation-fail bad-grad-relu-dense-shape stablehlo.multiply operands: expected matching tensor types
 validation-fail bad-parameter-tree-shape stablehlo.add operands: expected matching tensor types
 validation-fail bad-mnist-parameter-tree-shape stablehlo.add operands: expected matching tensor types

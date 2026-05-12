@@ -33,3 +33,13 @@ gradients against a deterministic Python oracle.
 ## First Slice
 
 Use the same small hidden dimension chosen for `mnist-forward`.
+
+## Status
+
+Completed. LeanAX now has a `grad-relu-dense` artifact for first-layer classifier
+gradients. The first slice makes the ReLU derivative explicit as a `relu_mask`
+input, multiplies it by the hidden activation gradient, and returns `grad_w1`
+and `grad_b1`. The oracle fixture includes enabled and disabled mask entries,
+covering the positive/zero-or-negative ReLU derivative convention used by this
+slice. `bad-grad-relu-dense-shape` covers a hidden-gradient/mask mismatch as an
+expected validation failure.

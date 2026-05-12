@@ -293,6 +293,18 @@ def oracle_inputs(name: str) -> dict[str, Tensor]:
                     ],
                 ),
             }
+        case "grad-relu-dense":
+            return {
+                "x": patterned_tensor((2, 784), 0.01, 1),
+                "hidden_grad": patterned_tensor((2, 8), 0.03, 6),
+                "relu_mask": tensor(
+                    (2, 8),
+                    [
+                        1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0,
+                        0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0,
+                    ],
+                ),
+            }
         case "linear-train-step":
             return {
                 "w": Tensor.scalar(1.0),
@@ -377,6 +389,12 @@ def expected(name: str, inputs: dict[str, Tensor]) -> Tensor | list[Tensor]:
             grad_b2_keepdim = reduce_last_dim(transpose_2d(delta))
             grad_b2 = Tensor((10,), grad_b2_keepdim.data)
             return [grad_w2, grad_b2]
+        case "grad-relu-dense":
+            pre_activation_grad = elementwise(inputs["hidden_grad"], inputs["relu_mask"], lambda grad, mask: grad * mask)
+            grad_w1 = matmul(transpose_2d(inputs["x"]), pre_activation_grad)
+            grad_b1_keepdim = reduce_last_dim(transpose_2d(pre_activation_grad))
+            grad_b1 = Tensor((8,), grad_b1_keepdim.data)
+            return [grad_w1, grad_b1]
         case "linear-train-step":
             return Tensor.scalar(inputs["w"].data[0] + inputs["grad"].data[0] * -0.1)
         case "sgd-parameter-tree":

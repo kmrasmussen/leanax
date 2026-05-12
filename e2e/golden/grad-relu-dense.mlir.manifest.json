@@ -1,0 +1,58 @@
+{
+  "schema": "leanax.lowering.v1",
+  "generated": "generated/grad-relu-dense.mlir",
+  "module": "leanax_grad_relu_dense",
+  "function": "main",
+  "inputs": [{"name": "x", "type": "tensor<2x784xf32>"}, {"name": "hidden_grad", "type": "tensor<2x8xf32>"}, {"name": "relu_mask", "type": "tensor<2x8xf32>"}],
+  "outputs": [{"name": "grad_w1", "type": "tensor<784x8xf32>"}, {"name": "grad_b1", "type": "tensor<8xf32>"}],
+  "operations": [
+    {
+      "id": "op0",
+      "result": "pre_activation_grad",
+      "op": "stablehlo.multiply",
+      "operands": ["hidden_grad", "relu_mask"],
+      "result_type": "tensor<2x8xf32>",
+      "mlir_line": 3
+    },
+    {
+      "id": "op1",
+      "result": "x_t",
+      "op": "stablehlo.transpose",
+      "operands": ["x"],
+      "result_type": "tensor<784x2xf32>",
+      "mlir_line": 4
+    },
+    {
+      "id": "op2",
+      "result": "grad_w1",
+      "op": "stablehlo.dot_general",
+      "operands": ["x_t", "pre_activation_grad"],
+      "result_type": "tensor<784x8xf32>",
+      "mlir_line": 5
+    },
+    {
+      "id": "op3",
+      "result": "pre_activation_grad_t",
+      "op": "stablehlo.transpose",
+      "operands": ["pre_activation_grad"],
+      "result_type": "tensor<8x2xf32>",
+      "mlir_line": 6
+    },
+    {
+      "id": "op4",
+      "result": "grad_b1_keepdim",
+      "op": "stablehlo.reduce",
+      "operands": ["pre_activation_grad_t"],
+      "result_type": "tensor<8x1xf32>",
+      "mlir_line": 7
+    },
+    {
+      "id": "op5",
+      "result": "grad_b1",
+      "op": "stablehlo.reshape",
+      "operands": ["grad_b1_keepdim"],
+      "result_type": "tensor<8xf32>",
+      "mlir_line": 8
+    }
+  ]
+}

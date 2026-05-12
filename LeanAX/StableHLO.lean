@@ -435,6 +435,18 @@ def badGradSoftmaxDenseShapeModule : Module :=
     ],
     returns := [delta] }
 
+def badGradReluDenseShapeModule : Module :=
+  let hiddenGrad := tensor "hidden_grad" .f32 [2, 8]
+  let reluMask := tensor "relu_mask" .f32 [2, 7]
+  let preActivationGrad := tensor "pre_activation_grad" .f32 [2, 8]
+  { name := "leanax_bad_grad_relu_dense_shape",
+    functionName := "main",
+    inputs := [hiddenGrad, reluMask],
+    bindings := [
+      { result := preActivationGrad, kind := .multiply hiddenGrad reluMask }
+    ],
+    returns := [preActivationGrad] }
+
 def badParameterTreeShapeModule : Module :=
   let b := tensor "b" .f32 [3]
   let gradB := tensor "grad_b" .f32 [2]
@@ -475,6 +487,7 @@ def moduleByName (name : String) : Option Module :=
   | "grad-square-sum" => gradSquareSumModule?.toOption
   | "grad-dense-loss" => gradDenseLossModule?.toOption
   | "grad-softmax-dense" => gradSoftmaxDenseModule?.toOption
+  | "grad-relu-dense" => gradReluDenseModule?.toOption
   | "linear-train-step" => linearTrainStepModule?.toOption
   | "sgd-parameter-tree" => parameterTreeStepModule?.toOption
   | "mnist-parameter-tree" => mnistParameterTreeStepModule?.toOption
@@ -496,6 +509,7 @@ def moduleByName (name : String) : Option Module :=
   | "bad-vmap-dense-rank" => some badVmapDenseRankModule
   | "bad-grad-dense-shape" => some badGradDenseShapeModule
   | "bad-grad-softmax-dense-shape" => some badGradSoftmaxDenseShapeModule
+  | "bad-grad-relu-dense-shape" => some badGradReluDenseShapeModule
   | "bad-parameter-tree-shape" => some badParameterTreeShapeModule
   | "bad-mnist-parameter-tree-shape" => some badMnistParameterTreeShapeModule
   | _ => none
@@ -516,6 +530,7 @@ def availableCases : List String :=
     "grad-square-sum",
     "grad-dense-loss",
     "grad-softmax-dense",
+    "grad-relu-dense",
     "linear-train-step",
     "sgd-parameter-tree",
     "mnist-parameter-tree",
@@ -537,6 +552,7 @@ def availableCases : List String :=
     "bad-vmap-dense-rank",
     "bad-grad-dense-shape",
     "bad-grad-softmax-dense-shape",
+    "bad-grad-relu-dense-shape",
     "bad-parameter-tree-shape",
     "bad-mnist-parameter-tree-shape"
   ]

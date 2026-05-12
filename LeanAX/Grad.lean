@@ -72,4 +72,25 @@ def gradSoftmaxDenseModule? : Except ValidationError Module := do
     ]
     [gradW2.result, gradB2.result]
 
+def gradReluDenseModule? : Except ValidationError Module := do
+  let x := tensor "x" .f32 [2, 784]
+  let hiddenGrad := tensor "hidden_grad" .f32 [2, 8]
+  let reluMask := tensor "relu_mask" .f32 [2, 8]
+  let preActivationGrad ← checkedMultiply "pre_activation_grad" hiddenGrad reluMask
+  let xT ← checkedTranspose "x_t" x [1, 0]
+  let gradW1 ← checkedDotGeneral "grad_w1" xT.result preActivationGrad.result
+  let preActivationGradT ← checkedTranspose "pre_activation_grad_t" preActivationGrad.result [1, 0]
+  let gradB1KeepDim ← checkedReduceSumLastDim "grad_b1_keepdim" preActivationGradT.result
+  let gradB1 ← checkedReshape "grad_b1" gradB1KeepDim.result [8]
+  checkedModuleMulti "leanax_grad_relu_dense" "main" [x, hiddenGrad, reluMask]
+    [
+      preActivationGrad,
+      xT,
+      gradW1,
+      preActivationGradT,
+      gradB1KeepDim,
+      gradB1
+    ]
+    [gradW1.result, gradB1.result]
+
 end LeanAX

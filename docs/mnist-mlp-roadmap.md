@@ -299,6 +299,8 @@ Current progress:
   `w1`, `b1`, `w2`, and `b2` and checks every returned tensor numerically.
 - `grad-softmax-dense` computes final-layer gradients for batched ten-class
   softmax cross entropy, including batch-mean scaling.
+- `grad-relu-dense` computes first-layer gradients using an explicit ReLU mask
+  and returns `grad_w1` plus `grad_b1`.
 
 ## Where We Are Relative To A Real Classifier
 
@@ -326,8 +328,8 @@ What is still missing for an honest MNIST classifier:
   MNIST-shaped forward module or full train step.
 - Gradients cover square loss and a one-layer dense case, not a two-layer
   ReLU MLP trained with cross entropy.
-- Final-layer softmax/dense gradients exist, but gradients are not yet chained
-  through ReLU and the first dense layer.
+- Final-layer and first-layer gradient artifacts exist, but they are not yet
+  composed into a checked train-step artifact.
 - The MNIST smoke command uses Python training logic and checks that compiler
   artifacts exist; it does not yet execute a LeanAX-generated full train step.
 - Full dataset loading and stable short-epoch metrics remain future work.
@@ -390,6 +392,8 @@ Current progress:
   parameters.
 - `grad-softmax-dense` covers the final dense layer gradient for batched
   softmax cross entropy.
+- `grad-relu-dense` covers the first dense layer gradient with explicit ReLU
+  mask semantics.
 
 ## Phase 11: Classifier Command And Metrics
 
