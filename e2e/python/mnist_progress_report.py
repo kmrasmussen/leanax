@@ -23,6 +23,9 @@ EXPECTED = {
     "full_dataset_training": True,
     "idx_full_dataset_loader": True,
     "cached_dataset_training_sweep": True,
+    "runtime_operation_inventory": True,
+    "runtime_scalar_math_fixture": True,
+    "runtime_tiny_train_step_fixture": True,
     "mnist_forward_runtime": True,
     "mnist_train_command": True,
     "monolithic_mnist_train_step": True,
@@ -136,6 +139,23 @@ def report() -> dict[str, bool]:
         "cached_dataset_training_sweep": (
             ("training-loop", "mnist-cached-training-sweep") in entries
             and dataset_metrics_ready()
+        ),
+        "runtime_operation_inventory": (
+            ("data-loader", "runtime-operation-inventory") in entries
+        ),
+        "runtime_scalar_math_fixture": (
+            ("runtime", "softmax-loss-runtime") in entries
+            and artifact_contains(
+                "e2e/golden/softmax-loss-runtime.mlir",
+                ["llvm.intr.exp", "llvm.intr.log", "llvm.fdiv"],
+            )
+        ),
+        "runtime_tiny_train_step_fixture": (
+            ("runtime", "tiny-train-step-runtime") in entries
+            and artifact_contains(
+                "e2e/golden/tiny-train-step-runtime.mlir",
+                ["llvm.select", "llvm.intr.exp", "llvm.intr.log", "%checksum"],
+            )
         ),
         "mnist_forward_runtime": (
             ("runtime", "mnist-forward-runtime") in entries

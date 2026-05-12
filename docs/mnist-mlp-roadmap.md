@@ -748,6 +748,10 @@ Current progress:
   updated parameters. This proves tiny train-step semantics through
   `mlir-runner` while leaving the full classifier-shaped runtime artifact as a
   separate milestone.
+- `mnist-progress-report` now tracks runtime operation inventory, scalar math
+  runtime coverage, and tiny train-step runtime coverage. It still keeps
+  `direct_mnist_external_runtime` false until the full classifier-shaped
+  train-step artifact executes externally.
 
 ## What Not To Do Yet
 

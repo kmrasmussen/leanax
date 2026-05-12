@@ -35,3 +35,11 @@ e2e gate.
 
 Land only after `TICKET-0055` through `TICKET-0057` establish the runtime
 evidence the report should track.
+
+## Status
+
+Completed. `mnist-progress-report` now tracks runtime operation inventory,
+scalar softmax-loss runtime coverage, and the tiny derived-mask train-step
+runtime fixture. The report still keeps `direct_mnist_external_runtime` false
+because the full classifier-shaped train-step artifact has not yet run through
+an external runtime.

@@ -108,6 +108,11 @@ and SGD updates. It is intentionally tiny and scalar-expanded; it proves the
 runtime can execute train-step semantics, not that the full fixed
 `2x784 -> 8 -> 10` classifier artifact is already executable.
 
+`mnist-progress-report` now distinguishes these runtime milestones from direct
+full MNIST runtime execution. Runtime operation inventory, scalar math runtime,
+and tiny train-step runtime are true; `direct_mnist_external_runtime` remains
+false until the full classifier-shaped train-step artifact executes externally.
+
 The remaining runtime expansion gap is:
 
 - `stablehlo.broadcast_in_dim`
