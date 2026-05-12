@@ -98,12 +98,29 @@ Returning only a small forward checksum is not enough. Running host-side Python
 training over generated text is not enough. Parsing StableHLO-shaped text with
 `mlir-opt --allow-unregistered-dialect` is not enough.
 
-## Next Ticket Queue
+## Completed Runtime Ticket Queue
 
 1. `TICKET-0055`: Runtime Operation Inventory Verifier.
 2. `TICKET-0056`: Runtime Scalar Math Fixture.
 3. `TICKET-0057`: Tiny Derived-Mask Train-Step Runtime Fixture.
 4. `TICKET-0058`: Runtime Readiness Report V5.
+5. `TICKET-0059`: Runtime LLVM Codegen Skeleton And ABI.
+6. `TICKET-0060`: Runtime Shape Ops Lowering Fixtures.
+7. `TICKET-0061`: Runtime Reduce Lowering Fixtures.
+8. `TICKET-0062`: Runtime Dot/Dense Lowering Fixture.
+9. `TICKET-0063`: Generated MNIST Forward Runtime Checksum.
+10. `TICKET-0064`: Generated Derived-Mask Train-Step Runtime Checksum.
+11. `TICKET-0065`: Runtime Readiness Report V6.
+
+## Next Ticket Queue
+
+1. `TICKET-0066`: Full Runtime Scaling Budget And Gate Plan.
+2. `TICKET-0067`: Runtime Tensor Indexing Codegen Helpers.
+3. `TICKET-0068`: Exact-Shape MNIST Forward Runtime Checksum.
+4. `TICKET-0069`: Exact-Shape MNIST Loss Runtime Checksum.
+5. `TICKET-0070`: Exact-Shape Derived-Mask Gradient Runtime Checksum.
+6. `TICKET-0071`: Exact-Shape Derived-Mask Train-Step Runtime Checksum.
+7. `TICKET-0072`: Direct Runtime Readiness Report V7.
 
 ## Current Progress
 

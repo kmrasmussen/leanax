@@ -25,3 +25,19 @@ classifier-shaped runtime checks:
 The wave leaves `direct_mnist_external_runtime` false because the generated
 forward and train-step checks are scaled representatives, not the full
 `2x784 -> 8 -> 10` classifier-shaped train-step artifact.
+
+## Active Wave
+
+`TICKET-0066` through `TICKET-0072` target the exact-shape direct runtime gap:
+
+1. full runtime scaling budget and gate plan,
+2. tensor indexing codegen helpers,
+3. exact-shape forward checksum,
+4. exact-shape loss checksum,
+5. exact-shape gradient checksum,
+6. exact-shape train-step checksum,
+7. direct runtime readiness report v7.
+
+The active wave should not flip `direct_mnist_external_runtime` until the full
+`mnist-train-step-derived-mask` semantics execute externally in the default
+gate.

@@ -138,3 +138,23 @@ runtime slices.
 The queue should keep `direct_mnist_external_runtime` false until generated
 classifier-shaped train-step semantics execute externally and the report can
 explain that evidence precisely.
+
+## Direct Runtime Scale-Up Ticket Queue
+
+`TICKET-0059` through `TICKET-0065` completed the generated representative
+runtime wave. The next queue targets exact-shape execution for the full
+classifier train-step contract.
+
+1. `TICKET-0066`: Full Runtime Scaling Budget And Gate Plan.
+2. `TICKET-0067`: Runtime Tensor Indexing Codegen Helpers.
+3. `TICKET-0068`: Exact-Shape MNIST Forward Runtime Checksum.
+4. `TICKET-0069`: Exact-Shape MNIST Loss Runtime Checksum.
+5. `TICKET-0070`: Exact-Shape Derived-Mask Gradient Runtime Checksum.
+6. `TICKET-0071`: Exact-Shape Derived-Mask Train-Step Runtime Checksum.
+7. `TICKET-0072`: Direct Runtime Readiness Report V7.
+
+This queue is allowed to discover that scalarized LLVM generation is too large
+or too slow for the default gate, but that has to be proven with a reproduced
+budget and a documented fallback. The flag `direct_mnist_external_runtime`
+should remain false until `TICKET-0071` gives exact-shape external runtime
+evidence.

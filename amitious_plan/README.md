@@ -20,6 +20,8 @@ shape of the project.
 - [07-e2e-roadmap.md](07-e2e-roadmap.md): the verification ladder.
 - [08-ticket-breakdown.md](08-ticket-breakdown.md): phase-one tickets.
 - [09-runtime-wave.md](09-runtime-wave.md): the generated runtime ticket wave.
+- [10-direct-runtime-wave.md](10-direct-runtime-wave.md): the exact-shape
+  direct MNIST runtime wave.
 
 ## Operating Rule
 

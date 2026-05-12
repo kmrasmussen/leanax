@@ -798,6 +798,39 @@ Current progress:
   and train-step runtime checks are scaled representatives rather than the full
   `2x784 -> 8 -> 10` classifier-shaped train-step artifact.
 
+## Phase 20: Exact-Shape Direct Runtime
+
+Goal: move from scaled generated runtime representatives to exact-shape
+external execution of the classifier train-step.
+
+Work:
+
+- Measure full-artifact size, build time, runtime, and checksum tolerance before
+  committing to huge checked-in goldens.
+- Add tensor indexing helpers so exact-shape scalarized LLVM is generated from
+  reusable code instead of handwritten strings.
+- Land exact-shape forward, loss, gradient, and train-step runtime checks in
+  that order.
+- Keep `direct_mnist_external_runtime` false until the full train-step runtime
+  checksum executes externally in the default gate.
+
+Exit gate:
+
+- The default e2e manifest either executes the exact-shape derived-mask
+  train-step externally and flips `direct_mnist_external_runtime`, or records a
+  reproduced blocker explaining why the LLVM route cannot carry the full
+  artifact yet.
+
+Tickets:
+
+- `TICKET-0066`: Full Runtime Scaling Budget And Gate Plan.
+- `TICKET-0067`: Runtime Tensor Indexing Codegen Helpers.
+- `TICKET-0068`: Exact-Shape MNIST Forward Runtime Checksum.
+- `TICKET-0069`: Exact-Shape MNIST Loss Runtime Checksum.
+- `TICKET-0070`: Exact-Shape Derived-Mask Gradient Runtime Checksum.
+- `TICKET-0071`: Exact-Shape Derived-Mask Train-Step Runtime Checksum.
+- `TICKET-0072`: Direct Runtime Readiness Report V7.
+
 ## What Not To Do Yet
 
 - Do not chase a full NumPy surface area.
