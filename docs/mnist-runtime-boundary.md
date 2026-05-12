@@ -38,6 +38,8 @@ The current runtime gate proves:
 - `reduce-row-runtime`, `reduce-all-runtime`, and `reduce-keepdim-runtime`:
   helper-generated reduction checksums execute through `mlir-runner` and return
   `36.0`, `21.0`, and `261.0`.
+- `generated-dense-runtime`: a helper-generated dense composition executes
+  through `mlir-runner` and returns `15.25`.
 
 The current classifier artifact proves the compiler-side shape:
 
@@ -123,5 +125,5 @@ train-step artifact executes externally.
 
 The runtime operation inventory no longer reports unsupported operation names.
 The remaining bridge is generated composition of the full classifier-shaped
-train-step path, starting with a generated dot/dense lowering fixture and then
-generated forward/train-step runtime checksums.
+train-step path, starting with generated forward and then generated train-step
+runtime checksums.

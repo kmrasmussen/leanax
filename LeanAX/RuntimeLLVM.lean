@@ -175,6 +175,42 @@ def reduceAllRuntimeLLVM : String :=
 def reduceKeepdimRuntimeLLVM : String :=
   reduceKeepdimRuntimeProgram.render
 
+def generatedDenseRuntimeProgram : RuntimeLLVMProgram :=
+  runtimeWeightedChecksumRefsProgram
+    [
+      runtimeConstF32 "x00" "1.0",
+      runtimeConstF32 "x01" "-2.0",
+      runtimeConstF32 "x10" "0.5",
+      runtimeConstF32 "x11" "3.0",
+      runtimeConstF32 "w00" "2.0",
+      runtimeConstF32 "w01" "-1.0",
+      runtimeConstF32 "w10" "0.25",
+      runtimeConstF32 "w11" "1.5",
+      runtimeConstF32 "b0" "0.5",
+      runtimeConstF32 "b1" "-0.25",
+      runtimeBinaryF32 "p000" "fmul" "x00" "w00",
+      runtimeBinaryF32 "p010" "fmul" "x01" "w10",
+      runtimeBinaryF32 "s00" "fadd" "p000" "p010",
+      runtimeBinaryF32 "y00" "fadd" "s00" "b0",
+      runtimeBinaryF32 "p001" "fmul" "x00" "w01",
+      runtimeBinaryF32 "p011" "fmul" "x01" "w11",
+      runtimeBinaryF32 "s01" "fadd" "p001" "p011",
+      runtimeBinaryF32 "y01" "fadd" "s01" "b1",
+      runtimeBinaryF32 "p100" "fmul" "x10" "w00",
+      runtimeBinaryF32 "p110" "fmul" "x11" "w10",
+      runtimeBinaryF32 "s10" "fadd" "p100" "p110",
+      runtimeBinaryF32 "y10" "fadd" "s10" "b0",
+      runtimeBinaryF32 "p101" "fmul" "x10" "w01",
+      runtimeBinaryF32 "p111" "fmul" "x11" "w11",
+      runtimeBinaryF32 "s11" "fadd" "p101" "p111",
+      runtimeBinaryF32 "y11" "fadd" "s11" "b1"
+    ]
+    "generated_dense"
+    ["y00", "y01", "y10", "y11"]
+
+def generatedDenseRuntimeLLVM : String :=
+  generatedDenseRuntimeProgram.render
+
 def affineRuntimeLLVM : String :=
   LeanAX.joinSep "\n" [
     "module {",
@@ -467,7 +503,8 @@ def runtimeLLVMCases : List RuntimeLLVMCase :=
     { name := "transpose-shape-runtime", llvm := transposeShapeRuntimeLLVM },
     { name := "reduce-row-runtime", llvm := reduceRowRuntimeLLVM },
     { name := "reduce-all-runtime", llvm := reduceAllRuntimeLLVM },
-    { name := "reduce-keepdim-runtime", llvm := reduceKeepdimRuntimeLLVM }
+    { name := "reduce-keepdim-runtime", llvm := reduceKeepdimRuntimeLLVM },
+    { name := "generated-dense-runtime", llvm := generatedDenseRuntimeLLVM }
   ]
 
 def runtimeLLVMByName (name : String) : Option String :=

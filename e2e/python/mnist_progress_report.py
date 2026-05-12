@@ -24,6 +24,7 @@ EXPECTED = {
     "idx_full_dataset_loader": True,
     "cached_dataset_training_sweep": True,
     "runtime_operation_inventory": True,
+    "runtime_generated_dense_fixture": True,
     "runtime_reduce_fixtures": True,
     "runtime_scalar_math_fixture": True,
     "runtime_shape_ops_fixtures": True,
@@ -144,6 +145,13 @@ def report() -> dict[str, bool]:
         ),
         "runtime_operation_inventory": (
             ("data-loader", "runtime-operation-inventory") in entries
+        ),
+        "runtime_generated_dense_fixture": (
+            ("runtime", "generated-dense-runtime") in entries
+            and artifact_contains(
+                "e2e/golden/generated-dense-runtime.mlir",
+                ["%y00", "%y01", "%y10", "%y11", "%generated_dense_acc0"],
+            )
         ),
         "runtime_reduce_fixtures": (
             ("runtime", "reduce-row-runtime") in entries

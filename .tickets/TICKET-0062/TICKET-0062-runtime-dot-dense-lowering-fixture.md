@@ -39,4 +39,8 @@ be called by the MNIST forward runtime ticket.
 
 ## Status
 
-Ready for analysis.
+Completed. `generated-dense-runtime` now uses the shared runtime skeleton for a
+tiny generated `2x2 @ 2x2 + bias` dense composition. The default manifest emits
+the fixture, compares it to golden LLVM MLIR, runs it through `mlir-runner`, and
+checks the weighted output checksum `15.25`. The readiness surface tracks this
+separately from full direct MNIST runtime.

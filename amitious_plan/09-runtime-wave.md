@@ -45,7 +45,8 @@ auditable runtime bridge for the operation surface used by
    helper-generated broadcast, reshape, and transpose runtime checksums.
 3. `TICKET-0061`: Runtime Reduce Lowering Fixtures. Completed by row-wise,
    all-elements, and keepdim-style runtime checksums.
-4. `TICKET-0062`: Runtime Dot/Dense Lowering Fixture.
+4. `TICKET-0062`: Runtime Dot/Dense Lowering Fixture. Completed by the
+   helper-generated `2x2 @ 2x2 + bias` dense checksum.
 5. `TICKET-0063`: Generated MNIST Forward Runtime Checksum.
 6. `TICKET-0064`: Generated Derived-Mask Train-Step Runtime Checksum.
 7. `TICKET-0065`: Runtime Readiness Report V6.

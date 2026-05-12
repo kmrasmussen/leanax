@@ -41,6 +41,9 @@ The implemented first slice is intentionally narrow:
   scalarize row-wise reduction, all-elements reduction, and a keepdim-style
   rebroadcast checksum. The runner compares them against `36.0`, `21.0`, and
   `261.0`.
+- `generated-dense-runtime` uses the shared runtime skeleton for a tiny
+  generated `2x2 @ 2x2 + bias` dense composition and returns the weighted output
+  checksum `15.25`.
 - `lake exe leanax emit-runtime-llvm --case affine-runtime --out
   generated/affine-runtime.mlir` emits an executable LLVM-dialect MLIR module.
 - The module hardcodes the same `affine` fixture values used by the Python
