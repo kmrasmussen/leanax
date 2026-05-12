@@ -649,6 +649,12 @@ Work:
   accuracy, and artifact paths.
 - Extend the readiness report so derived command wiring and cached real-dataset
   training cannot drift.
+- Move as much regression checking and training plumbing as practical into the
+  Rust e2e harness over time. Python should remain mostly a reference and
+  comparison layer, especially where it mirrors JAX/NumPy behavior or gives a
+  compact oracle. Keep this balanced: do not force Rust rewrites when Python is
+  still the clearest way to express reference math or inspect JAX-adjacent
+  behavior.
 
 Exit gate:
 
@@ -679,3 +685,5 @@ Current progress:
 - Do not implement a custom device compiler.
 - Do not hide the IR so deeply that debugging lowering becomes hard.
 - Do not optimize performance before the numeric e2e path exists.
+- Do not let Python become the permanent owner of regression orchestration or
+  training plumbing when the Rust harness can reasonably own that behavior.
