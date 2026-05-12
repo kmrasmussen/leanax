@@ -17,6 +17,7 @@ numeric grad-relu-dense generated/grad-relu-dense.mlir e2e/golden/grad-relu-dens
 numeric linear-train-step generated/linear-train-step.mlir e2e/golden/linear-train-step.mlir linear-train-step
 numeric sgd-parameter-tree generated/sgd-parameter-tree.mlir e2e/golden/sgd-parameter-tree.mlir sgd-parameter-tree
 numeric mnist-parameter-tree generated/mnist-parameter-tree.mlir e2e/golden/mnist-parameter-tree.mlir mnist-parameter-tree
+numeric mnist-train-step generated/mnist-train-step.mlir e2e/golden/mnist-train-step.mlir mnist-train-step
 data-loader mnist-fixture e2e/python/mnist_fixture.py
 data-loader mnist-idx-sample e2e/python/mnist_idx_sample.py
 data-loader mnist-progress-report e2e/python/mnist_progress_report.py
@@ -46,3 +47,6 @@ validation-fail bad-grad-softmax-dense-shape stablehlo.add operands: expected ma
 validation-fail bad-grad-relu-dense-shape stablehlo.multiply operands: expected matching tensor types
 validation-fail bad-parameter-tree-shape stablehlo.add operands: expected matching tensor types
 validation-fail bad-mnist-parameter-tree-shape stablehlo.add operands: expected matching tensor types
+validation-fail bad-mnist-train-step-label-shape stablehlo.add operands: expected matching tensor types
+validation-fail bad-mnist-train-step-hidden-shape stablehlo.multiply operands: expected matching tensor types
+validation-fail bad-mnist-train-step-parameter-shape stablehlo.add operands: expected matching tensor types

@@ -35,3 +35,11 @@ Add `bad-mnist-train-step-*` expected validation-fail cases to the manifest.
 ## First Slice
 
 Start with one hidden-width mismatch and one label/logit class-count mismatch.
+
+## Status
+
+Completed. The manifest now includes `bad-mnist-train-step-label-shape`,
+`bad-mnist-train-step-hidden-shape`, and
+`bad-mnist-train-step-parameter-shape` as expected validation failures. These
+cover class-count, explicit ReLU mask, and parameter-update boundaries for the
+monolithic train-step contract.

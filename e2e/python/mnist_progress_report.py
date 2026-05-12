@@ -15,7 +15,7 @@ EXPECTED = {
     "fixture_only_default": True,
     "full_dataset_training": False,
     "idx_full_dataset_loader": True,
-    "monolithic_mnist_train_step": False,
+    "monolithic_mnist_train_step": True,
     "mnist_cross_entropy_artifact": True,
     "mnist_forward_artifact": True,
     "mnist_parameter_tree_artifact": True,
@@ -61,7 +61,13 @@ def report() -> dict[str, bool]:
         "fixture_only_default": ("data-loader", "mnist-fixture") in entries,
         "full_dataset_training": False,
         "idx_full_dataset_loader": ("data-loader", "mnist-idx-sample") in entries,
-        "monolithic_mnist_train_step": ("numeric", "mnist-train-step") in entries,
+        "monolithic_mnist_train_step": (
+            ("numeric", "mnist-train-step") in entries
+            and artifact_contains(
+                "generated/mnist-train-step.mlir",
+                ["%next_w1", "%next_b1", "%next_w2", "%next_b2", "%loss"],
+            )
+        ),
         "mnist_cross_entropy_artifact": (
             ("numeric", "mnist-cross-entropy") in entries
             and artifact_contains(

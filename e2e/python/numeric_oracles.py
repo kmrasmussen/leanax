@@ -201,6 +201,31 @@ def patterned_tensor(shape: tuple[int, ...], scale: float, offset: int = 0) -> T
     return Tensor(shape, tuple(values))
 
 
+def mnist_train_step_inputs() -> dict[str, Tensor]:
+    x = patterned_tensor((2, 784), 0.01, 1)
+    w1 = patterned_tensor((784, 8), 0.002, 3)
+    b1 = patterned_tensor((8,), 0.01, 5)
+    w2 = patterned_tensor((8, 10), 0.02, 7)
+    b2 = patterned_tensor((10,), 0.01, 9)
+    hidden_pre = elementwise(matmul(x, w1), broadcast_to(b1, (2, 8)), lambda a, b: a + b)
+    relu_mask = Tensor(hidden_pre.shape, tuple(1.0 if value > 0.0 else 0.0 for value in hidden_pre.data))
+    return {
+        "x": x,
+        "labels": tensor(
+            (2, 10),
+            [
+                0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+            ],
+        ),
+        "relu_mask": relu_mask,
+        "w1": w1,
+        "b1": b1,
+        "w2": w2,
+        "b2": b2,
+    }
+
+
 def oracle_inputs(name: str) -> dict[str, Tensor]:
     match name:
         case "affine":
@@ -328,6 +353,8 @@ def oracle_inputs(name: str) -> dict[str, Tensor]:
                 "grad_w2": patterned_tensor((8, 10), 0.002, 15),
                 "grad_b2": patterned_tensor((10,), 0.001, 17),
             }
+        case "mnist-train-step":
+            return mnist_train_step_inputs()
         case _:
             fail(f"unknown oracle case {name}")
 
@@ -407,6 +434,40 @@ def expected(name: str, inputs: dict[str, Tensor]) -> Tensor | list[Tensor]:
                 elementwise(inputs["b1"], inputs["grad_b1"], lambda param, grad: param - 0.1 * grad),
                 elementwise(inputs["w2"], inputs["grad_w2"], lambda param, grad: param - 0.1 * grad),
                 elementwise(inputs["b2"], inputs["grad_b2"], lambda param, grad: param - 0.1 * grad),
+            ]
+        case "mnist-train-step":
+            hidden_pre = elementwise(
+                matmul(inputs["x"], inputs["w1"]),
+                broadcast_to(inputs["b1"], (2, 8)),
+                lambda a, b: a + b,
+            )
+            hidden = elementwise(hidden_pre, broadcast_to(Tensor.scalar(0.0), (2, 8)), max)
+            logits = elementwise(
+                matmul(hidden, inputs["w2"]),
+                broadcast_to(inputs["b2"], (2, 10)),
+                lambda a, b: a + b,
+            )
+            exp_logits = Tensor(logits.shape, tuple(math.exp(value) for value in logits.data))
+            denom = broadcast_to(reduce_last_dim(exp_logits), logits.shape)
+            probs = elementwise(exp_logits, denom, lambda value, row_total: value / row_total)
+            log_probs = Tensor(probs.shape, tuple(math.log(value) for value in probs.data))
+            weighted = elementwise(inputs["labels"], log_probs, lambda label, log_prob: label * log_prob)
+            loss = Tensor.scalar(-sum(weighted.data) / logits.shape[0])
+            delta = elementwise(probs, inputs["labels"], lambda prob, label: (prob - label) / logits.shape[0])
+            grad_w2 = matmul(transpose_2d(hidden), delta)
+            grad_b2_keepdim = reduce_last_dim(transpose_2d(delta))
+            grad_b2 = Tensor((10,), grad_b2_keepdim.data)
+            hidden_grad = matmul(delta, transpose_2d(inputs["w2"]))
+            pre_activation_grad = elementwise(hidden_grad, inputs["relu_mask"], lambda grad, mask: grad * mask)
+            grad_w1 = matmul(transpose_2d(inputs["x"]), pre_activation_grad)
+            grad_b1_keepdim = reduce_last_dim(transpose_2d(pre_activation_grad))
+            grad_b1 = Tensor((8,), grad_b1_keepdim.data)
+            return [
+                elementwise(inputs["w1"], grad_w1, lambda param, grad: param - 0.2 * grad),
+                elementwise(inputs["b1"], grad_b1, lambda param, grad: param - 0.2 * grad),
+                elementwise(inputs["w2"], grad_w2, lambda param, grad: param - 0.2 * grad),
+                elementwise(inputs["b2"], grad_b2, lambda param, grad: param - 0.2 * grad),
+                loss,
             ]
         case _:
             fail(f"unknown expected case {name}")

@@ -457,6 +457,18 @@ Exit gate:
   manifest validation, MLIR parsing, and oracle coverage. The progress report
   flips `monolithic_mnist_train_step` to true in the same commit.
 
+Current progress:
+
+- `mnist-train-step` now lowers the fixed `2x784 -> 8 -> 10` classifier update
+  as one module. It returns `next_w1`, `next_b1`, `next_w2`, `next_b2`, and the
+  batch loss, and the numeric oracle compares it against the previous composed
+  train-step math.
+- The first version keeps `relu_mask` explicit, matching the existing
+  first-layer gradient artifact until comparison/select primitives can derive
+  the mask inside the module.
+- The manifest includes expected failures for label/class mismatch, hidden mask
+  mismatch, and parameter update mismatch.
+
 Tickets:
 
 - `TICKET-0036`: Monolithic MNIST Train-Step Artifact.

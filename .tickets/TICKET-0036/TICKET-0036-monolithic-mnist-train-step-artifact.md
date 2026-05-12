@@ -43,3 +43,13 @@ parsing, lowering manifest validation, and deterministic oracle coverage.
 Keep the static `2x784 -> 8 -> 10` fixture shape and accept an explicit ReLU
 mask. Deriving the mask inside the module should wait for a dedicated
 comparison/select primitive slice.
+
+## Status
+
+Completed. LeanAX now lowers `mnist-train-step` as one numeric manifest case.
+The module accepts a fixture batch, labels, explicit ReLU mask, and the full
+classifier parameter tree, then returns `next_w1`, `next_b1`, `next_w2`,
+`next_b2`, and the batch loss. The Python oracle compares the monolithic update
+against the same fixed-shape classifier math used by the previous composed e2e
+train-step path, and the progress report now marks
+`monolithic_mnist_train_step` as true.

@@ -471,6 +471,42 @@ def badMnistParameterTreeShapeModule : Module :=
     ],
     returns := [nextB2] }
 
+def badMnistTrainStepLabelShapeModule : Module :=
+  let probs := tensor "softmax_probs" .f32 [2, 10]
+  let labels := tensor "labels" .f32 [2, 9]
+  let delta := tensor "logit_delta_unscaled" .f32 [2, 10]
+  { name := "leanax_bad_mnist_train_step_label_shape",
+    functionName := "main",
+    inputs := [probs, labels],
+    bindings := [
+      { result := delta, kind := .add probs labels }
+    ],
+    returns := [delta] }
+
+def badMnistTrainStepHiddenShapeModule : Module :=
+  let hiddenGrad := tensor "hidden_grad" .f32 [2, 8]
+  let reluMask := tensor "relu_mask" .f32 [2, 7]
+  let preActivationGrad := tensor "pre_activation_grad" .f32 [2, 8]
+  { name := "leanax_bad_mnist_train_step_hidden_shape",
+    functionName := "main",
+    inputs := [hiddenGrad, reluMask],
+    bindings := [
+      { result := preActivationGrad, kind := .multiply hiddenGrad reluMask }
+    ],
+    returns := [preActivationGrad] }
+
+def badMnistTrainStepParameterShapeModule : Module :=
+  let b2 := tensor "b2" .f32 [10]
+  let gradB2 := tensor "grad_b2" .f32 [9]
+  let nextB2 := tensor "next_b2" .f32 [10]
+  { name := "leanax_bad_mnist_train_step_parameter_shape",
+    functionName := "main",
+    inputs := [b2, gradB2],
+    bindings := [
+      { result := nextB2, kind := .add b2 gradB2 }
+    ],
+    returns := [nextB2] }
+
 def moduleByName (name : String) : Option Module :=
   match name with
   | "affine" => affineModule?.toOption
@@ -491,6 +527,7 @@ def moduleByName (name : String) : Option Module :=
   | "linear-train-step" => linearTrainStepModule?.toOption
   | "sgd-parameter-tree" => parameterTreeStepModule?.toOption
   | "mnist-parameter-tree" => mnistParameterTreeStepModule?.toOption
+  | "mnist-train-step" => mnistTrainStepModule?.toOption
   | "bad-add-shape" => some badAddShapeModule
   | "duplicate-input" => some duplicateInputModule
   | "undefined-ref" => some undefinedReferenceModule
@@ -512,6 +549,9 @@ def moduleByName (name : String) : Option Module :=
   | "bad-grad-relu-dense-shape" => some badGradReluDenseShapeModule
   | "bad-parameter-tree-shape" => some badParameterTreeShapeModule
   | "bad-mnist-parameter-tree-shape" => some badMnistParameterTreeShapeModule
+  | "bad-mnist-train-step-label-shape" => some badMnistTrainStepLabelShapeModule
+  | "bad-mnist-train-step-hidden-shape" => some badMnistTrainStepHiddenShapeModule
+  | "bad-mnist-train-step-parameter-shape" => some badMnistTrainStepParameterShapeModule
   | _ => none
 
 def availableCases : List String :=
@@ -534,6 +574,7 @@ def availableCases : List String :=
     "linear-train-step",
     "sgd-parameter-tree",
     "mnist-parameter-tree",
+    "mnist-train-step",
     "bad-add-shape",
     "duplicate-input",
     "undefined-ref",
@@ -554,7 +595,10 @@ def availableCases : List String :=
     "bad-grad-softmax-dense-shape",
     "bad-grad-relu-dense-shape",
     "bad-parameter-tree-shape",
-    "bad-mnist-parameter-tree-shape"
+    "bad-mnist-parameter-tree-shape",
+    "bad-mnist-train-step-label-shape",
+    "bad-mnist-train-step-hidden-shape",
+    "bad-mnist-train-step-parameter-shape"
   ]
 
 end LeanAX
