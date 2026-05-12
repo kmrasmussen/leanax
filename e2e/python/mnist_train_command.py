@@ -15,7 +15,10 @@ REQUIRED_ARTIFACTS = {
     "grad_softmax_dense": ("generated/grad-softmax-dense.mlir", ["%grad_w2", "%grad_b2"]),
     "grad_relu_dense": ("generated/grad-relu-dense.mlir", ["%grad_w1", "%grad_b1"]),
     "mnist_parameter_tree": ("generated/mnist-parameter-tree.mlir", ["%next_w1", "%next_b1", "%next_w2", "%next_b2"]),
-    "mnist_train_step": ("generated/mnist-train-step.mlir", ["%next_w1", "%next_b1", "%next_w2", "%next_b2", "%loss"]),
+    "mnist_train_step_derived_mask": (
+        "generated/mnist-train-step-derived-mask.mlir",
+        ["stablehlo.compare", "stablehlo.select", "%relu_mask", "%next_w1", "%loss"],
+    ),
 }
 
 

@@ -34,3 +34,11 @@ stops emitting or referencing the derived-mask train-step artifact.
 
 Change the command artifact registry and update expected output checks without
 changing training math.
+
+## Status
+
+Completed. `mnist_train_command.py` now requires and reports
+`generated/mnist-train-step-derived-mask.mlir` as the command-facing train-step
+artifact. The artifact-composition check also requires the derived-mask artifact,
+while the explicit-mask `mnist-train-step` remains a separate manifested numeric
+compatibility fixture.

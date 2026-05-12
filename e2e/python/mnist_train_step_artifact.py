@@ -144,6 +144,10 @@ def main() -> int:
     require_artifact("generated/grad-softmax-dense.mlir", ["%grad_w2", "%grad_b2"])
     require_artifact("generated/grad-relu-dense.mlir", ["%grad_w1", "%grad_b1", "%relu_mask"])
     require_artifact("generated/mnist-parameter-tree.mlir", ["%next_w1", "%next_b1", "%next_w2", "%next_b2"])
+    require_artifact(
+        "generated/mnist-train-step-derived-mask.mlir",
+        ["stablehlo.compare", "stablehlo.select", "%relu_mask", "%next_w1", "%loss"],
+    )
 
     first_loss, final_loss, update_l1 = train_step()
     if not final_loss < first_loss:

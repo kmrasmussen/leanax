@@ -66,6 +66,7 @@ def report() -> dict[str, bool]:
             and artifact_contains("generated/grad-softmax-dense.mlir", ["%grad_w2", "%grad_b2"])
             and artifact_contains("generated/grad-relu-dense.mlir", ["%grad_w1", "%grad_b1"])
             and artifact_contains("generated/mnist-parameter-tree.mlir", ["%next_w1", "%next_b1"])
+            and artifact_contains("generated/mnist-train-step-derived-mask.mlir", ["%next_w1", "%loss"])
         ),
         "cache_resolver": ("data-loader", "mnist-cache-resolver") in entries,
         "compare_select_artifact": (

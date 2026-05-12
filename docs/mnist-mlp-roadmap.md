@@ -665,6 +665,13 @@ Tickets:
 - `TICKET-0053`: Classifier Readiness Report V4.
 - `TICKET-0054`: Direct MNIST Runtime Boundary Plan.
 
+Current progress:
+
+- `mnist_train_command.py` now uses and reports
+  `generated/mnist-train-step-derived-mask.mlir` as its command-facing
+  train-step artifact. The explicit-mask artifact remains a compatibility
+  numeric case.
+
 ## What Not To Do Yet
 
 - Do not chase a full NumPy surface area.
