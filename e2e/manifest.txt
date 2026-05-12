@@ -2,6 +2,7 @@
 numeric affine generated/affine.mlir e2e/golden/affine.mlir affine
 numeric matmul generated/matmul.mlir e2e/golden/matmul.mlir matmul
 numeric nn-primitives generated/nn-primitives.mlir e2e/golden/nn-primitives.mlir nn-primitives
+numeric compare-select generated/compare-select.mlir e2e/golden/compare-select.mlir compare-select
 numeric mlp-forward generated/mlp-forward.mlir e2e/golden/mlp-forward.mlir mlp-forward
 numeric relu-forward generated/relu-forward.mlir e2e/golden/relu-forward.mlir relu-forward
 numeric mnist-forward generated/mnist-forward.mlir e2e/golden/mnist-forward.mlir mnist-forward

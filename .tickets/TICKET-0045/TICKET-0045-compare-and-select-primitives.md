@@ -36,3 +36,11 @@ lowering manifest validation, and deterministic Python oracle coverage.
 ## First Slice
 
 Support rank-2 f32 tensors only, matching the ReLU hidden activation shape.
+
+## Status
+
+Completed. LeanAX now has checked `compareGt` and `select` bindings that lower
+to `stablehlo.compare` and `stablehlo.select`. The manifested
+`compare-select` case covers golden text, lowering manifest validation, MLIR
+parsing, structural text verification, and deterministic numeric oracle
+execution.

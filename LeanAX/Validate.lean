@@ -151,6 +151,20 @@ def validateBinding (defined : List ValueRef) (binding : Binding) :
   | .logarithm operand =>
       requireDefined "stablehlo.log operand" defined operand
       requireTensorEq "stablehlo.log result" operand.ty binding.result.ty
+  | .compareGt lhs rhs =>
+      requireDefined "stablehlo.compare lhs" defined lhs
+      requireDefined "stablehlo.compare rhs" defined rhs
+      requireTensorEq "stablehlo.compare operands" lhs.ty rhs.ty
+      requireTensorEq "stablehlo.compare operand dtype" lhs.ty { dtype := .f32, shape := lhs.ty.shape }
+      requireTensorEq "stablehlo.compare result" { dtype := .pred, shape := lhs.ty.shape } binding.result.ty
+  | .select predicate onTrue onFalse =>
+      requireDefined "stablehlo.select predicate" defined predicate
+      requireDefined "stablehlo.select true_value" defined onTrue
+      requireDefined "stablehlo.select false_value" defined onFalse
+      requireTensorEq "stablehlo.select values" onTrue.ty onFalse.ty
+      requireTensorEq "stablehlo.select value dtype" onTrue.ty { dtype := .f32, shape := onTrue.ty.shape }
+      requireTensorEq "stablehlo.select predicate" { dtype := .pred, shape := onTrue.ty.shape } predicate.ty
+      requireTensorEq "stablehlo.select result" onTrue.ty binding.result.ty
   | .dotGeneral lhs rhs =>
       requireDefined "stablehlo.dot_general lhs" defined lhs
       requireDefined "stablehlo.dot_general rhs" defined rhs

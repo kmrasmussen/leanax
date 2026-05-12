@@ -26,6 +26,8 @@ inductive BindingKind where
   | divide (lhs : ValueRef) (rhs : ValueRef)
   | exponential (operand : ValueRef)
   | logarithm (operand : ValueRef)
+  | compareGt (lhs : ValueRef) (rhs : ValueRef)
+  | select (predicate : ValueRef) (onTrue : ValueRef) (onFalse : ValueRef)
   | dotGeneral (lhs : ValueRef) (rhs : ValueRef)
   | broadcastInDim (operand : ValueRef)
   | reshape (operand : ValueRef)

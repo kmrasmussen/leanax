@@ -98,6 +98,8 @@ Example mapping:
 | `add` | `stablehlo.add` |
 | `mul` | `stablehlo.multiply` |
 | `matmul` | `stablehlo.dot_general` |
+| `compareGt` | `stablehlo.compare` |
+| `select` | `stablehlo.select` |
 | `reshape` | `stablehlo.reshape` |
 | `reduceSum` | `stablehlo.reduce` |
 

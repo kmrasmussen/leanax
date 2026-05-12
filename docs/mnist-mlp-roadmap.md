@@ -604,6 +604,13 @@ Exit gate:
   lowering manifests, MLIR parsing, and Python oracle coverage. The progress
   report marks derived ReLU mask and derived-mask train step as true.
 
+Current progress:
+
+- `compare-select` is now a manifested numeric case. LeanAX emits
+  `stablehlo.compare` with a predicate tensor result and feeds that predicate to
+  `stablehlo.select`; the golden text, lowering manifest, MLIR parse, structural
+  verifier, and Python oracle all cover the path.
+
 Tickets:
 
 - `TICKET-0045`: Compare And Select Primitives.

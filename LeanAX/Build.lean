@@ -34,6 +34,19 @@ def checkedLog (resultName : String) (operand : ValueRef) :
     Except ValidationError Binding := do
   pure { result := tensor resultName operand.ty.dtype operand.ty.shape, kind := .logarithm operand }
 
+def checkedCompareGt (resultName : String) (lhs : ValueRef) (rhs : ValueRef) :
+    Except ValidationError Binding := do
+  requireTensorEq "stablehlo.compare operands" lhs.ty rhs.ty
+  requireTensorEq "stablehlo.compare operand dtype" lhs.ty { dtype := .f32, shape := lhs.ty.shape }
+  pure { result := tensor resultName .pred lhs.ty.shape, kind := .compareGt lhs rhs }
+
+def checkedSelect (resultName : String) (predicate : ValueRef) (onTrue : ValueRef) (onFalse : ValueRef) :
+    Except ValidationError Binding := do
+  requireTensorEq "stablehlo.select values" onTrue.ty onFalse.ty
+  requireTensorEq "stablehlo.select value dtype" onTrue.ty { dtype := .f32, shape := onTrue.ty.shape }
+  requireTensorEq "stablehlo.select predicate" predicate.ty { dtype := .pred, shape := onTrue.ty.shape }
+  pure { result := tensor resultName .f32 onTrue.ty.shape, kind := .select predicate onTrue onFalse }
+
 def checkedDotGeneral (resultName : String) (lhs : ValueRef) (rhs : ValueRef) :
     Except ValidationError Binding := do
   match lhs.ty.dtype, rhs.ty.dtype, lhs.ty.shape, rhs.ty.shape with

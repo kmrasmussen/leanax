@@ -62,6 +62,15 @@ def elementwise(lhs: Tensor, rhs: Tensor, op) -> Tensor:
     return Tensor(lhs.shape, tuple(op(a, b) for a, b in zip(lhs.data, rhs.data)))
 
 
+def select(predicate: Tensor, on_true: Tensor, on_false: Tensor) -> Tensor:
+    if predicate.shape != on_true.shape or on_true.shape != on_false.shape:
+        fail(f"select shape mismatch: {predicate.shape}, {on_true.shape}, {on_false.shape}")
+    return Tensor(
+        on_true.shape,
+        tuple(t if p != 0.0 else f for p, t, f in zip(predicate.data, on_true.data, on_false.data)),
+    )
+
+
 def broadcast_to(value: Tensor, shape: tuple[int, ...]) -> Tensor:
     if not value.shape:
         return Tensor(shape, tuple(value.data[0] for _ in range(numel(shape))))
@@ -166,6 +175,12 @@ def execute(text: str, inputs: dict[str, Tensor]) -> list[Tensor]:
             values[name] = Tensor(tensors[0].shape, tuple(math.exp(value) for value in tensors[0].data))
         elif op == "log":
             values[name] = Tensor(tensors[0].shape, tuple(math.log(value) for value in tensors[0].data))
+        elif op == "compare":
+            if 'comparison_direction = "GT"' not in line:
+                fail(f"unsupported compare direction in %{name}")
+            values[name] = elementwise(tensors[0], tensors[1], lambda a, b: 1.0 if a > b else 0.0)
+        elif op == "select":
+            values[name] = select(tensors[0], tensors[1], tensors[2])
         elif op == "dot_general":
             values[name] = matmul(tensors[0], tensors[1])
         elif op == "broadcast_in_dim":
@@ -242,6 +257,11 @@ def oracle_inputs(name: str) -> dict[str, Tensor]:
             return {
                 "x": tensor((2, 3), [1, 2, 3, 4, 5, 6]),
                 "bias": tensor((3,), [0.25, -0.5, 1.0]),
+            }
+        case "compare-select":
+            return {
+                "x": tensor((2, 3), [-1.0, 0.5, 3.0, 2.0, -0.25, 4.0]),
+                "threshold": tensor((2, 3), [0.0, 1.0, 2.5, 2.0, -1.0, 5.0]),
             }
         case "mlp-forward":
             return {
@@ -369,6 +389,9 @@ def expected(name: str, inputs: dict[str, Tensor]) -> Tensor | list[Tensor]:
         case "nn-primitives":
             shifted = elementwise(inputs["x"], broadcast_to(inputs["bias"], (2, 3)), lambda a, b: a + b)
             return Tensor.scalar(sum(value * 2.0 for value in shifted.data))
+        case "compare-select":
+            pred = elementwise(inputs["x"], inputs["threshold"], lambda a, b: 1.0 if a > b else 0.0)
+            return select(pred, inputs["x"], inputs["threshold"])
         case "mlp-forward":
             h = elementwise(matmul(inputs["x"], inputs["w1"]), broadcast_to(inputs["b1"], (2, 3)), lambda a, b: a + b)
             h2 = elementwise(h, h, lambda a, b: a * b)

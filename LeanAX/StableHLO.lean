@@ -37,6 +37,8 @@ def BindingKind.stableOpName : BindingKind -> String
   | .divide _ _ => "stablehlo.divide"
   | .exponential _ => "stablehlo.exponential"
   | .logarithm _ => "stablehlo.log"
+  | .compareGt _ _ => "stablehlo.compare"
+  | .select _ _ _ => "stablehlo.select"
   | .dotGeneral _ _ => "stablehlo.dot_general"
   | .broadcastInDim _ => "stablehlo.broadcast_in_dim"
   | .reshape _ => "stablehlo.reshape"
@@ -52,6 +54,8 @@ def BindingKind.operands : BindingKind -> List ValueRef
   | .divide lhs rhs => [lhs, rhs]
   | .exponential operand => [operand]
   | .logarithm operand => [operand]
+  | .compareGt lhs rhs => [lhs, rhs]
+  | .select predicate onTrue onFalse => [predicate, onTrue, onFalse]
   | .dotGeneral lhs rhs => [lhs, rhs]
   | .broadcastInDim operand => [operand]
   | .reshape operand => [operand]
@@ -77,6 +81,10 @@ def Binding.render (binding : Binding) : String :=
       renderGenericOp binding.result "exponential" [operand]
   | .logarithm operand =>
       renderGenericOp binding.result "log" [operand]
+  | .compareGt lhs rhs =>
+      renderGenericOp binding.result "compare" [lhs, rhs] (some "{comparison_direction = \"GT\"}")
+  | .select predicate onTrue onFalse =>
+      renderGenericOp binding.result "select" [predicate, onTrue, onFalse]
   | .dotGeneral lhs rhs =>
       renderGenericOp binding.result "dot_general" [lhs, rhs] (some "{batching_dims = \"[] x []\"}")
   | .broadcastInDim operand =>
@@ -200,6 +208,14 @@ def nnPrimitivesModule? : Except ValidationError Module := do
     scaled,
     loss
   ] loss.result
+
+def compareSelectModule? : Except ValidationError Module := do
+  let shape := [2, 3]
+  let x := sameShapeF32 "x" shape
+  let threshold := sameShapeF32 "threshold" shape
+  let pred ← checkedCompareGt "pred" x threshold
+  let out ← checkedSelect "out" pred.result x threshold
+  checkedModule "leanax_compare_select" "main" [x, threshold] [pred, out] out.result
 
 def badAddShapeModule : Module :=
   let x := tensor "x" .f32 [2, 3]
@@ -512,6 +528,7 @@ def moduleByName (name : String) : Option Module :=
   | "affine" => affineModule?.toOption
   | "matmul" => matmulModule?.toOption
   | "nn-primitives" => nnPrimitivesModule?.toOption
+  | "compare-select" => compareSelectModule?.toOption
   | "mlp-forward" => DSL.mlpForwardModule?.toOption
   | "relu-forward" => DSL.reluForwardModule?.toOption
   | "mnist-forward" => DSL.mnistForwardModule?.toOption
@@ -559,6 +576,7 @@ def availableCases : List String :=
     "affine",
     "matmul",
     "nn-primitives",
+    "compare-select",
     "mlp-forward",
     "relu-forward",
     "mnist-forward",

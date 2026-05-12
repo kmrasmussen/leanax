@@ -28,6 +28,7 @@ def verify(path: Path) -> None:
     allowed = {
         "add",
         "broadcast_in_dim",
+        "compare",
         "constant",
         "divide",
         "dot_general",
@@ -37,6 +38,7 @@ def verify(path: Path) -> None:
         "multiply",
         "reduce",
         "reshape",
+        "select",
         "transpose",
     }
     unknown = sorted(set(ops) - allowed)

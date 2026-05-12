@@ -1,0 +1,26 @@
+{
+  "schema": "leanax.lowering.v1",
+  "generated": "generated/compare-select.mlir",
+  "module": "leanax_compare_select",
+  "function": "main",
+  "inputs": [{"name": "x", "type": "tensor<2x3xf32>"}, {"name": "threshold", "type": "tensor<2x3xf32>"}],
+  "outputs": [{"name": "out", "type": "tensor<2x3xf32>"}],
+  "operations": [
+    {
+      "id": "op0",
+      "result": "pred",
+      "op": "stablehlo.compare",
+      "operands": ["x", "threshold"],
+      "result_type": "tensor<2x3xi1>",
+      "mlir_line": 3
+    },
+    {
+      "id": "op1",
+      "result": "out",
+      "op": "stablehlo.select",
+      "operands": ["pred", "x", "threshold"],
+      "result_type": "tensor<2x3xf32>",
+      "mlir_line": 4
+    }
+  ]
+}
