@@ -37,3 +37,11 @@ files, resolves a split, and verifies the returned batch contract.
 ## First Slice
 
 Implement cache discovery and split selection against tiny local IDX files.
+
+## Status
+
+Completed. `mnist_fixture.py` now exposes cache discovery, train/test split
+resolution, explicit image/label path resolution, and `load_mnist_split`.
+`mnist-cache-resolver` builds a temporary tiny IDX cache, verifies train/test
+batch contracts, checks explicit path resolution, and asserts that partial
+caches fail with actionable missing-file diagnostics.

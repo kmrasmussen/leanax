@@ -423,6 +423,8 @@ Exit gate:
 
 Current progress:
 
+- `mnist-cache-resolver` checks train/test split resolution against a tiny local
+  IDX cache, including explicit path resolution and missing-cache diagnostics.
 - `mnist_train_command.py --mode fixture` is the current user-facing training
   wrapper. It checks the generated classifier artifacts, runs the deterministic
   fixture classifier, and prints stable metric fields for future parsing.

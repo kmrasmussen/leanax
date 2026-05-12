@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
 from pathlib import Path
 import struct
 
@@ -12,6 +13,10 @@ IDX_IMAGE_MAGIC = 2051
 IDX_LABEL_MAGIC = 2049
 IDX_ROWS = 28
 IDX_COLUMNS = 28
+MNIST_FILENAMES = {
+    "train": ("train-images-idx3-ubyte", "train-labels-idx1-ubyte"),
+    "test": ("t10k-images-idx3-ubyte", "t10k-labels-idx1-ubyte"),
+}
 
 
 @dataclass(frozen=True)
@@ -130,6 +135,53 @@ def load_idx_files(
         Path(labels_path).read_bytes(),
         batch_size=batch_size,
     )
+
+
+def default_mnist_cache_dir(env: dict[str, str] | None = None) -> Path:
+    values = os.environ if env is None else env
+    if xdg_cache := values.get("XDG_CACHE_HOME"):
+        return Path(xdg_cache) / "leanax" / "mnist"
+    if home := values.get("HOME"):
+        return Path(home) / ".cache" / "leanax" / "mnist"
+    raise ValueError("cannot resolve MNIST cache: neither XDG_CACHE_HOME nor HOME is set")
+
+
+def split_idx_paths(split: str, cache_dir: str | Path | None = None) -> tuple[Path, Path]:
+    if split not in MNIST_FILENAMES:
+        raise ValueError(f"unknown MNIST split {split!r}; expected one of {sorted(MNIST_FILENAMES)}")
+    root = Path(cache_dir) if cache_dir is not None else default_mnist_cache_dir()
+    image_name, label_name = MNIST_FILENAMES[split]
+    return root / image_name, root / label_name
+
+
+def resolve_idx_paths(
+    split: str = "train",
+    cache_dir: str | Path | None = None,
+    images_path: str | Path | None = None,
+    labels_path: str | Path | None = None,
+) -> tuple[Path, Path]:
+    if (images_path is None) != (labels_path is None):
+        raise ValueError("provide both images_path and labels_path, or neither")
+    if images_path is not None and labels_path is not None:
+        resolved = (Path(images_path), Path(labels_path))
+    else:
+        resolved = split_idx_paths(split, cache_dir)
+
+    missing = [str(path) for path in resolved if not path.is_file()]
+    if missing:
+        raise FileNotFoundError("missing MNIST IDX cache file(s): " + ", ".join(missing))
+    return resolved
+
+
+def load_mnist_split(
+    split: str = "train",
+    cache_dir: str | Path | None = None,
+    images_path: str | Path | None = None,
+    labels_path: str | Path | None = None,
+    batch_size: int = BATCH_SIZE,
+) -> list[MnistBatch]:
+    resolved_images, resolved_labels = resolve_idx_paths(split, cache_dir, images_path, labels_path)
+    return load_idx_files(resolved_images, resolved_labels, batch_size=batch_size)
 
 
 def verify() -> None:

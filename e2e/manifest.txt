@@ -20,6 +20,7 @@ numeric mnist-parameter-tree generated/mnist-parameter-tree.mlir e2e/golden/mnis
 numeric mnist-train-step generated/mnist-train-step.mlir e2e/golden/mnist-train-step.mlir mnist-train-step
 data-loader mnist-fixture e2e/python/mnist_fixture.py
 data-loader mnist-idx-sample e2e/python/mnist_idx_sample.py
+data-loader mnist-cache-resolver e2e/python/mnist_cache_resolver.py
 data-loader mnist-progress-report e2e/python/mnist_progress_report.py
 training-loop synthetic-linear e2e/python/training_loop.py
 training-loop mnist-mlp-smoke e2e/python/mnist_mlp_smoke.py
