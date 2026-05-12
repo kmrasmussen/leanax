@@ -35,3 +35,12 @@ Add a manifest `training-loop` case for the cached real-dataset sweep.
 
 Use a modest deterministic sample count and reuse the existing NumPy training
 loop implementation.
+
+## Status
+
+Completed. `e2e/python/mnist_cached_training_sweep.py` builds a bounded
+train-split IDX cache, verifies the missing-cache diagnostic first, resolves the
+cache through `load_mnist_split`, and trains for four epochs over sixteen
+samples. The manifested `mnist-cached-training-sweep` case prints stable loss,
+accuracy, sample, batch, epoch, and artifact fields while keeping the default
+gate network-free.
