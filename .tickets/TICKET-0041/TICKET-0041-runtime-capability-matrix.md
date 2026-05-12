@@ -37,3 +37,10 @@ and records optional tools without pretending they are available.
 
 Report `mlir-opt`, `mlir-runner`, and `stablehlo-opt` availability from inside
 the Nix dev shell.
+
+## Status
+
+Completed. `runtime-capability-matrix` now runs under the manifest and prints a
+stable JSON report for required `mlir-opt` and `mlir-runner` tools plus optional
+`stablehlo-opt`, `iree-compile`, and `iree-run-module` probes. Missing optional
+direct StableHLO/IREE tools remain visible without failing the default gate.

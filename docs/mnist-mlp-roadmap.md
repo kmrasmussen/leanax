@@ -466,6 +466,8 @@ Exit gate:
 
 Current progress:
 
+- `runtime-capability-matrix` reports required LLVM/MLIR runtime tools and
+  optional direct StableHLO/IREE tooling from inside the Nix shell.
 - `mnist-train-step` now lowers the fixed `2x784 -> 8 -> 10` classifier update
   as one module. It returns `next_w1`, `next_b1`, `next_w2`, `next_b2`, and the
   batch loss, and the numeric oracle compares it against the previous composed
