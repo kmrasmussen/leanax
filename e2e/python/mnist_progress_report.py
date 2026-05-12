@@ -7,6 +7,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[2]
 MANIFEST = REPO / "e2e/manifest.txt"
 DATASET_METRICS = REPO / "generated/mnist-real-dataset-metrics.json"
+RUNTIME_SCALING_BUDGET = REPO / "generated/runtime-scaling-budget.json"
 
 
 EXPECTED = {
@@ -43,6 +44,7 @@ EXPECTED = {
     "optional_full_dataset_smoke": True,
     "relu_dense_gradient_artifact": True,
     "runtime_capability_matrix": True,
+    "runtime_scaling_budget": True,
     "softmax_dense_gradient_artifact": True,
     "structured_dataset_training_metrics": True,
     "ten_class_fixture_training": True,
@@ -89,6 +91,27 @@ def dataset_metrics_ready() -> bool:
         and data["final_accuracy"] >= data["first_accuracy"]
         and isinstance(artifacts, list)
         and "generated/mnist-train-step-derived-mask.mlir" in artifacts
+    )
+
+
+def runtime_scaling_budget_ready() -> bool:
+    if not RUNTIME_SCALING_BUDGET.is_file():
+        return False
+    data = json.loads(RUNTIME_SCALING_BUDGET.read_text(encoding="utf-8"))
+    cases = data.get("cases")
+    train_step = None
+    if isinstance(cases, list):
+        for case in cases:
+            if isinstance(case, dict) and case.get("name") == "exact_train_step":
+                train_step = case
+                break
+    return (
+        data.get("schema") == "leanax.runtime_scaling_budget.v1"
+        and data.get("classifier") == {"batch": 2, "classes": 10, "hidden": 8, "inputs": 784}
+        and isinstance(train_step, dict)
+        and train_step.get("default_gate_candidate") is True
+        and isinstance(train_step.get("estimated_scalar_ops"), int)
+        and train_step["estimated_scalar_ops"] > 0
     )
 
 
@@ -254,6 +277,10 @@ def report() -> dict[str, bool]:
             and artifact_contains("generated/grad-relu-dense.mlir", ["%grad_w1", "%grad_b1", "%relu_mask"])
         ),
         "runtime_capability_matrix": ("data-loader", "runtime-capability-matrix") in entries,
+        "runtime_scaling_budget": (
+            ("data-loader", "runtime-scaling-budget") in entries
+            and runtime_scaling_budget_ready()
+        ),
         "softmax_dense_gradient_artifact": (
             ("numeric", "grad-softmax-dense") in entries
             and artifact_contains("generated/grad-softmax-dense.mlir", ["%grad_w2", "%grad_b2"])

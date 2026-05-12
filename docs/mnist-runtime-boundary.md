@@ -156,3 +156,7 @@ train-step artifact still has not executed externally, so
 codegen, shape ops, reductions, dense composition, forward representative, and
 train-step representative are all true, while direct full MNIST external runtime
 is still false.
+
+`runtime-scaling-budget` now records the planned exact-shape scalarized LLVM
+budget and default-gate policy before the next wave starts generating large
+runtime artifacts.

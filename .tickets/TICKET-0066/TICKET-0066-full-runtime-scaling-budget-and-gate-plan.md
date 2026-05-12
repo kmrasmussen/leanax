@@ -44,4 +44,8 @@ manifest metadata rather than generating huge artifacts.
 
 ## Status
 
-Ready for analysis.
+Completed. `runtime-scaling-budget` now validates the exact-shape classifier
+contract, writes `generated/runtime-scaling-budget.json`, estimates scalarized
+runtime sizes for exact-shape forward, loss, gradient, and train-step cases, and
+records the default-gate policy and fallback. `mnist-progress-report` verifies
+the budget artifact so the plan cannot drift silently.

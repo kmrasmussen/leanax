@@ -55,6 +55,9 @@ The implemented first slice is intentionally narrow:
   the codegen skeleton, shape-op fixtures, reduce fixtures, generated dense,
   generated forward, generated train-step, and a still-false direct MNIST
   runtime flag.
+- `runtime-scaling-budget` records the exact-shape scalarized runtime budget for
+  forward, loss, gradient, and train-step cases before the project commits to
+  large checked-in artifacts.
 - `lake exe leanax emit-runtime-llvm --case affine-runtime --out
   generated/affine-runtime.mlir` emits an executable LLVM-dialect MLIR module.
 - The module hardcodes the same `affine` fixture values used by the Python
