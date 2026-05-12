@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from mnist_classifier_smoke import EPOCHS, train_batches
-from mnist_fixture import fixture_batches
+from mnist_fixture import MnistBatch, fixture_batches, load_mnist_split
 from mnist_train_step_artifact import require_artifact
 
 
@@ -31,6 +31,10 @@ class Metrics:
     final_accuracy: float
 
 
+class OptionalDatasetMissing(Exception):
+    pass
+
+
 def require_checked_artifacts() -> list[str]:
     paths = []
     for _name, (path, required_text) in REQUIRED_ARTIFACTS.items():
@@ -43,12 +47,28 @@ def require_checked_artifacts() -> list[str]:
     return paths
 
 
-def fixture_metrics(epochs: int) -> Metrics:
-    batches = fixture_batches()
+def limit_batches(batches: list[MnistBatch], max_samples: int | None) -> list[MnistBatch]:
+    if max_samples is None:
+        return batches
+    if max_samples <= 0:
+        raise ValueError(f"--max-samples must be positive, got {max_samples}")
+    selected = []
+    seen = 0
+    for batch in batches:
+        if seen + len(batch.images) > max_samples:
+            break
+        selected.append(batch)
+        seen += len(batch.images)
+    if not selected:
+        raise ValueError(f"--max-samples={max_samples} is smaller than one complete batch")
+    return selected
+
+
+def metrics_for_batches(mode: str, batches: list[MnistBatch], epochs: int) -> Metrics:
     first_loss, final_loss, first_accuracy, final_accuracy = train_batches(batches, epochs)
     sample_count = sum(len(batch.images) for batch in batches)
     return Metrics(
-        mode="fixture",
+        mode=mode,
         epochs=epochs,
         samples=sample_count,
         batches=len(batches),
@@ -57,6 +77,30 @@ def fixture_metrics(epochs: int) -> Metrics:
         first_accuracy=first_accuracy,
         final_accuracy=final_accuracy,
     )
+
+
+def fixture_metrics(epochs: int) -> Metrics:
+    return metrics_for_batches("fixture", fixture_batches(), epochs)
+
+
+def cached_metrics(
+    split: str,
+    epochs: int,
+    cache_dir: str | None,
+    images_idx: str | None,
+    labels_idx: str | None,
+    max_samples: int | None,
+) -> Metrics:
+    try:
+        batches = load_mnist_split(
+            split=split,
+            cache_dir=cache_dir,
+            images_path=images_idx,
+            labels_path=labels_idx,
+        )
+    except FileNotFoundError as err:
+        raise OptionalDatasetMissing(str(err)) from err
+    return metrics_for_batches(f"cached-{split}", limit_batches(batches, max_samples), epochs)
 
 
 def render_metrics(metrics: Metrics, artifacts: list[str]) -> str:
@@ -77,7 +121,12 @@ def render_metrics(metrics: Metrics, artifacts: list[str]) -> str:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run the LeanAX MNIST classifier training wrapper.")
-    parser.add_argument("--mode", choices=["fixture"], default="fixture")
+    parser.add_argument("--mode", choices=["fixture", "cached"], default="fixture")
+    parser.add_argument("--split", choices=["train", "test"], default="train")
+    parser.add_argument("--cache-dir")
+    parser.add_argument("--images-idx")
+    parser.add_argument("--labels-idx")
+    parser.add_argument("--max-samples", type=int, default=None)
     parser.add_argument("--epochs", type=int, default=EPOCHS)
     return parser.parse_args()
 
@@ -88,7 +137,22 @@ def main() -> int:
         raise ValueError(f"--epochs must be positive, got {args.epochs}")
 
     artifacts = require_checked_artifacts()
-    metrics = fixture_metrics(args.epochs)
+    try:
+        if args.mode == "fixture":
+            metrics = fixture_metrics(args.epochs)
+        else:
+            metrics = cached_metrics(
+                args.split,
+                args.epochs,
+                args.cache_dir,
+                args.images_idx,
+                args.labels_idx,
+                args.max_samples,
+            )
+    except OptionalDatasetMissing as err:
+        print(f"mnist-train-skip mode=cached split={args.split} reason=missing-cache detail={err}")
+        return 0
+
     if not metrics.final_loss < metrics.first_loss:
         raise AssertionError(f"classifier loss did not decrease: {metrics.first_loss} -> {metrics.final_loss}")
     if metrics.final_accuracy < metrics.first_accuracy:

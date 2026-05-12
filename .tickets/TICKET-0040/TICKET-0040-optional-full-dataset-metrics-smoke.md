@@ -36,3 +36,11 @@ IDX files, not by downloading MNIST.
 
 Run the full-dataset path against a tiny local cache and prove metric output is
 stable.
+
+## Status
+
+Completed. `mnist_train_command.py` now supports explicit cached IDX mode with
+split, cache directory, explicit path, epoch, and sample-limit options. Missing
+caches print a skip diagnostic instead of affecting the default fixture gate.
+`mnist-full-dataset-smoke` builds a tiny local IDX cache, runs cached-train mode,
+and verifies stable metric output without network access.

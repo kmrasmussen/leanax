@@ -103,6 +103,17 @@ artifact paths. Run the full e2e gate first so the generated compiler artifacts
 exist under `generated/`; missing artifacts fail with the path that needs to be
 generated.
 
+Cached IDX mode is opt-in:
+
+```sh
+nix develop --command uv run --no-managed-python --python python3 --project e2e/python python e2e/python/mnist_train_command.py --mode cached --split train --max-samples 32
+```
+
+It resolves the documented MNIST cache layout or explicit `--images-idx` and
+`--labels-idx` paths. If the cache is absent, the non-default cached mode prints
+`mnist-train-skip ... reason=missing-cache` instead of turning the default gate
+into a network or download requirement.
+
 ## A Useful First Milestone
 
 The smallest meaningful prototype would be:

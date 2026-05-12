@@ -423,6 +423,8 @@ Exit gate:
 
 Current progress:
 
+- `mnist-full-dataset-smoke` runs cached mode against a tiny local IDX cache and
+  checks stable metric output without downloading MNIST.
 - `mnist-cache-resolver` checks train/test split resolution against a tiny local
   IDX cache, including explicit path resolution and missing-cache diagnostics.
 - `mnist_train_command.py --mode fixture` is the current user-facing training

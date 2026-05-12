@@ -51,14 +51,27 @@ The resolver recognizes two split names:
 Explicit image/label paths may be passed instead of a cache split, but both
 paths must be provided together.
 
+The training wrapper keeps fixture mode as the default. Cached full-dataset mode
+is explicit:
+
+```sh
+nix develop --command uv run --no-managed-python --python python3 --project e2e/python python e2e/python/mnist_train_command.py --mode cached --split train --max-samples 32
+```
+
+Use `--cache-dir` to point at a non-default cache, or `--images-idx` and
+`--labels-idx` to bypass split discovery. The optional cached mode prints a
+skip diagnostic when files are missing, so normal e2e runs do not download or
+require MNIST.
+
 Expected failure modes are explicit: missing files fail at path read time, bad
 magic numbers reject non-IDX inputs, non-`28x28` images reject incompatible
 datasets, mismatched counts reject corrupt image/label pairs, out-of-range
 labels reject non-MNIST targets, and non-divisible sample counts reject batches
 that would not match the current static `2x784` classifier artifact shape.
 
-The manifest cases `mnist-idx-sample` and `mnist-cache-resolver` exercise this
-code path with tiny local IDX bytes. That keeps fixture mode as the default
-smoke path and keeps the full e2e gate network-free while still checking the
-parser, resolver, split names, partial-cache diagnostics, and batch contract used
-by the full dataset route.
+The manifest cases `mnist-idx-sample`, `mnist-cache-resolver`, and
+`mnist-full-dataset-smoke` exercise this code path with tiny local IDX bytes.
+That keeps fixture mode as the default smoke path and keeps the full e2e gate
+network-free while still checking the parser, resolver, split names,
+partial-cache diagnostics, cached-mode metrics, and batch contract used by the
+full dataset route.
