@@ -466,6 +466,9 @@ Exit gate:
 
 Current progress:
 
+- `dense-runtime` runs a fixed dense-layer checksum through LLVM `mlir-runner`,
+  expanding runtime coverage beyond the affine fixture while remaining separate
+  from full MNIST runtime execution.
 - `runtime-capability-matrix` reports required LLVM/MLIR runtime tools and
   optional direct StableHLO/IREE tooling from inside the Nix shell.
 - `mnist-train-step` now lowers the fixed `2x784 -> 8 -> 10` classifier update

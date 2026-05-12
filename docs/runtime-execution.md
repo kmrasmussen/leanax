@@ -33,6 +33,9 @@ The implemented first slice is intentionally narrow:
   compares stdout against `94.25`.
 - `e2e/manifest.txt` records this as a `runtime` outcome, so the runtime check
   is part of the normal Nix e2e gate.
+- `dense-runtime` adds a second LLVM runtime fixture: a fixed dense-layer
+  checksum for one `1x4 @ 4x3 + 3` computation. The runner compares its scalar
+  result against `103.375`.
 
 ## Capability Matrix
 

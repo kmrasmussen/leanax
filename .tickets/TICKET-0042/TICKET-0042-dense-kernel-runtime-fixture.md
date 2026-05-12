@@ -35,3 +35,11 @@ its external result against the deterministic expected value.
 ## First Slice
 
 Use a fixed small dense checksum before attempting classifier-forward runtime.
+
+## Status
+
+Completed. LeanAX now emits `dense-runtime`, an LLVM-dialect MLIR fixture for a
+fixed `1x4 @ 4x3 + 3` dense checksum. The manifest runs it through
+`mlir-runner` and compares the scalar result against `103.375`, expanding
+runtime coverage beyond the affine checksum without claiming full MNIST runtime
+execution.
