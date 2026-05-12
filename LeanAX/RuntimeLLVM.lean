@@ -221,6 +221,86 @@ def runtimeSoftmaxCrossEntropyLossLines
   let total := runtimeReduceRefsF32 "loss_total" "fadd" rowRefs
   body ++ total.fst ++ [runtimeBinaryF32 lossName "fmul" total.snd "mean_scale"]
 
+def runtimeReluMaskTensorLines
+    (source mask : RuntimeTensor)
+    (zeroRef oneRef : String) : List String :=
+  runtimeListBind (runtimeShapeIndices source.shape) fun indices =>
+    let sourceRef := source.ref indices
+    let maskRef := mask.ref indices
+    let pred := maskRef ++ "_bool"
+    [
+      "%" ++ pred ++ " = llvm.fcmp \"ogt\" %" ++ sourceRef ++ ", %" ++ zeroRef ++ " : f32",
+      "%" ++ maskRef ++ " = llvm.select %" ++ pred ++ ", %" ++ oneRef ++ ", %" ++ zeroRef ++ " : i1, f32"
+    ]
+
+def runtimeElementwiseBinaryTensorLines
+    (_label op : String)
+    (lhs rhs target : RuntimeTensor) : List String :=
+  runtimeListBind (runtimeShapeIndices target.shape) fun indices =>
+    let result := target.ref indices
+    [
+      runtimeBinaryF32 result op (lhs.ref indices) (rhs.ref indices)
+    ]
+
+def runtimeReduceRefsToF32
+    (label target op : String)
+    (refs : List String) : List String :=
+  match refs with
+  | [] => [runtimeConstF32 target "0.0"]
+  | [single] => [runtimeBinaryF32 target "fadd" single "zero"]
+  | first :: rest =>
+      let rec go (acc : String) (nextIndex : Nat) (remaining : List String) : List String :=
+        match remaining with
+        | [] => [runtimeBinaryF32 target "fadd" acc "zero"]
+        | [last] => [runtimeBinaryF32 target op acc last]
+        | ref :: tail =>
+            let next := label ++ "_s" ++ toString nextIndex
+            runtimeBinaryF32 next op acc ref :: go next (nextIndex + 1) tail
+      go first 0 rest
+
+def runtimeMatmul2DRefLines
+    (label : String)
+    (lhsRef rhsRef : Nat -> Nat -> String)
+    (target : RuntimeTensor)
+    (rows inner cols : Nat) : List String :=
+  runtimeListBind (List.range rows) fun row =>
+    runtimeListBind (List.range cols) fun col =>
+      let products := (List.range inner).map fun k =>
+        let productName := label ++ "_p" ++ toString row ++ "_" ++ toString k ++ "_" ++ toString col
+        runtimeBinaryF32 productName "fmul" (lhsRef row k) (rhsRef k col)
+      let productRefs := (List.range inner).map fun k =>
+        label ++ "_p" ++ toString row ++ "_" ++ toString k ++ "_" ++ toString col
+      products ++ runtimeReduceRefsToF32
+        (label ++ "_" ++ toString row ++ "_" ++ toString col)
+        (target.ref [row, col])
+        "fadd"
+        productRefs
+
+def runtimeColumnSumLines
+    (label : String)
+    (source target : RuntimeTensor)
+    (rows cols : Nat) : List String :=
+  runtimeListBind (List.range cols) fun col =>
+    let refs := (List.range rows).map fun row => source.ref [row, col]
+    runtimeReduceRefsToF32
+      (label ++ "_" ++ toString col)
+      (target.ref [col])
+      "fadd"
+      refs
+
+def runtimeSoftmaxDeltaLines
+    (labels delta : RuntimeTensor)
+    (batch classes : Nat) : List String :=
+  runtimeListBind (List.range batch) fun row =>
+    runtimeListBind (List.range classes) fun col =>
+      let labelNeg := "delta_label_neg" ++ toString row ++ toString col
+      let diff := "delta_diff" ++ toString row ++ toString col
+      [
+        runtimeBinaryF32 labelNeg "fmul" (labels.ref [row, col]) "neg_one",
+        runtimeBinaryF32 diff "fadd" ("loss_prob" ++ toString row ++ toString col) labelNeg,
+        runtimeBinaryF32 (delta.ref [row, col]) "fmul" diff "mean_scale"
+      ]
+
 def generatedArithmeticRuntimeProgram : RuntimeLLVMProgram :=
   {
     body := [
@@ -482,6 +562,60 @@ def exactMnistLossRuntimeProgram : RuntimeLLVMProgram :=
 
 def exactMnistLossRuntimeLLVM : String :=
   exactMnistLossRuntimeProgram.render
+
+def exactMnistGradientRuntimeProgram : RuntimeLLVMProgram :=
+  let forward := exactMnistForwardBodyAndLogits
+  let labels : RuntimeTensor := { name := "labels", shape := [2, 10] }
+  let hiddenPre : RuntimeTensor := { name := "hidden_pre", shape := [2, 8] }
+  let hidden : RuntimeTensor := { name := "hidden", shape := [2, 8] }
+  let mask : RuntimeTensor := { name := "relu_mask", shape := [2, 8] }
+  let x : RuntimeTensor := { name := "x", shape := [2, 784] }
+  let w2 : RuntimeTensor := { name := "w2", shape := [8, 10] }
+  let delta : RuntimeTensor := { name := "delta", shape := [2, 10] }
+  let gradW2 : RuntimeTensor := { name := "grad_w2", shape := [8, 10] }
+  let gradB2 : RuntimeTensor := { name := "grad_b2", shape := [10] }
+  let hiddenGrad : RuntimeTensor := { name := "hidden_grad", shape := [2, 8] }
+  let preActivationGrad : RuntimeTensor := { name := "pre_activation_grad", shape := [2, 8] }
+  let gradW1 : RuntimeTensor := { name := "grad_w1", shape := [784, 8] }
+  let gradB1 : RuntimeTensor := { name := "grad_b1", shape := [8] }
+  runtimeWeightedChecksumRefsProgram
+    (forward.fst ++
+      runtimeTensorConstF32 labels runtimeExactMnistLabelValues ++
+      [
+        runtimeConstF32 "neg_one" "-1.0",
+        runtimeConstF32 "one" "1.0",
+        runtimeConstF32 "mean_scale" "0.5"
+      ] ++
+      runtimeSoftmaxCrossEntropyLossLines forward.snd labels 2 10 "loss" ++
+      runtimeSoftmaxDeltaLines labels delta 2 10 ++
+      runtimeReluMaskTensorLines hiddenPre mask "zero" "one" ++
+      runtimeMatmul2DRefLines
+        "grad_w2"
+        (fun row k => hidden.ref [k, row])
+        (fun k col => delta.ref [k, col])
+        gradW2
+        8 2 10 ++
+      runtimeColumnSumLines "grad_b2" delta gradB2 2 10 ++
+      runtimeMatmul2DRefLines
+        "hidden_grad"
+        (fun row k => delta.ref [row, k])
+        (fun k col => w2.ref [col, k])
+        hiddenGrad
+        2 10 8 ++
+      runtimeElementwiseBinaryTensorLines "pre_activation_grad" "fmul" hiddenGrad mask preActivationGrad ++
+      runtimeMatmul2DRefLines
+        "grad_w1"
+        (fun row k => x.ref [k, row])
+        (fun k col => preActivationGrad.ref [k, col])
+        gradW1
+        784 2 8 ++
+      runtimeColumnSumLines "grad_b1" preActivationGrad gradB1 2 8)
+    "exact_gradient"
+    (["loss"] ++ runtimeTensorRefs gradW1 ++ runtimeTensorRefs gradB1 ++
+      runtimeTensorRefs gradW2 ++ runtimeTensorRefs gradB2)
+
+def exactMnistGradientRuntimeLLVM : String :=
+  exactMnistGradientRuntimeProgram.render
 
 def generatedDerivedMaskTrainStepRuntimeProgram : RuntimeLLVMProgram :=
   {
@@ -844,6 +978,7 @@ def runtimeLLVMCases : List RuntimeLLVMCase :=
     { name := "generated-mnist-forward-runtime", llvm := generatedMnistForwardRuntimeLLVM },
     { name := "exact-mnist-forward-runtime", llvm := exactMnistForwardRuntimeLLVM },
     { name := "exact-mnist-loss-runtime", llvm := exactMnistLossRuntimeLLVM },
+    { name := "exact-mnist-gradient-runtime", llvm := exactMnistGradientRuntimeLLVM },
     {
       name := "generated-derived-mask-train-step-runtime",
       llvm := generatedDerivedMaskTrainStepRuntimeLLVM

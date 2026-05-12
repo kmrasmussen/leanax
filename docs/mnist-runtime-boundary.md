@@ -50,6 +50,9 @@ The current runtime gate proves:
 - `exact-mnist-loss-runtime`: the same exact forward body plus fixed `2x10`
   labels executes row-wise softmax cross-entropy through `mlir-runner` and
   returns mean loss `2.261078`, with a Python oracle checking the expected loss.
+- `exact-mnist-gradient-runtime`: the exact-shape backward path derives the
+  ReLU mask internally, computes both dense-layer gradients and biases, and
+  returns checksum `-131.4983` over loss plus all gradients.
 - `generated-derived-mask-train-step-runtime`: a helper-generated derived-mask
   train-step representative executes through `mlir-runner` and returns
   `1.4609127`.
@@ -173,8 +176,9 @@ layer. That gives the exact-shape forward/loss/train-step tickets a structured
 way to enumerate row-major scalar refs instead of growing more handwritten
 runtime strings.
 
-`exact-mnist-forward-runtime` and `exact-mnist-loss-runtime` now close the
-forward/loss scale gap: the full fixed classifier forward pass and mean
-cross-entropy run externally, while direct full MNIST runtime execution remains
-false because gradients, SGD updates, and the train-step checksum still need
-exact-shape runtime coverage.
+`exact-mnist-forward-runtime`, `exact-mnist-loss-runtime`, and
+`exact-mnist-gradient-runtime` now close the forward/loss/backward scale gap:
+the full fixed classifier forward pass, mean cross-entropy, and derived-mask
+gradients run externally. Direct full MNIST runtime execution remains false
+because SGD updates and the train-step checksum still need exact-shape runtime
+coverage.

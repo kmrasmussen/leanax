@@ -59,6 +59,8 @@ by the default e2e gate.
 4. `TICKET-0069`: Exact-Shape MNIST Loss Runtime Checksum. Completed with
    `exact-mnist-loss-runtime` and a checked mean-loss oracle.
 5. `TICKET-0070`: Exact-Shape Derived-Mask Gradient Runtime Checksum.
+   Completed with `exact-mnist-gradient-runtime` covering loss plus all
+   parameter gradients.
 6. `TICKET-0071`: Exact-Shape Derived-Mask Train-Step Runtime Checksum.
 7. `TICKET-0072`: Direct Runtime Readiness Report V7.
 

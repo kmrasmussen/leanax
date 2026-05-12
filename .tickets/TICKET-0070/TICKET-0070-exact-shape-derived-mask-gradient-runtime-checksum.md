@@ -37,4 +37,8 @@ gradient semantics without bloating the runtime output ABI.
 
 ## Status
 
-Ready for analysis.
+Completed. `exact-mnist-gradient-runtime` reuses the exact forward/loss body,
+derives the ReLU mask internally, computes `grad_w2`, `grad_b2`, `grad_w1`, and
+`grad_b1`, and returns a checksum over loss plus all gradients. The Python
+oracle records an explicit `5e-3` tolerance for the long f32 checksum
+accumulation.
