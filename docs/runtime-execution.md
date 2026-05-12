@@ -42,6 +42,10 @@ The implemented first slice is intentionally narrow:
 - `softmax-loss-runtime` adds a scalar softmax cross-entropy checksum using
   LLVM intrinsics for exp/log plus floating-point division. The runner compares
   its scalar result against `0.31326166`.
+- `tiny-train-step-runtime` scalar-expands a tiny derived-mask train step with
+  ReLU mask derivation, softmax loss, dense-layer gradients, SGD updates, and a
+  checksum over loss plus updated parameters. The runner compares its scalar
+  result against `7.939712`.
 
 ## Capability Matrix
 

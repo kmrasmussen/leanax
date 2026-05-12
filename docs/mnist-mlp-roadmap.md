@@ -743,6 +743,11 @@ Current progress:
   with LLVM exp/log intrinsics and floating-point division, proving the scalar
   math route needed by the train-step loss before expanding to tensor-shaped
   runtime code.
+- `tiny-train-step-runtime` now executes a scalar-expanded derived-mask train
+  step with softmax loss, gradients, SGD updates, and a checksum over loss plus
+  updated parameters. This proves tiny train-step semantics through
+  `mlir-runner` while leaving the full classifier-shaped runtime artifact as a
+  separate milestone.
 
 ## What Not To Do Yet
 

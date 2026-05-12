@@ -102,6 +102,12 @@ expansion gap.
 intrinsics for exp/log plus floating-point division, so divide, exponential,
 and log are no longer in the unsupported fixture surface.
 
+`tiny-train-step-runtime` now covers a scalar-expanded train-step checksum with
+internal ReLU mask derivation, softmax loss, gradients for both dense layers,
+and SGD updates. It is intentionally tiny and scalar-expanded; it proves the
+runtime can execute train-step semantics, not that the full fixed
+`2x784 -> 8 -> 10` classifier artifact is already executable.
+
 The remaining runtime expansion gap is:
 
 - `stablehlo.broadcast_in_dim`

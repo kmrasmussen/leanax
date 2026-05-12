@@ -33,3 +33,12 @@ Add a manifested runtime case once the scalar math route is proven.
 
 Start with a tiny shape that exercises every train-step operation category
 without producing a huge LLVM fixture.
+
+## Status
+
+Completed. `tiny-train-step-runtime` is a scalar-expanded LLVM runtime fixture
+with a tiny batch, two inputs, two hidden units, and two classes. It derives the
+ReLU mask internally, computes softmax loss, backpropagates through both dense
+layers, applies one SGD update, and returns a checksum covering loss plus all
+updated parameters. The Rust runtime gate compares the `mlir-runner` result
+against `7.939712`.
