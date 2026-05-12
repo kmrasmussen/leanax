@@ -43,6 +43,10 @@ The current runtime gate proves:
 - `generated-mnist-forward-runtime`: a helper-generated dense-ReLU-dense
   classifier-forward representative executes through `mlir-runner` and returns
   `-0.525`.
+- `exact-mnist-forward-runtime`: the full fixed `2x784 -> 8 -> 10`
+  dense-ReLU-dense forward computation executes through `mlir-runner` and
+  returns `3.970676`, with a Python oracle checking the expected logits
+  checksum.
 - `generated-derived-mask-train-step-runtime`: a helper-generated derived-mask
   train-step representative executes through `mlir-runner` and returns
   `1.4609127`.
@@ -165,3 +169,8 @@ runtime artifacts.
 layer. That gives the exact-shape forward/loss/train-step tickets a structured
 way to enumerate row-major scalar refs instead of growing more handwritten
 runtime strings.
+
+`exact-mnist-forward-runtime` now closes the forward scale gap: the full fixed
+classifier forward pass runs externally, while direct full MNIST runtime
+execution remains false because loss, gradients, SGD updates, and the
+train-step checksum still need exact-shape runtime coverage.

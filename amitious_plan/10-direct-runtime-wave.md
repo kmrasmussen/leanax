@@ -54,7 +54,8 @@ by the default e2e gate.
 2. `TICKET-0067`: Runtime Tensor Indexing Codegen Helpers. Completed by
    routing `generated-dense-runtime` through reusable `RuntimeTensor` helpers
    while preserving its golden output.
-3. `TICKET-0068`: Exact-Shape MNIST Forward Runtime Checksum.
+3. `TICKET-0068`: Exact-Shape MNIST Forward Runtime Checksum. Completed with
+   `exact-mnist-forward-runtime` and a checked Python checksum oracle.
 4. `TICKET-0069`: Exact-Shape MNIST Loss Runtime Checksum.
 5. `TICKET-0070`: Exact-Shape Derived-Mask Gradient Runtime Checksum.
 6. `TICKET-0071`: Exact-Shape Derived-Mask Train-Step Runtime Checksum.

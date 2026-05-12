@@ -38,4 +38,8 @@ in this ticket.
 
 ## Status
 
-Ready for analysis.
+Completed. `exact-mnist-forward-runtime` now emits the full fixed
+`2x784 -> 8 -> 10` dense-ReLU-dense forward computation through the LLVM
+runtime path. The default gate compares its 33,443-line golden against generated
+text, runs it with `mlir-runner`, and checks the expected logits checksum
+against `exact-mnist-forward-runtime-oracle`.

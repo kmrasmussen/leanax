@@ -49,14 +49,19 @@ The implemented first slice is intentionally narrow:
 - `generated-mnist-forward-runtime` uses the same skeleton for a scaled
   dense-ReLU-dense classifier-forward representative and returns the weighted
   logits checksum `-0.525`.
+- `exact-mnist-forward-runtime` emits the full fixed
+  `2x784 -> 8 -> 10` dense-ReLU-dense forward computation through the LLVM
+  runtime path. The generated golden is 33,443 lines, returns the logits
+  checksum `3.970676` under `mlir-runner`, and is cross-checked by
+  `exact-mnist-forward-runtime-oracle`.
 - `generated-derived-mask-train-step-runtime` uses the skeleton for a scaled
   generated train-step representative with internal ReLU mask derivation,
   softmax loss, gradients, SGD updates, and a checksum over loss plus updated
   parameters. It returns `1.4609127`.
 - `mnist-progress-report` now includes `runtime_readiness_v6`, which requires
   the codegen skeleton, shape-op fixtures, reduce fixtures, generated dense,
-  generated forward, generated train-step, and a still-false direct MNIST
-  runtime flag.
+  scaled generated forward, exact-shape forward, generated train-step, and a
+  still-false direct MNIST runtime flag.
 - `runtime-scaling-budget` records the exact-shape scalarized runtime budget for
   forward, loss, gradient, and train-step cases before the project commits to
   large checked-in artifacts.

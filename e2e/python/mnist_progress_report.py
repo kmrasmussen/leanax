@@ -8,6 +8,7 @@ REPO = Path(__file__).resolve().parents[2]
 MANIFEST = REPO / "e2e/manifest.txt"
 DATASET_METRICS = REPO / "generated/mnist-real-dataset-metrics.json"
 RUNTIME_SCALING_BUDGET = REPO / "generated/runtime-scaling-budget.json"
+EXACT_FORWARD_RUNTIME_ORACLE = REPO / "generated/exact-mnist-forward-runtime-oracle.json"
 
 
 EXPECTED = {
@@ -28,6 +29,7 @@ EXPECTED = {
     "runtime_operation_inventory": True,
     "runtime_generated_dense_fixture": True,
     "runtime_generated_mnist_forward": True,
+    "runtime_exact_mnist_forward": True,
     "runtime_generated_train_step": True,
     "runtime_reduce_fixtures": True,
     "runtime_scalar_math_fixture": True,
@@ -115,6 +117,18 @@ def runtime_scaling_budget_ready() -> bool:
     )
 
 
+def exact_forward_runtime_oracle_ready() -> bool:
+    if not EXACT_FORWARD_RUNTIME_ORACLE.is_file():
+        return False
+    data = json.loads(EXACT_FORWARD_RUNTIME_ORACLE.read_text(encoding="utf-8"))
+    return (
+        data.get("schema") == "leanax.exact_mnist_forward_runtime_oracle.v1"
+        and data.get("classifier") == {"batch": 2, "classes": 10, "hidden": 8, "inputs": 784}
+        and isinstance(data.get("checksum"), float)
+        and abs(data["checksum"] - data.get("manifest_expected", 0.0)) <= data.get("tolerance", 0.0)
+    )
+
+
 def report() -> dict[str, bool]:
     entries = manifest_entries()
     actual = {
@@ -192,6 +206,15 @@ def report() -> dict[str, bool]:
             and artifact_contains(
                 "e2e/golden/generated-mnist-forward-runtime.mlir",
                 ["%hidden_pre0", "llvm.fcmp", "llvm.select", "%logit0", "%generated_forward_acc0"],
+            )
+        ),
+        "runtime_exact_mnist_forward": (
+            ("runtime", "exact-mnist-forward-runtime") in entries
+            and ("data-loader", "exact-mnist-forward-runtime-oracle") in entries
+            and exact_forward_runtime_oracle_ready()
+            and artifact_contains(
+                "e2e/golden/exact-mnist-forward-runtime.mlir",
+                ["%hidden_pre00", "%hidden00", "%logits09", "%exact_forward_acc0"],
             )
         ),
         "runtime_generated_train_step": (

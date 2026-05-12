@@ -108,17 +108,30 @@ def runtimeReluRefs
     ]
   (lines, indexed.map fun pair => label ++ toString pair.fst)
 
-def runtimeDense2DLines
+def runtimeReluTensorLines
+    (source target : RuntimeTensor)
+    (zeroRef : String) : List String :=
+  runtimeListBind (runtimeShapeIndices source.shape) fun indices =>
+    let sourceRef := source.ref indices
+    let targetRef := target.ref indices
+    let pred := targetRef ++ "_pos"
+    [
+      "%" ++ pred ++ " = llvm.fcmp \"ogt\" %" ++ sourceRef ++ ", %" ++ zeroRef ++ " : f32",
+      "%" ++ targetRef ++ " = llvm.select %" ++ pred ++ ", %" ++ sourceRef ++ ", %" ++ zeroRef ++ " : i1, f32"
+    ]
+
+def runtimeDense2DLabeledLines
+    (label : String)
     (x w b y : RuntimeTensor)
     (batch input output : Nat) : List String :=
   runtimeListBind (List.range batch) fun row =>
     runtimeListBind (List.range output) fun col =>
       let products := (List.range input).map fun k =>
-        let productName := "p" ++ toString row ++ toString k ++ toString col
+        let productName := label ++ "p" ++ toString row ++ toString k ++ toString col
         runtimeBinaryF32 productName "fmul" (x.ref [row, k]) (w.ref [k, col])
       let productRefs := (List.range input).map fun k =>
-        "p" ++ toString row ++ toString k ++ toString col
-      let sumName := "s" ++ toString row ++ toString col
+        label ++ "p" ++ toString row ++ toString k ++ toString col
+      let sumName := label ++ "s" ++ toString row ++ toString col
       let sumLines :=
         match productRefs with
         | [] => [runtimeConstF32 sumName "0.0"]
@@ -141,6 +154,35 @@ def runtimeDense2DLines
       | 0 => sumLines ++ [runtimeBinaryF32 (y.ref [row, col]) "fadd" sumName (b.ref [col])]
       | 1 => sumLines
       | _ => products ++ sumLines
+
+def runtimeDense2DLines
+    (x w b y : RuntimeTensor)
+    (batch input output : Nat) : List String :=
+  runtimeDense2DLabeledLines "" x w b y batch input output
+
+def runtimePad3 (value : Nat) : String :=
+  if value < 10 then
+    "00" ++ toString value
+  else if value < 100 then
+    "0" ++ toString value
+  else
+    toString value
+
+def runtimeMilliF32Lit (milliValue : Int) : String :=
+  let absValue := Int.toNat (if milliValue < 0 then -milliValue else milliValue)
+  let sign := if milliValue < 0 then "-" else ""
+  sign ++ toString (absValue / 1000) ++ "." ++ runtimePad3 (absValue % 1000)
+
+def runtimePatternedMilliValue (index offset : Nat) (milliScale : Int) : String :=
+  let raw : Int := Int.ofNat ((index + offset) % 17) - 8
+  runtimeMilliF32Lit (raw * milliScale)
+
+def runtimePatternedTensorValues
+    (shape : List Nat)
+    (milliScale : Int)
+    (offset : Nat) : List String :=
+  (List.range (runtimeShapeSize shape)).map fun index =>
+    runtimePatternedMilliValue index offset milliScale
 
 def generatedArithmeticRuntimeProgram : RuntimeLLVMProgram :=
   {
@@ -354,6 +396,31 @@ def generatedMnistForwardRuntimeProgram : RuntimeLLVMProgram :=
 
 def generatedMnistForwardRuntimeLLVM : String :=
   generatedMnistForwardRuntimeProgram.render
+
+def exactMnistForwardRuntimeProgram : RuntimeLLVMProgram :=
+  let x : RuntimeTensor := { name := "x", shape := [2, 784] }
+  let w1 : RuntimeTensor := { name := "w1", shape := [784, 8] }
+  let b1 : RuntimeTensor := { name := "b1", shape := [8] }
+  let hiddenPre : RuntimeTensor := { name := "hidden_pre", shape := [2, 8] }
+  let hidden : RuntimeTensor := { name := "hidden", shape := [2, 8] }
+  let w2 : RuntimeTensor := { name := "w2", shape := [8, 10] }
+  let b2 : RuntimeTensor := { name := "b2", shape := [10] }
+  let logits : RuntimeTensor := { name := "logits", shape := [2, 10] }
+  runtimeWeightedChecksumRefsProgram
+    (runtimeTensorConstF32 x (runtimePatternedTensorValues x.shape 10 1) ++
+      runtimeTensorConstF32 w1 (runtimePatternedTensorValues w1.shape 2 3) ++
+      runtimeTensorConstF32 b1 (runtimePatternedTensorValues b1.shape 10 5) ++
+      runtimeTensorConstF32 w2 (runtimePatternedTensorValues w2.shape 20 7) ++
+      runtimeTensorConstF32 b2 (runtimePatternedTensorValues b2.shape 10 9) ++
+      [runtimeConstF32 "zero" "0.0"] ++
+      runtimeDense2DLabeledLines "h_" x w1 b1 hiddenPre 2 784 8 ++
+      runtimeReluTensorLines hiddenPre hidden "zero" ++
+      runtimeDense2DLabeledLines "logit_" hidden w2 b2 logits 2 8 10)
+    "exact_forward"
+    (runtimeTensorRefs logits)
+
+def exactMnistForwardRuntimeLLVM : String :=
+  exactMnistForwardRuntimeProgram.render
 
 def generatedDerivedMaskTrainStepRuntimeProgram : RuntimeLLVMProgram :=
   {
@@ -714,6 +781,7 @@ def runtimeLLVMCases : List RuntimeLLVMCase :=
     { name := "reduce-keepdim-runtime", llvm := reduceKeepdimRuntimeLLVM },
     { name := "generated-dense-runtime", llvm := generatedDenseRuntimeLLVM },
     { name := "generated-mnist-forward-runtime", llvm := generatedMnistForwardRuntimeLLVM },
+    { name := "exact-mnist-forward-runtime", llvm := exactMnistForwardRuntimeLLVM },
     {
       name := "generated-derived-mask-train-step-runtime",
       llvm := generatedDerivedMaskTrainStepRuntimeLLVM
